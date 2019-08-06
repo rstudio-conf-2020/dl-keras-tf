@@ -1,4 +1,4 @@
-WORKSHOP_TITLE
+Deep Learning with Keras and TensorFlow in R
 ================
 
 ### rstudio::conf 2020
