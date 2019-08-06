@@ -25,7 +25,9 @@ can remove these instructions from the README.
 
 ## Overview
 
-ABSTRACT
+This two-day workshop introduces the essential concepts of building deep learning models with TensorFlow and Keras via R. First, we’ll establish a mental model of where deep learning fits in the spectrum of machine learning, highlight its benefits and limitations, and discuss how the TensorFlow - Keras - R toolchain work together. We’ll then build an understanding of deep learning through first principles and practical applications covering a variety of tasks such as computer vision, natural language processing, anomaly detection, and more.
+
+Throughout the workshop you will gain an intuitive understanding of the architectures and engines that make up deep learning models, apply a variety of deep learning algorithms (i.e. MLPs, CNNs, RNNs, LSTMs, autoencoders), understand when and how to tune the various hyperparameters, and be able to interpret model results. Leaving this workshop, you should have a firm grasp of deep learning and be able to implement a systematic approach for producing high quality modeling results.
 
 ## Learning objectives
 
