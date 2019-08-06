@@ -31,7 +31,7 @@ Throughout the workshop you will gain an intuitive understanding of the architec
 
 ## Learning objectives
 
-LEARNING_OBJECTIVES
+ADD LEARNING OBJECTIVE(S)
 
 ## Is this course for me?
 
