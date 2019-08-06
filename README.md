@@ -35,7 +35,15 @@ ADD LEARNING OBJECTIVE(S)
 
 ## Is this course for me?
 
-THREE_QUESTIONS
+Is this workshop for you? If you answer "yes" to these three questions, then this workshop is likely a good fit: 
+
+1.Are you relatively new to the field of deep learning and neural networks but eager to learn? Or maybe you have applied a basic feedforward neural network but aren’t familiar with the other deep learning frameworks? 
+
+2.Are you an experienced R user comfortable with the tidyverse, creating functions, and applying control (i.e. if, ifelse) and iteration (i.e. for, while) statements? 
+
+3.Are you familiar with the machine learning process such as data splitting, feature engineering, resampling procedures (i.e. k-fold cross validation), hyperparameter tuning, and model validation? 
+
+This workshop will provide some review of these topics but coming in with some exposure will help you stay focused on the deep learning details rather than the general modeling procedure details.
 
 ## Prework
 
