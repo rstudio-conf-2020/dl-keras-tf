@@ -3,7 +3,7 @@ Deep Learning with Keras and TensorFlow in R
 
 ### rstudio::conf 2020
 
-by INSTRUCTOR_NAME
+by Bradley Boehmke
 
 -----
 
