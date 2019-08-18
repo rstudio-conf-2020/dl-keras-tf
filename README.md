@@ -66,7 +66,16 @@ RSTUDIO.CLOUD ACCOUNT, ETC.\]
 
 ## Instructor
 
-\[ADD INSTRUCTOR BIO\]
+Brad Boehmke is a Director of Data science at 84.51° where he wears both
+software developer and machine learning engineer hats. His team focuses
+on developing algorithmic processes, solutions, and tools that enable
+84.51° and its data scientists to efficiently extract insights from data
+and provide solution alternatives to decision-makers. He is a visiting
+professor at the University of Cincinnati, author of the Hands-on
+Machine Learning with R and Data Wrangling with R books, creator of
+multiple public and private enterprise R packages, and developer of
+various data science educational content. You can learn more about his
+work, and connect with him, at &lt;bradleyboehmke.github.io&gt;.
 
 -----
 
