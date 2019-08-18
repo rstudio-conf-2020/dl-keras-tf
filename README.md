@@ -75,7 +75,7 @@ professor at the University of Cincinnati, author of the Hands-on
 Machine Learning with R and Data Wrangling with R books, creator of
 multiple public and private enterprise R packages, and developer of
 various data science educational content. You can learn more about his
-work, and connect with him, at &lt;bradleyboehmke.github.io&gt;.
+work, and connect with him, at [bradleyboehmke.github.io](http://bradleyboehmke.github.io/).
 
 -----
 
