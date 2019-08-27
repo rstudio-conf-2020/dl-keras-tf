@@ -54,15 +54,31 @@ RSTUDIO.CLOUD ACCOUNT, ETC.\]
 
 ## Schedule
 
-| Time          | Activity         |
-| :------------ | :--------------- |
-| 09:00 - 10:30 | Session 1        |
-| 10:30 - 11:00 | *Coffee break*   |
-| 11:00 - 12:30 | Session 2        |
-| 12:00 - 13:30 | *Lunch break*    |
-| 13:30 - 15:00 | Session 3        |
-| 15:00 - 15:30 | *Coffee break*   |
-| 15:30 - 17:00 | Session 4        |
+### Day 1
+
+| Time          | Activity                 |
+| :------------ | :----------------------- |
+| 09:00 - 09:30 | Introduction             |
+| 09:30 - 10:30 | The deep learning engine |
+| 10:30 - 11:00 | *Coffee break*           |
+| 11:00 - 12:30 | 3 case studies           |
+| 12:30 - 13:30 | *Lunch break*            |
+| 13:30 - 15:00 | Computer vision & CNNs   |
+| 15:00 - 15:30 | *Coffee break*           |
+| 15:30 - 17:00 | Project                  |
+
+### Day 2
+
+| Time          | Activity                 |
+| :------------ | :----------------------- |
+| 09:00 - 09:15 | Recap                    |
+| 09:15 - 10:30 | Sequence data & LSTMs    |
+| 10:30 - 11:00 | *Coffee break*           |
+| 11:00 - 12:30 | Anomaly detection        |
+| 12:30 - 13:30 | *Lunch break*            |
+| 13:30 - 15:00 | TBD                      |
+| 15:00 - 15:30 | *Coffee break*           |
+| 15:30 - 17:00 | Project                  |
 
 ## Instructor
 
