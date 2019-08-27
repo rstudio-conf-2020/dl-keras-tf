@@ -1,0 +1,649 @@
+@import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+@import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+@import url(https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700);
+@import url(https://fonts.googleapis.com/css?family=Fira+Sans:300,300i,400,400i,500,500i,700,700i);
+@import url(https://cdn.rawgit.com/tonsky/FiraCode/1.204/distr/fira_code.css);
+
+@import url(https://fonts.googleapis.com/css?family=Noto+Serif);
+
+body {
+  font-family: 'Fira Sans','Droid Serif', 'Palatino Linotype', 'Book Antiqua', Palatino, 'Microsoft YaHei', 'Songti SC', serif;
+  font-size: 120%;
+}
+
+p {
+  font-family: 'Fira Sans','Droid Serif', 'Palatino Linotype', 'Book Antiqua', Palatino, 'Microsoft YaHei', 'Songti SC', serif;
+  font-size: 120%;
+}
+
+ul, ol {
+  font-family: 'Fira Sans','Droid Serif', 'Palatino Linotype', 'Book Antiqua', Palatino, 'Microsoft YaHei', 'Songti SC', serif;
+  font-size: 100%;
+}
+
+.remark-code, .remark-inline-code {
+  font-family: 'Source Code Pro', 'Lucida Console', Monaco, monospace;
+  font-size: 80%;
+}
+
+.remark-inline-code {
+  /* background: #F5F5F5; /* lighter */
+  /* background: #e7e8e2; /* darker */
+    border-radius: 3px;
+  padding: 4px;
+}
+
+.code10 .remark-code {
+  font-size: 10%;
+}
+
+.code20 .remark-code {
+  font-size: 20%;
+}
+
+.code30 .remark-code {
+  font-size: 30%;
+}
+
+.code40 .remark-code {
+  font-size: 40%;
+}
+
+.code50 .remark-code {
+  font-size: 50%;
+}
+
+.code55 .remark-code {
+  font-size: 55%;
+}
+
+.code60 .remark-code {
+  font-size: 60%;
+}
+
+.code70 .remark-code {
+  font-size: 70%;
+}
+
+.code80 .remark-code {
+  font-size: 80%;
+}
+
+.code90 .remark-code {
+  font-size: 90%;
+}
+
+.code100 .remark-code {
+  font-size: 100%;
+}
+
+.font10 {
+  font-size: 10%;
+}
+
+.font20 {
+  font-size: 20%;
+}
+
+.font30 {
+  font-size: 30%;
+}
+
+.font40 {
+  font-size: 40%;
+}
+
+.font50 {
+  font-size: 50%;
+}
+
+.font60 {
+  font-size: 60%;
+}
+
+.font70 {
+  font-size: 70%;
+}
+
+.font80 {
+  font-size: 80%;
+}
+
+.font90 {
+  font-size: 90%;
+}
+
+.font100 {
+  font-size: 100%;
+}
+
+.font110 {
+  font-size: 110%;
+}
+
+.font120 {
+  font-size: 120%;
+}
+
+.font130 {
+  font-size: 130%;
+}
+
+.font140 {
+  font-size: 140%;
+}
+
+.font150 {
+  font-size: 150%;
+}
+
+.font160 {
+  font-size: 160%;
+}
+.font170 {
+  font-size: 170%;
+}
+.font180 {
+  font-size: 180%;
+}
+.font190 {
+  font-size: 190%;
+}
+.font200 {
+  font-size: 200%;
+}
+.font250 {
+  font-size: 250%;
+}
+.font300 {
+  font-size: 300%;
+}
+
+.opacity10{
+    opacity: 0.1;
+}
+
+.scrollable {
+  width: 100%;
+  height: 70%;
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+.scrollable90 {
+  width: 100%;
+  height: 90%;
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+a, a > code {
+  color: #ff0000;
+    text-decoration: none;
+}
+
+
+**************
+ *
+ *  * Font size and colours
+ *   *
+ *    **************/
+
+
+.Large { font-size: 144% }
+.large { font-size: 120% }
+.small { font-size: 90% }
+.footnotesize { font-size: 80% }
+.scriptsize { font-size: 70% }
+.tiny { font-size: 60% }
+
+.black { color: black; }
+.red { color: red; }
+.blue { color: blue; }
+.green { color: green; }
+.yellow { color: yellow; }
+.orange { color: orange; }
+.purple { color: purple; }
+.gray { color: gray; }
+.grey { color: gray; }
+.white { color: white; }
+
+.bold { font-weight: bold; }
+.bolder { font-weight: bolder; }
+
+
+/******************
+ *  * 
+ *   * Coloured content boxes
+ *    *
+ *     ****************/
+
+
+.content-box { 
+    box-sizing: content-box;
+    	background-color: #e2e2e2;
+  /* Total width: 160px + (2 * 20px) + (2 * 8px) = 216px
+ *      Total height: 80px + (2 * 20px) + (2 * 8px) = 136px
+ *           Content box width: 160px
+ *                Content box height: 80px */
+}
+
+
+.content-box-blue,
+.content-box-blue-dark,
+.content-box-gray,
+.content-box-grey,
+.content-box-grey-dark,
+.content-box-army,
+.content-box-green,
+.content-box-green-dark,
+.content-box-purple,
+.content-box-purple-dark,
+.content-box-red,
+.content-box-red-dark,
+.content-box-yellow {
+    border-radius: 15px;
+    margin: 0 0 25px;
+    overflow: hidden;
+    padding: 20px;
+    width: 100%;
+}
+
+.content-box-blue {
+    background-color: #F0F8FF;
+}
+
+.content-box-blue-dark {
+    background-color: blue;
+
+}
+
+.content-box-gray {
+    background-color: #e2e2e2;
+}
+
+.content-box-grey {
+	background-color: #F5F5F5;
+}
+
+.content-box-grey-dark {
+	background-color: gray;
+}
+
+.content-box-army {
+	background-color: #737a36;
+}
+
+.content-box-green {
+	background-color: #d9edc2;
+}
+
+.content-box-green-dark {
+	background-color: #006400;
+}
+
+.content-box-purple {
+	background-color: #e2e2f9;
+}
+
+.content-box-purple-dark {
+	background-color: #800080;
+}
+
+.content-box-red {
+	background-color: #f9dbdb;
+}
+
+.content-box-red-dark {
+	background-color: red;
+}
+
+.content-box-yellow {
+	background-color: #fef5c4;
+}
+
+
+.full-width {
+    display: flex;
+    width: 100%;
+    flex: 1 1 auto;
+}
+
+
+
+/***********
+ *  *
+ *   * Changed CSS
+ *    *
+ *     **************/
+
+.opacity{
+    opacity: 0.5;
+}
+
+.opacity20{
+    opacity: 0.2;
+}
+
+
+
+.blur {
+    -webkit-filter: blur(5px);
+    -moz-filter: blur(10px);
+    -o-filter: blur(5px);
+    -ms-filter: blur(5px);
+    filter: blur(5px);
+}
+
+
+.grayscale img {
+    -webkit-filter: grayscale(100%); /* Safari 6.0 - 9.0 */
+    filter: grayscale(100%);
+}
+
+
+
+
+
+
+/**************
+ *  *
+ *   * Fancy stuff
+ *    *
+ *     **************/
+
+
+.rotate-left {
+    -webkit-transform: rotate(-2deg);
+    -moz-transform: rotate(-2deg);
+    transform: rotate(-2deg); 
+}
+
+.rotate-right {
+    -webkit-transform: rotate(2deg);
+    -moz-transform: rotate(2deg);
+    transform: rotate(2deg);     
+}
+
+
+
+/********** 
+ *  * 
+ *   * Image stuff
+ *    *
+ *     ************/
+
+
+.polaroid img {
+    border: 10px solid #fff;
+    border-bottom: 45px solid #fff;
+    -webkit-box-shadow: 3px 3px 3px #111;
+    -moz-box-shadow: 3px 3px 3px #111;
+    box-shadow: 3px 3px 3px #111;
+}
+
+
+
+.shadow {
+    -moz-border-radius: 5px;
+    -moz-box-shadow: 5px 5px 5px #aaa;
+    -webkit-box-shadow: 5px 5px 5px #aaa;
+    box-shadow: 5px 5px 5px #aaa;
+    border-radius: 2px;  
+}
+
+.footnote {
+  position: absolute;
+  bottom: 3em;
+  padding-right: 4em;
+  font-size: 90%;
+}
+.remark-code-line-highlighted     { background-color: #ffff88; }
+
+.hljs-github .hljs {
+    background: #e7e8e2;
+}
+    
+    .remark-slide-content {
+      background-color: #FFFFFF;
+        border-top: 80px solid #23373B;
+      font-size: 20px;
+      font-weight: 300;
+      line-height: 1.5;
+      padding: 1em 2em 1em 2em
+    }
+    
+    .yourturn {
+      background-color: #FFFFFF;
+        border-top: 80px solid #B22222;
+      font-size: 20px;
+      font-weight: 300;
+      line-height: 1.5;
+      padding: 1em 2em 1em 2em
+    }
+  
+  .title-slide .inverse .remark-slide-content {
+    background-color: #FFFFFF;
+    background-size: cover;
+    border-top: 0px;
+  }
+  
+  .inverse .remark-slide-number {
+    display: none;
+  }
+  
+  .inverse {
+    background-color: #23373B;
+      text-shadow: none;
+  }
+  .inverse h1, .inverse h2, .inverse h3 {
+    color: #f3f3f3;
+  }
+  /* Two-column layout */
+    .left-column {
+      color: #777;
+        width: 20%;
+      height: 92%;
+      float: left;
+    }
+  .left-column h2:last-of-type, .left-column h3:last-child {
+    color: #000;
+  }
+  .right-column {
+    width: 75%;
+    float: right;
+    padding-top: 1em;
+  }
+  .pull-left {
+    float: left;
+    width: 47%;
+  }
+  .pull-right {
+    float: right;
+    width: 47%;
+  }
+  .pull-left-wide {
+    float: left;
+    width: 75%;
+  }
+  .pull-right-narrow {
+    float: right;
+    width: 25%;
+  }
+  .pull-right-wide {
+    float: right;
+    width: 75%;
+  }
+  .pull-left-narrow {
+    float: left;
+    width: 25%;
+  }
+  .pull-left-30 {
+    float: left;
+    width: 30%;
+  }
+  .pull-right-70 {
+    float: right;
+    width: 70%;
+  }
+  .pull-left-60 {
+    float: left;
+    width: 60%;
+  }
+  .pull-right-40 {
+    float: right;
+    width: 40%;
+  }
+  .pull-right-70 {
+    float: right;
+    width: 70%;
+  }
+  .pull-left-40 {
+    float: left;
+    width: 40%;
+  }
+  .pull-right-60 {
+    float: right;
+    width: 60%;
+  }
+  .pull-right ~ * {
+    clear: both;
+  }
+  img, video, iframe {
+    max-width: 100%;
+  }
+  blockquote {
+    border-left: solid 5px lightgray;
+    padding-left: 1em;
+  }
+  table {
+    margin: auto;
+    border-top: 1px solid #666;
+    border-bottom: 1px solid #666;
+  }
+  table thead th { border-bottom: 1px solid #ddd; }
+    th, td { padding: 5px; }
+    thead, tfoot, tr:nth-child(even) { background: #eee }
+        
+        @page { margin: 0; }
+      @media print {
+        .remark-slide-scaler {
+          width: 100% !important;
+          height: 100% !important;
+          transform: scale(1) !important;
+          top: 0 !important;
+          left: 0 !important;
+        }
+      }
+      
+      .remark-slide-content > h1 {
+        font-family: 'Fira Sans';
+        font-weight: normal;
+        font-size: 45px;
+        margin-top: -95px;
+        margin-left: -00px;
+        color: #FAFAFA;
+      }
+      
+      .remark-slide-content > inverse {
+        width: 112px;
+        height: 47px;
+        border-bottom: 1px solid black;
+        position: absolute;
+      }
+      
+      .remark-slide-content > h2 {
+        padding-top: -15px;
+        padding-bottom: 00px;
+        color: #1A292C;
+          text-shadow: none;
+        font-weight: 400;
+        font-size: 35px;
+        text-align: left;
+        margin-left: 00px;
+      }
+      
+      .remark-slide-content > h3 {
+        padding-top: -15px;
+        padding-bottom: 10px;
+        color: #1A292C;
+          text-shadow: none;
+        font-weight: 400;
+        font-size: 30px;
+        text-align: left;
+        margin-left: 00px;
+      }
+      
+      .title-slide {
+        background-color: #FAFAFA;
+          border-top: 80px solid #FAFAFA;
+      }
+      
+      .title-slide > h1  {
+        color: #1A292C;
+          font-size: 40px;
+        text-shadow: none;
+        font-weight: 400;
+        text-align: left;
+        margin-left: 15px;
+        padding-top: 80px;
+      }
+      .title-slide > h2  {
+        margin-top: -25px;
+        padding-bottom: -20px;
+        color: #1A292C;
+          text-shadow: none;
+        font-weight: 300;
+        font-size: 35px;
+        text-align: left;
+        margin-left: 15px;
+      }
+      .title-slide > h3  {
+        color: #1A292C;
+          text-shadow: none;
+        font-weight: 300;
+        font-size: 25px;
+        text-align: left;
+        margin-left: 15px;
+        margin-bottom: -30px;
+      }
+      
+      .remark-slide-number {
+        font-size: 13pt;
+        font-family: 'Fira Sans';
+        color: #272822;
+          opacity: 1;
+      }
+      .inverse .remark-slide-number {
+        font-size: 13pt;
+        font-family: 'Fira Sans';
+        color: #FAFAFA;
+          opacity: 1;
+      }
+      
+      /* turns off slide numbers for title page: https://github.com/gnab/remark/issues/298 */
+        .title-slide .remark-slide-number {
+          display: none;
+        }
+      
+      
+      
+      .title-hex{
+        height: 60px;
+        align: middle;
+        float: right;
+      }
+      
+.clear {
+  border-top: 0px solid #FFFFFF;
+  border-bottom: 0px solid #FFFFFF;
+}
+
+.clear > h1 {
+  font-family: 'Fira Sans';
+  font-weight: normal;
+  font-size: 45px;
+  margin-top: -95px;
+  margin-left: -00px;
+  color: #FFFFFF;
+}
