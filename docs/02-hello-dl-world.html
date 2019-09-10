@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>Hello [Deep Learning] World</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Brad Boehmke" />
+    <meta name="date" content="2020-01-27" />
+    <link href="libs/font-awesome-animation/font-awesome-animation-emi.css" rel="stylesheet" />
+    <script src="libs/fontawesome/js/fontawesome-all.min.js"></script>
+    <link rel="stylesheet" href="custom.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Hello [Deep Learning] World
+### Brad Boehmke
+### 2020-01-27
+
+---
+
+class: clear, center, middle
+
+background-image: url(images/MnistExamples.png)
+background-size: cover
+
+.font1000.bold[MNIST]
+
+
+
+---
+# Origination
+
+.scrollable90[
+.pull-left[
+
+* National Institute of Standards and Technology (NIST) database
+
+* MNIST (Modified NIST)
+
+* 60,000 training images and 10,000 testing images
+
+* normalized to fit into a 28x28 pixel bounding box
+
+]
+
+.pull-right[
+
+&lt;img src="images/nist-sample-form.png" width="679" style="display: block; margin: auto;" /&gt;
+
+]
+]
+
+---
+# Important benchmark
+
+.scrollable90[
+.pull-left[
+
+* Used as an important benchmark for image processing from 1990s - 2012
+
+* 1998: 12% error rate
+
+* 2012: 0.23% error rate
+
+* Website: http://yann.lecun.com/exdb/mnist/
+
+]
+
+.pull-right[
+
+&lt;img src="images/MNIST-benchmarks.png" width="1145" style="display: block; margin: auto;" /&gt;
+
+]
+]
+
+---
+class: clear, center, middle
+
+.font1000.bold[`%&lt;-%`]
+
+.font300[object unpacking]
+
+---
+# zeallot <span>&lt;i class="fas  fa-box-open faa-FALSE animated "&gt;&lt;/i&gt;</span>
+
+Object unpacking mimicks tuple unpacking in Python
+
+--
+
+A simple vector
+
+
+```r
+my_name &lt;- c('Brad', 'Boehmke')
+```
+
+--
+
+.pull-left[
+
+Traditional assignment unpacking
+
+
+```r
+first &lt;- my_name[1]
+last &lt;- my_name[2]
+```
+
+]
+
+.pull-right[
+
+Object unpacking
+
+
+```r
+c(first, last) %&lt;-% my_name
+```
+
+]
+
+--
+
+Both result in:
+
+
+```r
+first
+## [1] "Brad"
+last
+## [1] "Boehmke"
+```
+
+
+---
+# zeallot <span>&lt;i class="fas  fa-box-open faa-FALSE animated "&gt;&lt;/i&gt;</span>
+
+Object unpacking mimicks tuple unpacking in Python
+
+A data frame
+
+
+```r
+head(mtcars)
+##                    mpg cyl disp  hp drat    wt  qsec vs am gear carb
+## Mazda RX4         21.0   6  160 110 3.90 2.620 16.46  0  1    4    4
+## Mazda RX4 Wag     21.0   6  160 110 3.90 2.875 17.02  0  1    4    4
+## Datsun 710        22.8   4  108  93 3.85 2.320 18.61  1  1    4    1
+## Hornet 4 Drive    21.4   6  258 110 3.08 3.215 19.44  1  0    3    1
+## Hornet Sportabout 18.7   8  360 175 3.15 3.440 17.02  0  0    3    2
+## Valiant           18.1   6  225 105 2.76 3.460 20.22  1  0    3    1
+```
+
+
+.pull-left[
+
+Traditional assignment unpacking
+
+
+```r
+# data frames
+mpg &lt;- mtcars$mpg
+cyl &lt;- mtcars$cyl
+disp &lt;- mtcars $disp
+hp &lt;- mtcars$hp
+```
+
+]
+
+.pull-right[
+
+Object unpacking
+
+
+```r
+# data frames
+c(mpg, cyl, disp, hp) %&lt;-% mtcars[, 1:4]
+```
+
+]
+
+Both result in:
+
+
+```r
+mpg
+##  [1] 21.0 21.0 22.8 21.4 18.7 18.1 14.3 24.4 22.8 19.2 17.8 16.4 17.3 15.2
+## [15] 10.4 10.4 14.7 32.4 30.4 33.9 21.5 15.5 15.2 13.3 19.2 27.3 26.0 30.4
+## [29] 15.8 19.7 15.0 21.4
+cyl
+##  [1] 6 6 4 6 8 6 8 4 4 6 6 8 8 8 8 8 8 4 4 4 4 8 8 8 8 4 4 4 8 6 8 4
+disp
+##  [1] 160.0 160.0 108.0 258.0 360.0 225.0 360.0 146.7 140.8 167.6 167.6
+## [12] 275.8 275.8 275.8 472.0 460.0 440.0  78.7  75.7  71.1 120.1 318.0
+## [23] 304.0 350.0 400.0  79.0 120.3  95.1 351.0 145.0 301.0 121.0
+hp
+##  [1] 110 110  93 110 175 105 245  62  95 123 123 180 180 180 205 215 230
+## [18]  66  52  65  97 150 150 245 175  66  91 113 264 175 335 109
+```
+
+
+---
+# zeallot <span>&lt;i class="fas  fa-box-open faa-FALSE animated "&gt;&lt;/i&gt;</span>
+
+
+```r
+mnist &lt;- dataset_mnist()
+str(mnist)
+## List of 2
+##  $ train:List of 2
+##   ..$ x: int [1:60000, 1:28, 1:28] 0 0 0 0 0 0 0 0 0 0 ...
+##   ..$ y: int [1:60000(1d)] 5 0 4 1 9 2 1 3 1 4 ...
+##  $ test :List of 2
+##   ..$ x: int [1:10000, 1:28, 1:28] 0 0 0 0 0 0 0 0 0 0 ...
+##   ..$ y: int [1:10000(1d)] 7 2 1 0 4 1 4 9 5 9 ...
+```
+
+.pull-left[
+
+Traditional assignment unpacking
+
+
+```r
+mnist &lt;- dataset_mnist()
+
+train_images &lt;- mnist$train$x
+train_labels &lt;- mnist$train$y
+test_images &lt;- mnist$test$x
+test_labels &lt;- mnist$test$y
+```
+
+]
+
+.pull-right[
+
+Object unpacking
+
+
+```r
+c(c(train_images, train_labels), c(test_images, test_labels)) %&lt;-% mnist
+```
+
+]
+
+---
+class: clear, center, middle
+
+.font1000.bold[Tensors]
+---
+# The .red[tensor] in TensorFlow
+
+.pull-left[
+
+&lt;img src="images/whats_a_tensor.png" width="667" style="display: block; margin: auto;" /&gt;
+
+]
+
+--
+
+.pull-right[
+&lt;br&gt;&lt;br&gt;&lt;br&gt;
+.center.bold[
+_Don't worry, you actually use tensors everyday (at least everyday you use R!)_
+]
+]
+
+---
+# The .red[tensor] in TensorFlow
+
+.pull-left[
+
+&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;
+
+&lt;img src="images/1D_tensor.png" width="499" style="display: block; margin: auto;" /&gt;
+
+]
+
+.pull-right[
+&lt;br&gt;&lt;br&gt;&lt;br&gt;
+.center.bold.opacity20[
+_Don't worry, you actually use tensors everyday (at least everyday you use R!)_
+]
+.center.bold.blue[Vectors are 1D tensors]
+
+]
+
+---
+# The .red[tensor] in TensorFlow
+
+.pull-left[
+
+&lt;br&gt;&lt;br&gt;
+
+&lt;img src="images/2D_tensor.png" width="536" style="display: block; margin: auto;" /&gt;
+
+]
+
+.pull-right[
+&lt;br&gt;&lt;br&gt;&lt;br&gt;
+.center.bold.opacity20[
+_Don't worry, you actually use tensors everyday (at least everyday you use R!)_
+
+Vectors are 1D tensors
+]
+.center.bold.blue[Matrices are 2D tensors]
+
+]
+
+---
+# MNIST tensor
+
+* Since our MNIST data are gray scale it is simply a 2D tensor
+* We just needed to reshape it so:
+   - each column <span>&lt;i class="fas  fa-hand-point-right faa-horizontal animated " style=" color:red;"&gt;&lt;/i&gt;</span> feature
+   - each row <span>&lt;i class="fas  fa-hand-point-right faa-horizontal animated " style=" color:red;"&gt;&lt;/i&gt;</span> observation
+   
+.pull-left[
+
+.center[`array_reshape` reshapes 3D array to...]
+
+&lt;img src="images/untidy_matrix.png" width="1773" style="display: block; margin: auto;" /&gt;
+
+
+]
+
+.pull-right[
+
+.center[2D tensor]
+
+&lt;img src="images/tidy_matrix.png" width="2185" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# .red[Tensor] benefits
+
+&lt;br&gt;
+
+* .red.bold[generalization]: Tensors generalize vectors and matrices to an arbitary
+number of dimensions,
+
+* .red.bold[Flexibility]: can hold a wide range of data dimensions,
+
+* .red.bold[Speed]: provide fast, parallel processing computations.
+
+&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;
+
+--
+
+.center.bold[_They just get a bit complicated when you start working with higher dimensions_]
+
+---
+# .red.bold[3D] Tensor
+
+.pull-left[
+
+* Represented as arrays
+
+* Sequence data
+   - time series
+   - text
+   - dim = (observations, seq steps, features)
+
+* Examples
+   - 250 days of high, low, and current stock price for 390 minutes of trading
+   in a day; dim = c(250, 390, 3)
+   - 1M tweets that can be 140 characters long and include 128 unique characters; dim = c(1M, 140, 128)
+
+]
+
+.pull-right[
+
+&lt;img src="images/3D_tensor.png" width="564" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# .red.bold[4D] Tensor
+
+.pull-left[
+
+* Represented as arrays
+
+* Image data
+   - RGB channels
+   - dim = (observations, height, width, color_depth)
+
+
+]
+
+.pull-right[
+
+&lt;img src="images/4D_tensor.png" width="745" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# .red.bold[4D] Tensor
+
+.pull-left[
+
+* Represented as arrays
+
+* Image data
+   - RGB channels
+   - dim = (observations, height, width, .red[color_depth])
+
+* Technically, we could treat our original MNIST data as a 4D tensor where
+.red[color_depth = 1]
+
+* We'll see this play out when we start working with CNNs
+
+]
+
+.pull-right[
+
+&lt;br&gt;&lt;br&gt;
+
+&lt;img src="images/untidy_matrix.png" width="679" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# .red.bold[5D] Tensor
+
+.pull-left[
+
+* Represented as arrays
+
+* Video data
+   - samples: 4 (each video is 1 minute long)
+   - frames: 240 (4 frames/second)
+   - width: 256 (pixels)
+   - height: 144 (pixels)
+   - channels: 3 (red, green, blue)
+   
+* Tensor shape (4, 240, 256, 144, 3)   
+
+]
+
+.pull-right[
+
+&lt;img src="images/5D_tensor.jpg" width="853" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Now you know what tensors are
+
+.pull-left[
+
+&lt;br&gt;
+
+* Tensors aren't that bad, humans are just really bad at visualizing multiple dimensions! 
+
+* Feeling comfortable will come with practice
+
+]
+
+.pull-right[
+
+&lt;br&gt;
+
+&lt;img src="images/tensors_everywhere.jpeg" width="573" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+class: clear, center, middle
+
+.font500.bold[Network architecture]
+
+---
+class: clear, center, middle
+
+.font500.bold[Network compilation]
+
+---
+class: clear, center, middle
+
+.font500.bold[Training loop]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="libs/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

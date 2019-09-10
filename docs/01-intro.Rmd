@@ -33,8 +33,7 @@ knitr::opts_chunk$set(
   collapse = TRUE 
 )
 
-# This is good for getting the ggplot background consistent with
-# the html background color
+# Use a clean black and white ggplot2 theme
 library(ggplot2)
 thm <- theme_bw()
 theme_set(thm)

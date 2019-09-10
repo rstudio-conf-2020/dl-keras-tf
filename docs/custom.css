@@ -158,6 +158,12 @@ ul, ol {
 .font300 {
   font-size: 300%;
 }
+.font500 {
+  font-size: 500%;
+}
+.font1000 {
+  font-size: 1000%;
+}
 
 .opacity10{
     opacity: 0.1;

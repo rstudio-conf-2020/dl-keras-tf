@@ -120,6 +120,7 @@ str(train_images)
 str(test_images)
 ```
 
+
 ## Normalize data:
 
 Our feature values range from 0-255. For our purposes we want to normalize these
@@ -246,8 +247,8 @@ metrics$acc
 
 ## Predictions
 
-You can predict either the probability of each class. __Note that column 1 is
-for digit 0, column 2 is for digit 1, ..., column 10 is for digit 9.
+You can predict either the probability of each class. Note that column 1 is for 
+digit 0, column 2 is for digit 1, ..., column 10 is for digit 9.
 
 ```{r make-predictions}
 network %>% predict_proba(test_images[1:10,])
@@ -326,3 +327,16 @@ for (i in missed) {
   plot(as.raster(mnist$test$x[i,,], max = 255))
 }
 ```
+
+If we look at the predicted vs actual we can reason about why our model 
+mispredicted some of the digits.
+
+```{r}
+par(mfrow = c(4, 4), mar = c(0,0,2,0))
+
+for (i in missed[1:16]) {
+  plot(as.raster(mnist$test$x[i,,], max = 255)) 
+  title(main = paste("Predicted:", predictions[i]))
+}
+```
+
