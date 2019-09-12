@@ -103,7 +103,7 @@ for (i in 1:100) {
 
 ## Reshape data:
 
-Our current data structure is incompatible for modeling
+Our current data structure is incompatible for modeling a basic neural network
 
 ```{r current-structure-features}
 str(train_images)
@@ -180,8 +180,8 @@ summary(network)
 
 ```{r compile}
 network %>% compile(
-  optimizer = "rmsprop",
   loss = "categorical_crossentropy",
+  optimizer = "rmsprop",
   metrics = c("accuracy")
 )
 ```

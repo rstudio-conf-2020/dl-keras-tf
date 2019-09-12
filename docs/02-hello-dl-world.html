@@ -310,7 +310,7 @@ Vectors are 1D tensors
 ---
 # MNIST tensor
 
-* Since our MNIST data are gray scale it is simply a 2D tensor
+* Since our MNIST data are gray scale it can be represented as a 2D tensor
 * We just needed to reshape it so:
    - each column <span>&lt;i class="fas  fa-hand-point-right faa-horizontal animated " style=" color:red;"&gt;&lt;/i&gt;</span> feature
    - each row <span>&lt;i class="fas  fa-hand-point-right faa-horizontal animated " style=" color:red;"&gt;&lt;/i&gt;</span> observation
@@ -337,7 +337,7 @@ Vectors are 1D tensors
 
 &lt;br&gt;
 
-* .red.bold[generalization]: Tensors generalize vectors and matrices to an arbitary
+* .red.bold[Generalization]: Tensors generalize vectors and matrices to an arbitary
 number of dimensions,
 
 * .red.bold[Flexibility]: can hold a wide range of data dimensions,
@@ -472,9 +472,728 @@ class: clear, center, middle
 .font500.bold[Network architecture]
 
 ---
+# Sequential vs functional
+
+.pull-left[
+
+&lt;img src="images/sequential_model.png" width="607" style="display: block; margin: auto;" /&gt;
+
+* Creating a single linear stack of layers
+* Most common type of neural networks
+* Examples:
+   - Predicting sales price based on tabular data of home characteristics,
+   - Predicting animal based on image,
+   - Predicting author based on text,
+   - Predicting hurricane path based on numeric meteorologic data.
+
+]
+
+--
+
+.pull-right[
+
+&lt;img src="images/functional_model.png" width="769" style="display: block; margin: auto;" /&gt;
+
+* More advanced modeling
+* Allows flexible, customizable model structures
+* Examples:
+   - Predicting presence of cancer based on images &lt;u&gt;.bold[_and_]&lt;/u&gt; patient 
+   transcripts,
+   - Forecasting time &lt;u&gt;.bold[_and_]&lt;/u&gt; volume of sale based on tabular 
+   transaction data &lt;u&gt;.bold[_and_]&lt;/u&gt; customer text.
+
+]
+
+---
+# Densely connected layers
+
+.pull-left[
+* `layer_dense()` is creating what's called a .bold[_fully connected feed forward neural network_]
+
+* Fundamental building block of nearly all deep learning models
+]
+
+.pull-right[
+&lt;img src="images/basic_mlp.png" width="728" style="display: block; margin: auto;" /&gt;
+]
+
+---
+# Densely connected layers
+
+.pull-left[
+* `layer_dense()` is creating what's called a .bold[_fully connected feed forward neural network_]
+
+* Fundamental building block of nearly all deep learning models
+
+* So why do we call `layer_dense()` twice?  And what about the arguments inside?
+
+
+```r
+network &lt;- keras_model_sequential() %&gt;%
+* layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %&gt;%
+* layer_dense(units = 10, activation = 'softmax')
+```
+
+]
+
+.pull-right[
+&lt;img src="images/basic_mlp.png" width="728" style="display: block; margin: auto;" /&gt;
+]
+
+---
+# Densely connected layers
+
+.pull-left[
+
+
+```r
+network &lt;- keras_model_sequential() %&gt;%
+* layer_dense() %&gt;% # hidden layer
+* layer_dense() # output layer
+```
+
+* .font100[Each `layer_dense()` represents a the number of hidden layers along 
+with the final output layer]
+
+]
+
+.pull-right[
+&lt;img src="images/basic_mlp.png" width="728" style="display: block; margin: auto;" /&gt;
+
+]
+
+&lt;br&gt;
+
+.center[.content-box-grey[We refer to a neural network with one or more hidden layer as a .blue[_multi-layer perceptron_]]]
+
+---
+# Densely connected layers
+
+.pull-left[
+
+
+```r
+network &lt;- keras_model_sequential() %&gt;%
+* layer_dense() %&gt;% # hidden layer 1
+* layer_dense() %&gt;% # hidden layer 2
+* layer_dense() %&gt;% # hidden layer 3
+* layer_dense() # output layer
+```
+
+* We can add multiple hidden layers by adding more `layer_dense()` functions
+
+* Technically, .blue[_deep learning_] refers to any neural network that has 
+2 or more hidden layers
+
+* The last `layer_dense()` will always represent the output layer
+
+]
+
+.pull-right[
+&lt;img src="images/basic_feedforward.png" style="display: block; margin: auto;" /&gt;
+]
+
+---
+# Hidden layer
+
+
+```r
+network &lt;- keras_model_sequential() %&gt;%
+* layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) # hidden layer
+```
+
+--
+
+.pull-left[
+
+* `units = 512`: number of nodes in the given layer
+
+* `input_shape = c(28 * 28)`
+   - tells the first hidden layer how many input features there are
+   - only required for the first `layer_dense`
+
+]
+
+.pull-right[
+&lt;img src="images/hidden_layer.png" width="724" style="display: block; margin: auto;" /&gt;
+]
+
+---
+# Hidden layer
+
+
+```r
+network &lt;- keras_model_sequential() %&gt;%
+* layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) # hidden layer
+```
+
+.pull-left[
+
+* `units = 512`: number of nodes in the given layer
+
+* `input_shape = c(28 * 28)`
+   - tells the first hidden layer how many input features there are
+   - only required for the first `layer_dense`
+
+* `activation`: <span style=" display: -moz-inline-stack; display: inline-block; transform: rotate(0deg);">&lt;img src="https://emojis.slackmojis.com/emojis/images/1499373537/2585/homer_thinking.png?1499373537" style="height:1em; width:auto; "/&gt;</span>
+]
+
+.pull-right[
+&lt;img src="images/perceptron_zoom.png" width="731" style="display: block; margin: auto;" /&gt;
+]
+
+---
+# Individual perceptron
+
+.font100.pull-left[
+
+* There is a two-step computation process when data go forward through a node
+
+]
+
+.pull-right[
+&lt;img src="images/perceptron1.png" width="960" style="display: block; margin: auto;" /&gt;
+]
+
+---
+# Individual perceptron
+
+.font100.pull-left[
+
+* There is a two-step computation process when data go forward through a node
+
+* Step 1: _linear transformation_
+   - `\(z = w_0b_0 + w_1x_1 + w_2x_2 + \cdots + w_nx_n\)`
+   - note the extra bias term which is typically always set to 1
+
+]
+
+.pull-right[
+&lt;img src="images/perceptron2.png" width="960" style="display: block; margin: auto;" /&gt;
+]
+
+---
+# Individual perceptron
+
+.pull-left[
+
+* There is a two-step computation process when data go forward through a node
+
+* .opacity20[Step 1: linear transformation]
+
+* Step 2: _activation function_
+   - in hidden layers, the most common activation function is the `\(\text{ReLU} = max(0, x)\)`
+   - You will be introduced to other activation functions but ReLU should nearly
+   always be your default for hidden layers
+   
+&lt;img src="02-hello-dl-world_files/figure-html/unnamed-chunk-37-1.png" style="display: block; margin: auto;" /&gt;
+   
+
+]
+
+.pull-right[
+&lt;img src="images/perceptron3.png" width="648" style="display: block; margin: auto;" /&gt;
+]
+
+---
+# Output layer
+
+
+```r
+network &lt;- keras_model_sequential() %&gt;%
+  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %&gt;%
+* layer_dense(units = 10, activation = 'softmax')
+```
+
+---
+# Output layer
+
+
+```r
+network &lt;- keras_model_sequential() %&gt;%
+  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %&gt;%
+  layer_dense(units = 10, activation = 'softmax')
+```
+
+.font100.pull-left[
+Two primary arguments of concern for the final output layer:
+
+1. number of units
+   - regression: `units = 1`:
+
+
+]
+
+.pull-right[
+
+&lt;img src="images/output_layer_continuous.png" width="80%" height="80%" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Output layer
+
+
+```r
+network &lt;- keras_model_sequential() %&gt;%
+  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %&gt;%
+  layer_dense(units = 10, activation = 'softmax')
+```
+
+.font100.pull-left[
+Two primary arguments of concern for the final output layer:
+
+1. number of units
+   - regression: `units = 1`:
+   - binary classification: `units = 2`
+
+]
+
+.pull-right[
+
+&lt;img src="images/output_layer_binary.png" width="80%" height="80%" style="display: block; margin: auto;" /&gt;
+
+]
+
+
+---
+# Output layer
+
+
+```r
+network &lt;- keras_model_sequential() %&gt;%
+  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %&gt;%
+* layer_dense(units = 10, activation = 'softmax')
+```
+
+.font100.pull-left[
+Two primary arguments of concern for the final output layer:
+
+1. number of units
+   - regression: `units = 1`:
+   - binary classification: `units = 2`
+   - multi-class classification: `units = n`
+
+]
+
+.pull-right[
+
+&lt;img src="images/output_layer_multi.png" width="75%" height="75%" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Output layer
+
+
+```r
+network &lt;- keras_model_sequential() %&gt;%
+  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %&gt;%
+  layer_dense(units = 10, activation = 'softmax')
+```
+
+.font100.pull-left[
+Two primary arguments of concern for the final output layer:
+
+1. .opacity20[number of units]
+2. activation function
+   - regression: `activation = NULL` (identity function)
+
+]
+
+.pull-right.center[
+
+&lt;img src="images/activation_identity.png" width="728" style="display: block; margin: auto;" /&gt;
+
+`\(y = w_0b_0 + w_1h^1_1 + w_2h^1_2 + \cdots + w_nh^1_n\)`
+
+]
+
+---
+# Output layer
+
+
+```r
+network &lt;- keras_model_sequential() %&gt;%
+  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %&gt;%
+  layer_dense(units = 10, activation = 'softmax') 
+```
+
+.font100.pull-left[
+Two primary arguments of concern for the final output layer:
+
+1. .opacity20[number of units]
+2. activation function
+   - regression: `activation = NULL` (identity function)
+   - binary classification: `activation = 'sigmoid'`
+
+]
+
+.pull-right.center[
+
+&lt;img src="02-hello-dl-world_files/figure-html/unnamed-chunk-49-1.png" style="display: block; margin: auto;" /&gt;
+
+`\(f(y) = \frac{1}{1 + e^{-y}}\)`
+
+]
+
+---
+# Output layer
+
+
+```r
+network &lt;- keras_model_sequential() %&gt;%
+  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %&gt;%
+* layer_dense(units = 10, activation = 'softmax')
+```
+
+.font100.pull-left[
+Two primary arguments of concern for the final output layer:
+
+1. .opacity20[number of units]
+2. activation function
+   - regression: `activation = NULL` (identity function)
+   - binary classification: `activation = 'sigmoid'`
+   - multi-class classification: `activation = 'softmax'`
+
+]
+
+.pull-right.center[
+
+&lt;img src="images/softmax.png" width="800" style="display: block; margin: auto;" /&gt;
+
+`\(f(y) = \frac{e^{y_i}}{\sum_je^{y_j}}\)`
+
+]
+
+---
+# Output layer
+
+
+```r
+network &lt;- keras_model_sequential() %&gt;%
+  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %&gt;%
+* layer_dense(units = 10, activation = 'softmax')
+```
+
+.font100.pull-left[
+Two primary arguments of concern for the final output layer:
+
+1. .opacity20[number of units]
+2. activation function
+   - regression: `activation = NULL` (identity function)
+   - binary classification: `activation = 'sigmoid'`
+   - multi-class classification: `activation = 'softmax'`
+
+]
+
+.pull-right.center[
+
+&lt;img src="images/softmax.png" width="800" style="display: block; margin: auto;" /&gt;
+
+]
+
+.center[.content-box-grey.font90.blue[_This is why we used `to_categorical()`, so that we can get the probabilities for each output class._]]
+
+---
+# Network architecture summary
+
+.pull-left-30.font80[
+
+1. A sequential, dense, fully connected neural network
+
+2. 784 inputs
+
+3. 1 hidden layer  
+   a. 512 nodes  
+   b. ReLU activation function
+&lt;br&gt;&lt;br&gt;   
+  
+4. multi-class output layer  
+   a. 10 nodes (1 for each output)  
+   b. Softmax activation function
+]
+
+.pull-right-70[
+
+&lt;img src="images/network_architecture_summary.png" width="960" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Network architecture summary
+
+.pull-left.font80[
+
+1. A sequential, dense, fully connected neural network
+
+2. 784 inputs
+
+3. 1 hidden layer  
+   a. 512 nodes  
+   b. ReLU activation function  
+   `\(params = (784 \times 512) + 512 = 401920\)`
+   
+4. multi-class output layer  
+   a. 10 nodes  
+   b. Softmax activation function  
+   `\(params = (512 \times 10) + 10 = 5130\)`
+]
+
+.pull-right[
+
+
+```r
+summary(network)
+## Model: "sequential"
+## ______________________________________________________________________________________
+## Layer (type)                          Output Shape                       Param #      
+## ======================================================================================
+## dense (Dense)                         (None, 512)                        401920       
+## ______________________________________________________________________________________
+## dense_1 (Dense)                       (None, 10)                         5130         
+## ======================================================================================
+## Total params: 407,050
+## Trainable params: 407,050
+## Non-trainable params: 0
+## ______________________________________________________________________________________
+```
+
+]
+
+---
 class: clear, center, middle
 
 .font500.bold[Network compilation]
+
+---
+# Forward pass
+
+.pull-left[
+
+]
+
+.pull-right[
+
+&lt;img src="images/forward_pass.png" width="960" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Forward pass
+
+.pull-left.font120[
+&lt;br&gt;&lt;br&gt;
+* Weights are _initialized_ as very small random values
+
+]
+
+.pull-right[
+
+&lt;img src="images/forward_pass.png" width="607" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Forward pass
+
+.pull-left.font100[
+&lt;br&gt;&lt;br&gt;&lt;br&gt;
+* Weights are _initialized_ as very small random values
+
+* Results in predicted values that are significantly different then the actual
+targets
+
+]
+
+.pull-right[
+
+&lt;img src="images/forward_pass2.png" width="559" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Forward pass
+
+.pull-left.code70[
+&lt;br&gt;&lt;br&gt;&lt;br&gt;
+* Weights are _initialized_ as very small random values
+
+* Results in predicted values that are significantly different then the actual
+targets
+
+* We measure this difference with a _loss function_
+
+
+```r
+network %&gt;% compile(
+* loss = "categorical_crossentropy",
+  optimizer = "rmsprop",
+  metrics = c("accuracy")
+)
+```
+
+
+]
+
+.pull-right[
+
+&lt;img src="images/forward_pass3.png" width="561" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Loss function
+
+_Loss function (objective function)_ : the quantity that will be minimized during training.
+
+.pull-left[
+
+* Many options
+
+* Should use the one that aligns best to the problem at hand; however,...
+
+]
+
+.pull-right[
+
+* mean squared error (MSE)
+* mean absolute error (MAE)
+* mean absolute percentage error (MAPE)
+* mean squared logarithmic error (MSLE)
+* squared hinge
+* log cosine hinge
+* binary cross entropy
+* categorical hinge
+* categorical cross entropy
+* sparse categorical cross entropy
+* Kullback-Leibler divergence
+* Poisson
+* cosine proximity
+* can even build your own custom loss functions!
+
+]
+
+---
+# Loss function
+
+_Loss function (objective function)_ : the quantity that will be minimized during training.
+
+.pull-left[
+
+* Many options
+
+* Should use the one that aligns best to the problem at hand; however,...
+
+* general recommendations for common problems include:
+   - Regression: MSE
+   - Binary classification: binary crossentropy
+   - Multi-class classification: categorical crossentropy
+
+]
+
+.pull-right[
+
+* .blue[mean squared error (MSE)]
+* mean absolute error (MAE)
+* mean absolute percentage error (MAPE)
+* mean squared logarithmic error (MSLE)
+* squared hinge
+* log cosine hinge
+* .blue[binary cross entropy]
+* categorical hinge
+* .blue[categorical cross entropy]
+* sparse categorical cross entropy
+* Kullback-Leibler divergence
+* Poisson
+* cosine proximity
+* can even build your own custom loss functions!
+
+]
+
+---
+# Loss function
+
+_Loss function (objective function)_ : the quantity that will be minimized during training.
+
+.pull-left[
+
+* Many options
+
+* Should use the one that aligns best to the problem at hand; however,...
+
+* general recommendations for common problems include:
+   - Regression: MSE
+   - Binary classification: binary crossentropy
+   - Multi-class classification: categorical crossentropy
+
+   
+.center[.content-box-grey.font80[_All three heavily penalize bad predictions!_]]
+
+]
+
+.pull-right[
+
+* .blue[mean squared error (MSE)]
+* mean absolute error (MAE)
+* mean absolute percentage error (MAPE)
+* mean squared logarithmic error (MSLE)
+* squared hinge
+* log cosine hinge
+* .blue[binary cross entropy]
+* categorical hinge
+* .blue[categorical cross entropy]
+* sparse categorical cross entropy
+* Kullback-Leibler divergence
+* Poisson
+* cosine proximity
+* can even build your own custom loss functions!
+
+]
+
+---
+# Loss function
+
+.pull-left[
+
+&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;
+.center.blue.bold[_Our goal is to find weights that minimize the loss score_]
+
+]
+
+.pull-right[
+
+&lt;img src="images/forward_pass4.png" width="960" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Backward pass
+
+
+---
+# Backpropagation
+
+
+---
+# Derivatives
+
+
+---
+# Gradient descent
+
+
+---
+# Optimizers
+
+
+---
+# Tacking additional metrics
+
+
+---
+# Network compilation summary
+
 
 ---
 class: clear, center, middle

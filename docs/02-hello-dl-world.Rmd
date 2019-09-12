@@ -300,7 +300,7 @@ Vectors are 1D tensors
 ---
 # MNIST tensor
 
-* Since our MNIST data are gray scale it is simply a 2D tensor
+* Since our MNIST data are gray scale it can be represented as a 2D tensor
 * We just needed to reshape it so:
    - each column `r anicon::faa("hand-point-right", color = "red", animate = "horizontal")` feature
    - each row `r anicon::faa("hand-point-right", color = "red", animate = "horizontal")` observation
@@ -331,7 +331,7 @@ knitr::include_graphics("images/tidy_matrix.png")
 
 <br>
 
-* .red.bold[generalization]: Tensors generalize vectors and matrices to an arbitary
+* .red.bold[Generalization]: Tensors generalize vectors and matrices to an arbitary
 number of dimensions,
 
 * .red.bold[Flexibility]: can hold a wide range of data dimensions,
@@ -476,9 +476,776 @@ class: clear, center, middle
 .font500.bold[Network architecture]
 
 ---
+# Sequential vs functional
+
+.pull-left[
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/sequential_model.png")
+```
+
+* Creating a single linear stack of layers
+* Most common type of neural networks
+* Examples:
+   - Predicting sales price based on tabular data of home characteristics,
+   - Predicting animal based on image,
+   - Predicting author based on text,
+   - Predicting hurricane path based on numeric meteorologic data.
+
+]
+
+--
+
+.pull-right[
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/functional_model.png")
+```
+
+* More advanced modeling
+* Allows flexible, customizable model structures
+* Examples:
+   - Predicting presence of cancer based on images <u>.bold[_and_]</u> patient 
+   transcripts,
+   - Forecasting time <u>.bold[_and_]</u> volume of sale based on tabular 
+   transaction data <u>.bold[_and_]</u> customer text.
+
+]
+
+---
+# Densely connected layers
+
+.pull-left[
+* `layer_dense()` is creating what's called a .bold[_fully connected feed forward neural network_]
+
+* Fundamental building block of nearly all deep learning models
+]
+
+.pull-right[
+```{r, echo=FALSE}
+knitr::include_graphics("images/basic_mlp.png")
+```
+]
+
+---
+# Densely connected layers
+
+.pull-left[
+* `layer_dense()` is creating what's called a .bold[_fully connected feed forward neural network_]
+
+* Fundamental building block of nearly all deep learning models
+
+* So why do we call `layer_dense()` twice?  And what about the arguments inside?
+
+```{r, eval=FALSE}
+network <- keras_model_sequential() %>%
+  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %>% #<<
+  layer_dense(units = 10, activation = 'softmax') #<<
+```
+
+]
+
+.pull-right[
+```{r, echo=FALSE}
+knitr::include_graphics("images/basic_mlp.png")
+```
+]
+
+---
+# Densely connected layers
+
+.pull-left[
+
+```{r, eval=FALSE}
+network <- keras_model_sequential() %>%
+  layer_dense() %>% # hidden layer #<< 
+  layer_dense() # output layer #<<
+```
+
+* .font100[Each `layer_dense()` represents a the number of hidden layers along 
+with the final output layer]
+
+]
+
+.pull-right[
+```{r, echo=FALSE}
+knitr::include_graphics("images/basic_mlp.png")
+```
+
+]
+
+<br>
+
+.center[.content-box-grey[We refer to a neural network with one or more hidden layer as a .blue[_multi-layer perceptron_]]]
+
+---
+# Densely connected layers
+
+.pull-left[
+
+```{r, eval=FALSE}
+network <- keras_model_sequential() %>%
+  layer_dense() %>% # hidden layer 1 #<< 
+  layer_dense() %>% # hidden layer 2 #<< 
+  layer_dense() %>% # hidden layer 3 #<< 
+  layer_dense() # output layer #<<
+```
+
+* We can add multiple hidden layers by adding more `layer_dense()` functions
+
+* Technically, .blue[_deep learning_] refers to any neural network that has 
+2 or more hidden layers
+
+* The last `layer_dense()` will always represent the output layer
+
+]
+
+.pull-right[
+```{r, echo=FALSE}
+knitr::include_graphics("images/basic_feedforward.png")
+```
+]
+
+---
+# Hidden layer
+
+```{r, eval=FALSE}
+network <- keras_model_sequential() %>%
+  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) # hidden layer #<<
+```
+
+--
+
+.pull-left[
+
+* `units = 512`: number of nodes in the given layer
+
+* `input_shape = c(28 * 28)`
+   - tells the first hidden layer how many input features there are
+   - only required for the first `layer_dense`
+
+]
+
+.pull-right[
+```{r, echo=FALSE}
+knitr::include_graphics("images/hidden_layer.png")
+```
+]
+
+---
+# Hidden layer
+
+```{r, eval=FALSE}
+network <- keras_model_sequential() %>%
+  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) # hidden layer #<<
+```
+
+.pull-left[
+
+* `units = 512`: number of nodes in the given layer
+
+* `input_shape = c(28 * 28)`
+   - tells the first hidden layer how many input features there are
+   - only required for the first `layer_dense`
+
+* `activation`: `r anicon::cia("https://emojis.slackmojis.com/emojis/images/1499373537/2585/homer_thinking.png?1499373537", animate=FALSE)`
+]
+
+.pull-right[
+```{r, echo=FALSE}
+knitr::include_graphics("images/perceptron_zoom.png")
+```
+]
+
+---
+# Individual perceptron
+
+.font100.pull-left[
+
+* There is a two-step computation process when data go forward through a node
+
+]
+
+.pull-right[
+```{r, echo=FALSE}
+knitr::include_graphics("images/perceptron1.png")
+```
+]
+
+---
+# Individual perceptron
+
+.font100.pull-left[
+
+* There is a two-step computation process when data go forward through a node
+
+* Step 1: _linear transformation_
+   - $z = w_0b_0 + w_1x_1 + w_2x_2 + \cdots + w_nx_n$
+   - note the extra bias term which is typically always set to 1
+
+]
+
+.pull-right[
+```{r, echo=FALSE}
+knitr::include_graphics("images/perceptron2.png")
+```
+]
+
+---
+# Individual perceptron
+
+.pull-left[
+
+* There is a two-step computation process when data go forward through a node
+
+* .opacity20[Step 1: linear transformation]
+
+* Step 2: _activation function_
+   - in hidden layers, the most common activation function is the $\text{ReLU} = max(0, x)$
+   - You will be introduced to other activation functions but ReLU should nearly
+   always be your default for hidden layers
+   
+```{r, echo=FALSE, fig.height=2, fig.width=4}
+x <- seq(-1, 1, by = 0.1)
+y <- ifelse(x < 0, 0, x)
+df <- data.frame(x, y)
+ggplot(df, aes(x, y)) + 
+   geom_line() +
+   xlab("z") +
+   ylab("f(z)")
+```
+   
+
+]
+
+.pull-right[
+```{r, echo=FALSE}
+knitr::include_graphics("images/perceptron3.png")
+```
+]
+
+---
+# Output layer
+
+```{r, eval=FALSE}
+network <- keras_model_sequential() %>%
+  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %>%
+  layer_dense(units = 10, activation = 'softmax') #<<
+```
+
+---
+# Output layer
+
+```{r, eval=FALSE}
+network <- keras_model_sequential() %>%
+  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %>%
+  layer_dense(units = 10, activation = 'softmax')
+```
+
+.font100.pull-left[
+Two primary arguments of concern for the final output layer:
+
+1. number of units
+   - regression: `units = 1`:
+
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE, out.height="80%", out.width="80%"}
+knitr::include_graphics("images/output_layer_continuous.png")
+```
+
+]
+
+---
+# Output layer
+
+```{r, eval=FALSE}
+network <- keras_model_sequential() %>%
+  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %>%
+  layer_dense(units = 10, activation = 'softmax')
+```
+
+.font100.pull-left[
+Two primary arguments of concern for the final output layer:
+
+1. number of units
+   - regression: `units = 1`:
+   - binary classification: `units = 2`
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE, out.height="80%", out.width="80%"}
+knitr::include_graphics("images/output_layer_binary.png")
+```
+
+]
+
+
+---
+# Output layer
+
+```{r, eval=FALSE}
+network <- keras_model_sequential() %>%
+  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %>%
+  layer_dense(units = 10, activation = 'softmax') #<<
+```
+
+.font100.pull-left[
+Two primary arguments of concern for the final output layer:
+
+1. number of units
+   - regression: `units = 1`:
+   - binary classification: `units = 2`
+   - multi-class classification: `units = n`
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE,  out.height="75%", out.width="75%"}
+knitr::include_graphics("images/output_layer_multi.png")
+```
+
+]
+
+---
+# Output layer
+
+```{r, eval=FALSE}
+network <- keras_model_sequential() %>%
+  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %>%
+  layer_dense(units = 10, activation = 'softmax')
+```
+
+.font100.pull-left[
+Two primary arguments of concern for the final output layer:
+
+1. .opacity20[number of units]
+2. activation function
+   - regression: `activation = NULL` (identity function)
+
+]
+
+.pull-right.center[
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/activation_identity.png")
+```
+
+$y = w_0b_0 + w_1h^1_1 + w_2h^1_2 + \cdots + w_nh^1_n$
+
+]
+
+---
+# Output layer
+
+```{r, eval=FALSE}
+network <- keras_model_sequential() %>%
+  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %>%
+  layer_dense(units = 10, activation = 'softmax') 
+```
+
+.font100.pull-left[
+Two primary arguments of concern for the final output layer:
+
+1. .opacity20[number of units]
+2. activation function
+   - regression: `activation = NULL` (identity function)
+   - binary classification: `activation = 'sigmoid'`
+
+]
+
+.pull-right.center[
+
+```{r, echo=FALSE, fig.height=3.5}
+x <- seq(-5, 5, by = 0.01)
+y <- 1 / (1 + exp(-x))
+df <- data.frame(x, y)
+ggplot(df, aes(x, y)) + 
+   geom_line() +
+   xlab("y") +
+   ylab("f(y)") +
+   ggtitle("Sigmoid activation function")
+```
+
+$f(y) = \frac{1}{1 + e^{-y}}$
+
+]
+
+---
+# Output layer
+
+```{r, eval=FALSE}
+network <- keras_model_sequential() %>%
+  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %>%
+  layer_dense(units = 10, activation = 'softmax') #<<
+```
+
+.font100.pull-left[
+Two primary arguments of concern for the final output layer:
+
+1. .opacity20[number of units]
+2. activation function
+   - regression: `activation = NULL` (identity function)
+   - binary classification: `activation = 'sigmoid'`
+   - multi-class classification: `activation = 'softmax'`
+
+]
+
+.pull-right.center[
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/softmax.png")
+```
+
+$f(y) = \frac{e^{y_i}}{\sum_je^{y_j}}$
+
+]
+
+---
+# Output layer
+
+```{r, eval=FALSE}
+network <- keras_model_sequential() %>%
+  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %>%
+  layer_dense(units = 10, activation = 'softmax') #<<
+```
+
+.font100.pull-left[
+Two primary arguments of concern for the final output layer:
+
+1. .opacity20[number of units]
+2. activation function
+   - regression: `activation = NULL` (identity function)
+   - binary classification: `activation = 'sigmoid'`
+   - multi-class classification: `activation = 'softmax'`
+
+]
+
+.pull-right.center[
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/softmax.png")
+```
+
+]
+
+.center[.content-box-grey.font90.blue[_This is why we used `to_categorical()`, so that we can get the probabilities for each output class._]]
+
+---
+# Network architecture summary
+
+.pull-left-30.font80[
+
+1. A sequential, dense, fully connected neural network
+
+2. 784 inputs
+
+3. 1 hidden layer  
+   a. 512 nodes  
+   b. ReLU activation function
+<br><br>   
+  
+4. multi-class output layer  
+   a. 10 nodes (1 for each output)  
+   b. Softmax activation function
+]
+
+.pull-right-70[
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/network_architecture_summary.png")
+```
+
+]
+
+---
+# Network architecture summary
+
+.pull-left.font80[
+
+1. A sequential, dense, fully connected neural network
+
+2. 784 inputs
+
+3. 1 hidden layer  
+   a. 512 nodes  
+   b. ReLU activation function  
+   $params = (784 \times 512) + 512 = 401920$
+   
+4. multi-class output layer  
+   a. 10 nodes  
+   b. Softmax activation function  
+   $params = (512 \times 10) + 10 = 5130$
+]
+
+.pull-right[
+
+```{r, eval=FALSE}
+summary(network)
+## Model: "sequential"
+## ______________________________________________________________________________________
+## Layer (type)                          Output Shape                       Param #      
+## ======================================================================================
+## dense (Dense)                         (None, 512)                        401920       
+## ______________________________________________________________________________________
+## dense_1 (Dense)                       (None, 10)                         5130         
+## ======================================================================================
+## Total params: 407,050
+## Trainable params: 407,050
+## Non-trainable params: 0
+## ______________________________________________________________________________________
+```
+
+]
+
+---
 class: clear, center, middle
 
 .font500.bold[Network compilation]
+
+---
+# Forward pass
+
+.pull-left[
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/forward_pass.png")
+```
+
+]
+
+---
+# Forward pass
+
+.pull-left.font120[
+<br><br>
+* Weights are _initialized_ as very small random values
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/forward_pass.png")
+```
+
+]
+
+---
+# Forward pass
+
+.pull-left.font100[
+<br><br><br>
+* Weights are _initialized_ as very small random values
+
+* Results in predicted values that are significantly different then the actual
+targets
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/forward_pass2.png")
+```
+
+]
+
+---
+# Forward pass
+
+.pull-left.code70[
+<br><br><br>
+* Weights are _initialized_ as very small random values
+
+* Results in predicted values that are significantly different then the actual
+targets
+
+* We measure this difference with a _loss function_
+
+```{r, eval=FALSE}
+network %>% compile(
+  loss = "categorical_crossentropy", #<<
+  optimizer = "rmsprop",
+  metrics = c("accuracy")
+)
+```
+
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/forward_pass3.png")
+```
+
+]
+
+---
+# Loss function
+
+_Loss function (objective function)_ : the quantity that will be minimized during training.
+
+.pull-left[
+
+* Many options
+
+* Should use the one that aligns best to the problem at hand; however,...
+
+]
+
+.pull-right[
+
+* mean squared error (MSE)
+* mean absolute error (MAE)
+* mean absolute percentage error (MAPE)
+* mean squared logarithmic error (MSLE)
+* squared hinge
+* log cosine hinge
+* binary cross entropy
+* categorical hinge
+* categorical cross entropy
+* sparse categorical cross entropy
+* Kullback-Leibler divergence
+* Poisson
+* cosine proximity
+* can even build your own custom loss functions!
+
+]
+
+---
+# Loss function
+
+_Loss function (objective function)_ : the quantity that will be minimized during training.
+
+.pull-left[
+
+* Many options
+
+* Should use the one that aligns best to the problem at hand; however,...
+
+* general recommendations for common problems include:
+   - Regression: MSE
+   - Binary classification: binary crossentropy
+   - Multi-class classification: categorical crossentropy
+
+]
+
+.pull-right[
+
+* .blue[mean squared error (MSE)]
+* mean absolute error (MAE)
+* mean absolute percentage error (MAPE)
+* mean squared logarithmic error (MSLE)
+* squared hinge
+* log cosine hinge
+* .blue[binary cross entropy]
+* categorical hinge
+* .blue[categorical cross entropy]
+* sparse categorical cross entropy
+* Kullback-Leibler divergence
+* Poisson
+* cosine proximity
+* can even build your own custom loss functions!
+
+]
+
+---
+# Loss function
+
+_Loss function (objective function)_ : the quantity that will be minimized during training.
+
+.pull-left[
+
+* Many options
+
+* Should use the one that aligns best to the problem at hand; however,...
+
+* general recommendations for common problems include:
+   - Regression: MSE
+   - Binary classification: binary crossentropy
+   - Multi-class classification: categorical crossentropy
+
+   
+.center[.content-box-grey.font80[_All three heavily penalize bad predictions!_]]
+
+]
+
+.pull-right[
+
+* .blue[mean squared error (MSE)]
+* mean absolute error (MAE)
+* mean absolute percentage error (MAPE)
+* mean squared logarithmic error (MSLE)
+* squared hinge
+* log cosine hinge
+* .blue[binary cross entropy]
+* categorical hinge
+* .blue[categorical cross entropy]
+* sparse categorical cross entropy
+* Kullback-Leibler divergence
+* Poisson
+* cosine proximity
+* can even build your own custom loss functions!
+
+]
+
+---
+# Loss function
+
+.pull-left[
+
+<br><br><br><br><br>
+.center.blue.bold[_Our goal is to find weights that minimize the loss score_]
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/forward_pass4.png")
+```
+
+]
+
+---
+# Backward pass
+
+
+---
+# Backpropagation
+
+
+---
+# Derivatives
+
+
+---
+# Gradient descent
+
+
+---
+# Optimizers
+
+
+---
+# Tacking additional metrics
+
+
+---
+# Network compilation summary
+
 
 ---
 class: clear, center, middle
