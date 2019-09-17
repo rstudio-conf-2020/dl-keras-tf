@@ -725,6 +725,53 @@ knitr::include_graphics("images/perceptron3.png")
 ]
 
 ---
+# Many ReLU transformations
+
+.pull-left[
+
+```{r, echo=FALSE, fig.height=2, fig.width=4}
+x <- seq(-1, 1, by = 0.1)
+y <- ifelse(x < 0, 0, x)
+df <- data.frame(x, y)
+ggplot(df, aes(x, y)) + 
+   geom_line() +
+   xlab("z") +
+   ylab("f(z)")
+```
+   
+How can a simple semi-linear transformation work so well?
+
+]
+
+---
+# Many ReLU transformations
+
+.pull-left[
+
+```{r, echo=FALSE, fig.height=2, fig.width=4}
+x <- seq(-1, 1, by = 0.1)
+y <- ifelse(x < 0, 0, x)
+df <- data.frame(x, y)
+ggplot(df, aes(x, y)) + 
+   geom_line() +
+   xlab("z") +
+   ylab("f(z)")
+```
+   
+How can a simple semi-linear transformation work so well?
+
+Like an origami, when we combine many simple geometric transformations, we can
+create very complex patterns.
+
+]
+
+.pull-right[
+```{r, echo=FALSE}
+knitr::include_graphics("images/demoui.gif")
+```
+]
+
+---
 # Output layer
 
 ```{r, eval=FALSE}
@@ -1222,17 +1269,222 @@ knitr::include_graphics("images/forward_pass4.png")
 ---
 # Backward pass
 
+.pull-left[
+
+<br><br><br><br><br>
+.center.blue.bold[_Our goal is to find weights that minimize the loss score_]
+
+The ___backward pass___ is the process of using information from the loss function
+to update the weights so that we improve the model's performance.
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/backward_pass.png")
+```
+
+]
 
 ---
-# Backpropagation
+# Backward pass example
+
+.pull-left[
+```{r, echo=FALSE}
+knitr::include_graphics("images/backward_pass_ex1.png")
+```
+]
+
+---
+# Backward pass example
+
+.pull-left[
+```{r, echo=FALSE}
+knitr::include_graphics("images/backward_pass_ex2.png")
+```
+]
+
+---
+# Backward pass example
+
+.pull-left[
+```{r, echo=FALSE}
+knitr::include_graphics("images/backward_pass_ex3.png")
+```
+]
+
+---
+# Backward pass example
+
+.pull-left[
+```{r, echo=FALSE}
+knitr::include_graphics("images/backward_pass_ex4.png")
+```
+]
+
+--
+
+.pull-right[
+
+<br><br><br>
+```{r, echo=FALSE, fig.height=4}
+x <- 1:25
+y <- c(12:0, 1:12)
+df <- data.frame(x, y)
+
+ggplot(df, aes(x, y)) +
+    geom_line(data = df[df$x >= 13, ], aes(x, y), size = 1.5, alpha = 0.5, color = 'red') +
+    geom_line(data = df[df$x <= 13, ], aes(x, y), size = 1.5, alpha = 0.5, color = 'blue') +
+    geom_step(data = df[df$x >= 13, ], aes(x, y), lty = "dotted", direction = "vh") +
+    geom_step(data = df[df$x <= 13, ], aes(x, y), lty = "dotted", direction = "hv") +
+    scale_y_continuous(expression('Error = ' *abs(y - hat(y))), breaks = 1:13, 
+                       expand = c(0, 0), limits = c(0, 12.5)) +
+    scale_x_continuous(expression('Change in shower handle position ('*~degree*radius*')'),
+                       breaks = x) +
+    theme(panel.grid.minor = element_blank())
+   
+```
+
+]
 
 
 ---
-# Derivatives
+# Derivative
 
+_Sensitivity_ is just the change in one thing per 1 unit change in another
+
+
+.pull-left[
+.font100[
+$$= \frac{\text{Change in temperature error}}{\text{Change in shower handle position}} $$
+]
+<br>
+.font100[
+$$= \frac{\Delta \text{temperature error}}{\Delta \text{shower handle position}} $$
+]
+]
+
+.pull-right[
+<br>
+```{r, echo=FALSE, fig.height=4}
+x <- 1:25
+y <- c(12:0, 1:12)
+df <- data.frame(x, y)
+
+ggplot(df, aes(x, y)) +
+    geom_line(data = df[df$x >= 13, ], aes(x, y), size = 1.5, alpha = 0.5, color = 'red') +
+    geom_line(data = df[df$x <= 13, ], aes(x, y), size = 1.5, alpha = 0.5, color = 'blue') +
+    geom_step(data = df[df$x >= 13, ], aes(x, y), lty = "dotted", direction = "vh") +
+    geom_step(data = df[df$x <= 13, ], aes(x, y), lty = "dotted", direction = "hv") +
+    scale_y_continuous(expression('Error = ' *abs(y - hat(y))), breaks = 1:13, 
+                       expand = c(0, 0), limits = c(0, 12.5)) +
+    scale_x_continuous(expression('Change in shower handle position ('*~degree*radius*')'),
+                       breaks = x) +
+    theme(panel.grid.minor = element_blank())
+   
+```
+
+]
+
+---
+# Derivative
+
+_Sensitivity_ is just the change in one thing per 1 unit change in another
+
+
+.pull-left[
+.font100[
+$$= \frac{\text{Change in temperature error}}{\text{Change in shower handle position}} $$
+]
+<br>
+.font100[
+$$= \frac{\Delta \text{temperature error}}{\Delta \text{shower handle position}} $$
+]
+]
+
+.pull-right[
+<br>
+```{r, echo=FALSE, fig.height=4}
+x <- 1:25
+y <- (-12:12)^2
+df <- data.frame(x, y)
+
+ggplot(df, aes(x, y)) +
+    geom_line(data = df[df$x >= 13, ], aes(x, y), size = 1.5, alpha = 0.5, color = 'red') +
+    geom_line(data = df[df$x <= 13, ], aes(x, y), size = 1.5, alpha = 0.5, color = 'blue') +
+    geom_step(data = df[df$x >= 13, ], aes(x, y), lty = "dotted", direction = "vh") +
+    geom_step(data = df[df$x <= 13, ], aes(x, y), lty = "dotted", direction = "hv") +
+    scale_y_continuous(expression('Error = ' *(y - hat(y))^2),  
+                       expand = c(0, 0), limits = c(0, 150)) +
+    scale_x_continuous(expression('Change in shower handle position ('*~degree*radius*')'),
+                       breaks = x) +
+    theme(panel.grid.minor = element_blank())
+   
+```
+
+]
+
+<br>
+
+.center[.content-box-grey[Sensitivity is not always linear.]]
+
+
+
+---
+# Derivative
+
+_Sensitivity_ is just the change in one thing per 1 unit change in another
+
+.pull-left[
+.font100[
+$$= \frac{\text{Change in temperature}}{\text{Change in shower handle position}} $$
+]
+<br>
+.font100[
+$$= \frac{\Delta \text{temperature}}{\Delta \text{shower handle position}} $$
+]
+<br>
+.font100[
+$$= \frac{\text{d(temperature)}}{\text{d(shower handle position)}} $$
+
+]
+]
+
+.pull-right[
+
+<br>
+```{r, echo=FALSE, fig.height=4}
+x <- 1:25
+y <- (-12:12)^2
+df <- data.frame(x, y)
+
+slope <- (8^2 - 7.9^2) / (8-7.9)
+intercept <- 64 - (slope * 21)
+
+ggplot(df, aes(x, y)) +
+    geom_line(data = df[df$x >= 13, ], aes(x, y), size = 1.5, alpha = 0.5, color = 'red') +
+    geom_line(data = df[df$x <= 13, ], aes(x, y), size = 1.5, alpha = 0.5, color = 'blue') +
+    geom_abline(intercept = intercept, slope = slope, lty = 'dashed') +
+    geom_point(data = df[21,], aes(x, y), size = 3, shape = 21, fill = 'yellow') +
+    scale_y_continuous(expression('Error = ' *abs(y - hat(y))),  
+                       expand = c(0, 0), limits = c(0, 150)) +
+    scale_x_continuous(expression('Change in shower handle position ('*~degree*radius*')'),
+                       breaks = x) +
+    theme(panel.grid.minor = element_blank())
+   
+```
+
+]
+
+]
 
 ---
 # Gradient descent
+
+
+---
+# Backpropagation
 
 
 ---

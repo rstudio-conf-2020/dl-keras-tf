@@ -319,7 +319,7 @@ Vectors are 1D tensors
 
 .center[`array_reshape` reshapes 3D array to...]
 
-&lt;img src="images/untidy_matrix.png" width="1773" style="display: block; margin: auto;" /&gt;
+&lt;img src="images/untidy_matrix.png" width="679" style="display: block; margin: auto;" /&gt;
 
 
 ]
@@ -590,7 +590,7 @@ network &lt;- keras_model_sequential() %&gt;%
 ]
 
 .pull-right[
-&lt;img src="images/basic_feedforward.png" style="display: block; margin: auto;" /&gt;
+&lt;img src="images/basic_feedforward.png" width="960" style="display: block; margin: auto;" /&gt;
 ]
 
 ---
@@ -652,7 +652,7 @@ network &lt;- keras_model_sequential() %&gt;%
 ]
 
 .pull-right[
-&lt;img src="images/perceptron1.png" width="960" style="display: block; margin: auto;" /&gt;
+&lt;img src="images/perceptron1.png" width="667" style="display: block; margin: auto;" /&gt;
 ]
 
 ---
@@ -669,7 +669,7 @@ network &lt;- keras_model_sequential() %&gt;%
 ]
 
 .pull-right[
-&lt;img src="images/perceptron2.png" width="960" style="display: block; margin: auto;" /&gt;
+&lt;img src="images/perceptron2.png" width="657" style="display: block; margin: auto;" /&gt;
 ]
 
 ---
@@ -693,6 +693,35 @@ network &lt;- keras_model_sequential() %&gt;%
 
 .pull-right[
 &lt;img src="images/perceptron3.png" width="648" style="display: block; margin: auto;" /&gt;
+]
+
+---
+# Many ReLU transformations
+
+.pull-left[
+
+&lt;img src="02-hello-dl-world_files/figure-html/unnamed-chunk-39-1.png" style="display: block; margin: auto;" /&gt;
+   
+How can a simple semi-linear transformation work so well?
+
+]
+
+---
+# Many ReLU transformations
+
+.pull-left[
+
+&lt;img src="02-hello-dl-world_files/figure-html/unnamed-chunk-40-1.png" style="display: block; margin: auto;" /&gt;
+   
+How can a simple semi-linear transformation work so well?
+
+Like an origami, when we combine many simple geometric transformations, we can
+create very complex patterns.
+
+]
+
+.pull-right[
+&lt;img src="images/demoui.gif" style="display: block; margin: auto;" /&gt;
 ]
 
 ---
@@ -831,7 +860,7 @@ Two primary arguments of concern for the final output layer:
 
 .pull-right.center[
 
-&lt;img src="02-hello-dl-world_files/figure-html/unnamed-chunk-49-1.png" style="display: block; margin: auto;" /&gt;
+&lt;img src="02-hello-dl-world_files/figure-html/unnamed-chunk-52-1.png" style="display: block; margin: auto;" /&gt;
 
 `\(f(y) = \frac{1}{1 + e^{-y}}\)`
 
@@ -975,7 +1004,7 @@ class: clear, center, middle
 
 .pull-right[
 
-&lt;img src="images/forward_pass.png" width="960" style="display: block; margin: auto;" /&gt;
+&lt;img src="images/forward_pass.png" width="557" style="display: block; margin: auto;" /&gt;
 
 ]
 
@@ -990,7 +1019,7 @@ class: clear, center, middle
 
 .pull-right[
 
-&lt;img src="images/forward_pass.png" width="607" style="display: block; margin: auto;" /&gt;
+&lt;img src="images/forward_pass.png" width="557" style="display: block; margin: auto;" /&gt;
 
 ]
 
@@ -1163,24 +1192,152 @@ _Loss function (objective function)_ : the quantity that will be minimized durin
 
 .pull-right[
 
-&lt;img src="images/forward_pass4.png" width="960" style="display: block; margin: auto;" /&gt;
+&lt;img src="images/forward_pass4.png" width="568" style="display: block; margin: auto;" /&gt;
 
 ]
 
 ---
 # Backward pass
 
+.pull-left[
+
+&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;
+.center.blue.bold[_Our goal is to find weights that minimize the loss score_]
+
+The ___backward pass___ is the process of using information from the loss function
+to update the weights so that we improve the model's performance.
+
+]
+
+.pull-right[
+
+&lt;img src="images/backward_pass.png" width="564" style="display: block; margin: auto;" /&gt;
+
+]
 
 ---
-# Backpropagation
+# Backward pass example
+
+.pull-left[
+&lt;img src="images/backward_pass_ex1.png" width="747" style="display: block; margin: auto;" /&gt;
+]
+
+---
+# Backward pass example
+
+.pull-left[
+&lt;img src="images/backward_pass_ex2.png" width="749" style="display: block; margin: auto;" /&gt;
+]
+
+---
+# Backward pass example
+
+.pull-left[
+&lt;img src="images/backward_pass_ex3.png" width="751" style="display: block; margin: auto;" /&gt;
+]
+
+---
+# Backward pass example
+
+.pull-left[
+&lt;img src="images/backward_pass_ex4.png" width="751" style="display: block; margin: auto;" /&gt;
+]
+
+--
+
+.pull-right[
+
+&lt;br&gt;&lt;br&gt;&lt;br&gt;
+&lt;img src="02-hello-dl-world_files/figure-html/unnamed-chunk-70-1.png" style="display: block; margin: auto;" /&gt;
+
+]
 
 
 ---
-# Derivatives
+# Derivative
 
+_Sensitivity_ is just the change in one thing per 1 unit change in another
+
+
+.pull-left[
+.font100[
+$$= \frac{\text{Change in temperature error}}{\text{Change in shower handle position}} $$
+]
+&lt;br&gt;
+.font100[
+$$= \frac{\Delta \text{temperature error}}{\Delta \text{shower handle position}} $$
+]
+]
+
+.pull-right[
+&lt;br&gt;
+&lt;img src="02-hello-dl-world_files/figure-html/unnamed-chunk-71-1.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Derivative
+
+_Sensitivity_ is just the change in one thing per 1 unit change in another
+
+
+.pull-left[
+.font100[
+$$= \frac{\text{Change in temperature error}}{\text{Change in shower handle position}} $$
+]
+&lt;br&gt;
+.font100[
+$$= \frac{\Delta \text{temperature error}}{\Delta \text{shower handle position}} $$
+]
+]
+
+.pull-right[
+&lt;br&gt;
+&lt;img src="02-hello-dl-world_files/figure-html/unnamed-chunk-72-1.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+&lt;br&gt;
+
+.center[.content-box-grey[Sensitivity is not always linear.]]
+
+
+
+---
+# Derivative
+
+_Sensitivity_ is just the change in one thing per 1 unit change in another
+
+.pull-left[
+.font100[
+$$= \frac{\text{Change in temperature}}{\text{Change in shower handle position}} $$
+]
+&lt;br&gt;
+.font100[
+$$= \frac{\Delta \text{temperature}}{\Delta \text{shower handle position}} $$
+]
+&lt;br&gt;
+.font100[
+$$= \frac{\text{d(temperature)}}{\text{d(shower handle position)}} $$
+
+]
+]
+
+.pull-right[
+
+&lt;br&gt;
+&lt;img src="02-hello-dl-world_files/figure-html/unnamed-chunk-73-1.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+]
 
 ---
 # Gradient descent
+
+
+---
+# Backpropagation
 
 
 ---
