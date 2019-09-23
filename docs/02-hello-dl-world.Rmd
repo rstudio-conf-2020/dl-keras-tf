@@ -40,6 +40,7 @@ knitr::opts_chunk$set(
 
 # Use a clean black and white ggplot2 theme
 library(ggplot2)
+library(gganimate)
 thm <- theme_bw()
 theme_set(thm)
 ```
@@ -1076,7 +1077,7 @@ knitr::include_graphics("images/forward_pass.png")
 
 .pull-left.font120[
 <br><br>
-* Weights are _initialized_ as very small random values
+* Weights are _initialized_ as very small semi-random values
 
 ]
 
@@ -1093,7 +1094,7 @@ knitr::include_graphics("images/forward_pass.png")
 
 .pull-left.font100[
 <br><br><br>
-* Weights are _initialized_ as very small random values
+* Weights are _initialized_ as very small semi-random values
 
 * Results in predicted values that are significantly different then the actual
 targets
@@ -1113,7 +1114,7 @@ knitr::include_graphics("images/forward_pass2.png")
 
 .pull-left.code70[
 <br><br><br>
-* Weights are _initialized_ as very small random values
+* Weights are _initialized_ as very small semi-random values
 
 * Results in predicted values that are significantly different then the actual
 targets
@@ -1350,7 +1351,7 @@ ggplot(df, aes(x, y)) +
 
 
 ---
-# Derivative
+# Derivatives
 
 _Sensitivity_ is just the change in one thing per 1 unit change in another
 
@@ -1388,7 +1389,7 @@ ggplot(df, aes(x, y)) +
 ]
 
 ---
-# Derivative
+# Derivatives
 
 _Sensitivity_ is just the change in one thing per 1 unit change in another
 
@@ -1432,7 +1433,7 @@ ggplot(df, aes(x, y)) +
 
 
 ---
-# Derivative
+# Derivatives
 
 _Sensitivity_ is just the change in one thing per 1 unit change in another
 
@@ -1477,30 +1478,517 @@ ggplot(df, aes(x, y)) +
 
 ]
 
+---
+# More than one variable?
+
+What if we have more than one variable?
+
+.pull-left[
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/hot_and_cold.png")
+```
+
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+library(geoR)
+data(elevation)
+
+elevation.df <- data.frame(x = 50 * elevation$coords[,"x"],
+  y = 50 * elevation$coords[,"y"], z = 10 * elevation$data)
+elevation.loess <- loess(z ~ x*y, data = elevation.df,
+  degree = 2, span = 0.25)
+elevation.fit = expand.grid(list(x = seq(10, 300, 1), y = seq(10, 300, 1)))
+z <- predict(elevation.loess, newdata = elevation.fit)
+
+persp(z = z, phi = 45, theta = -145,
+      xlab = "Change in hot handle", ylab = "Change in cold handle",
+      zlab = "Error", shade = 0.1)
+```
+
+]
+
+---
+# Partial derivatives
+
+What if we have more than one variable?
+
+.pull-left[
+.font100[
+$$= \frac{\text{Change in temperature}}{\text{Change in shower handle position}} $$
+]
+<br>
+.font100[
+$$= \frac{\Delta \text{temperature}}{\Delta \text{shower handle position}} $$
+]
+<br>
+.font100[
+$$= \frac{\partial \text{ temperature}}{\partial \text{ shower handle position}} $$
+
+]
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+library(geoR)
+data(elevation)
+
+elevation.df <- data.frame(x = 50 * elevation$coords[,"x"],
+  y = 50 * elevation$coords[,"y"], z = 10 * elevation$data)
+elevation.loess <- loess(z ~ x*y, data = elevation.df,
+  degree = 2, span = 0.25)
+elevation.fit = expand.grid(list(x = seq(10, 300, 1), y = seq(10, 300, 1)))
+z <- predict(elevation.loess, newdata = elevation.fit)
+
+persp(z = z, phi = 45, theta = -145, 
+      xlab = "Change in hot handle", ylab = "Change in cold handle",
+      zlab = "Error")
+```
+
 ]
 
 ---
 # Gradient descent
 
+.pull-left[
+
+* We can use derivative information to point us in the right direction.
+
+* Stepping in the opposite direction of the partial derivative leads us to the 
+minimum.
+
+* The size of the step is called our ___learning rate ( $\eta$ )___ .white[
+
+   - Too small: will take forever to converge
+   - Too big: risk never finding the minimum
+   - Defaults are reliable]
+   
+$$-\eta \text{ }\frac{\partial \text{ temperature}}{\partial \text{ shower handle position}}$$
+
+]
+
+.pull-right[
+
+<br>
+
+```{r, echo=FALSE, fig.height=4.5}
+x <- 1:25
+y <- (-12:12)^2
+df <- data.frame(x, y)
+
+step <- 21
+step_size <- .1
+
+for(i in seq_len(15)) {
+  next_step <- min(step) - round(diff(range(max(step), which.min(df$y))) * step_size, 0)
+  step <- c(step, next_step)
+  next
+}
+
+steps <- df[step, ] %>%
+  mutate(x2 = lag(x), y2 = lag(y)) %>%
+  dplyr::slice(1:18)
+
+ggplot(df, aes(x, y)) +
+    geom_line(data = df[df$x >= 13, ], aes(x, y), size = 1.5, alpha = 0.5, color = 'red') +
+    geom_line(data = df[df$x <= 13, ], aes(x, y), size = 1.5, alpha = 0.5, color = 'blue') +
+    geom_segment(data = df[c(21, which.min(df$y)), ], aes(x = x, y = y, xend = x, yend = -Inf), lty = "dashed") +
+    geom_point(data = df[21,], aes(x, y), size = 3, shape = 21, fill = 'yellow') +
+   geom_point(data = steps[2:9,], aes(x, y), size = 3, shape = 21, fill = "grey50") +
+   geom_curve(data = steps[2:9,], aes(x = x, y = y, xend = x2, yend = y2), curvature = -1, lty = "dotted") +
+    scale_y_continuous(expression('Error = ' *abs(y - hat(y))),  
+                       expand = c(0.01, 0), limits = c(0, 150)) +
+    scale_x_continuous(expression('Change in shower handle position ('*~degree*radius*')'),
+                       breaks = x) +
+    theme(panel.grid.minor = element_blank())
+```
+
+]
+
+---
+# Gradient descent
+
+.pull-left[
+
+* We can use derivative information to point us in the right direction.
+
+* Stepping in the opposite direction of the partial derivative leads us to the 
+minimum.
+
+* The size of the step is called our ___learning rate ( $\eta$ )___
+
+   - Too small: will take forever to converge
+   - Too big: risk jumping over the minimum
+   - Defaults are reliable
+   
+$$-\eta \text{ }\frac{\partial \text{ temperature}}{\partial \text{ shower handle position}}$$
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE, fig.height=7.5}
+y <- seq(-12, 12, by = 0.1)^2
+x <- seq(1, 25, length.out = length(y))
+df <- data.frame(x, y)
+
+step <- which(df$x == 21)
+step_size <- .025
+
+for(i in seq_len(30)) {
+  next_step <- min(step) - round(diff(range(max(step), which.min(df$y))) * step_size, 3)
+  step <- c(step, next_step)
+  next
+}
+
+steps <- df[step, ] %>%
+  mutate(
+     x = as.numeric(x),
+     x2 = lag(x), y2 = lag(y)) %>%
+  dplyr::slice(1:20)
+
+p1 <- ggplot(df, aes(x, y)) +
+    geom_line(data = df[df$x >= 13, ], aes(x, y), size = 1.5, alpha = 0.5, color = 'red') +
+    geom_line(data = df[df$x <= 13, ], aes(x, y), size = 1.5, alpha = 0.5, color = 'blue') +
+    geom_segment(data = df[c(which(df$x == 21), which.min(df$y)), ], aes(x = x, y = y, xend = x, yend = -Inf), lty = "dashed") +
+    geom_point(data = df[which(df$x == 21),], aes(x, y), size = 3, shape = 21, fill = 'yellow') +
+   geom_point(data = steps[2:nrow(steps),], aes(x, y), size = 3, shape = 21, fill = "grey50") +
+   geom_curve(data = steps[2:nrow(steps),], aes(x = x, y = y, xend = x2, yend = y2), curvature = -1, lty = "dotted") +
+    scale_y_continuous(expression('Error = ' *abs(y - hat(y))),  
+                       expand = c(0.01, 0), limits = c(0, 150)) +
+    scale_x_continuous(expression('Change in shower handle position ('*~degree*radius*')'),
+                       breaks = 1:25) +
+    theme(panel.grid.minor = element_blank())
+
+step <- which(df$x == 21)
+step_size <- .6
+
+for(i in seq_len(30)) {
+  next_step <- min(step) - round(diff(range(max(step), which.min(df$y))) * step_size, 3)
+  step <- c(step, next_step)
+  next
+}
+
+steps <- df[step[step > 0], ] %>%
+  mutate(
+     x = as.numeric(x),
+     x2 = lag(x), y2 = lag(y)) %>%
+  dplyr::slice(1:3)
+
+p2 <- ggplot(df, aes(x, y)) +
+    geom_line(data = df[df$x >= 13, ], aes(x, y), size = 1.5, alpha = 0.5, color = 'red') +
+    geom_line(data = df[df$x <= 13, ], aes(x, y), size = 1.5, alpha = 0.5, color = 'blue') +
+    geom_segment(data = df[c(which(df$x == 21), which.min(df$y)), ], aes(x = x, y = y, xend = x, yend = -Inf), lty = "dashed") +
+    geom_point(data = df[which(df$x == 21),], aes(x, y), size = 3, shape = 21, fill = 'yellow') +
+   geom_point(data = steps[2:nrow(steps),], aes(x, y), size = 3, shape = 21, fill = "grey50") +
+   geom_curve(data = steps[2:nrow(steps),], aes(x = x, y = y, xend = x2, yend = y2), curvature = -1, lty = "dotted") +
+    scale_y_continuous(expression('Error = ' *abs(y - hat(y))),  
+                       expand = c(0.01, 0), limits = c(0, 150)) +
+    scale_x_continuous(expression('Change in shower handle position ('*~degree*radius*')'),
+                       breaks = 1:25) +
+    theme(panel.grid.minor = element_blank())
+
+gridExtra::grid.arrange(p1, p2, ncol = 1)
+```
+
+]
+
+---
+# Chain rule
+
+.pull-left[
+
+* However, typically our problems have many layers of transformations $\rightarrow \hat y = f(g(x))$.
+
+* The ___chain rule___ states that we can compute partial derivatives for each
+layer as $\partial \text{layer}_2 \times \partial \text{layer}_1 \Rightarrow \partial f(g(x)) \times \partial g(x)$
+
+* Consequently, we can compute the following:
+   - $\Delta s = -\eta \frac{\partial \hat{y}}{\partial s} \cdot \frac{\partial E}{\partial \hat{y}}$ 
+   - $\Delta m = -\eta \frac{\partial h}{\partial m} \cdot \frac{\partial \hat{y}}{\partial h} \cdot \frac{\partial E}{\partial \hat{y}}$ 
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/multi-layer-shower.png")
+```
+
+]
+<br><br>
+
+--
+
+.center[.content-box-grey[_m_ and _s_ simply represent the weights of the first and second layer of a hypothetical neural net.]]
 
 ---
 # Backpropagation
 
+.pull-left[
+
+* This updating of our weights is what is called ___backpropagation___.
+
+* This simple example illustrated basic gradient descent backpropagation.
+
+* There have been several algorithms developed that slightly modify and _optimize_ this approach [`r anicon::aia("google-scholar", animate = 'tada', anitype="hover", rtext = "(Sebastian Ruder)")`](http://ruder.io/optimizing-gradient-descent/).
+
+* A main differentiating component is ___momentum___.
+
+
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/saddle_point_evaluation_optimizers.gif")
+```
+
+]
 
 ---
-# Optimizers
+# Backpropagation
+
+.pull-left[
+
+* This updating of our weights is what is called ___backpropagation___.
+
+* This simple example illustrated basic gradient descent backpropagation.
+
+* There have been several algorithms developed that slightly modify and _optimize_ this approach [`r anicon::aia("google-scholar", animate = 'tada', anitype="hover", rtext = "(Sebastian Ruder)")`](http://ruder.io/optimizing-gradient-descent/).
+
+* A main differentiating component is ___momentum___.
+
+
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE, fig.height=4, message=FALSE, warning=FALSE}
+set.seed(123)  # for reproducibility
+x <- seq(from = 0, to = 4.25 * pi, length = 100)
+y <- sin(x) - x*.4
+
+df <- data.frame(x, y)
+df_points <- data.frame(x, y) %>%
+   filter(x > 2 & x < 12) %>%
+   mutate(x2 = x, y = y + 0.07) %>%
+   select(-x)
+
+global <- filter(df, y == min(y))
+local  <- df %>% 
+  filter(x < 6) %>% 
+  filter(y == min(y))
+
+p <- ggplot() +
+  geom_line(data = df, aes(x, y), size = 1.5, alpha = 0.5) +
+  scale_y_continuous("Loss function", expand = c(0, 0.08), limits = c(-6, 1)) +
+  scale_x_continuous("Parameter value", expand = c(0.08, 0)) +
+  annotate("text", x = global$x, y = global$y, label = "Global minimum", vjust = 2, size = 4) +
+  annotate("text", x = local$x, y = local$y, label = "Local minimum", vjust = 2, size = 4) +
+  geom_point(data = df_points, aes(x2, y), size = 3) +
+  transition_time(x2)
+
+suppressMessages(suppressWarnings(
+   animate(p, renderer = magick_renderer(loop = TRUE), device = "png", fps = 25)
+))
+```
+
+]
+
 
 
 ---
-# Tacking additional metrics
+# Backpropagation
 
+.pull-left[
+
+* This updating of our weights is what is called ___backpropagation___.
+
+* This simple example illustrates basic gradient descent backpropagation.
+
+* There have been several algorithms developed that slightly modify and _optimize_ this approach [`r anicon::aia("google-scholar", animate = 'tada', anitype="hover", rtext = "(Sebastian Ruder)")`](http://ruder.io/optimizing-gradient-descent/).
+
+* A main differentiating component is ___momentum___.
+
+
+
+]
+
+.pull-right[
+
+<br><br><br>
+
+```{r, eval=FALSE}
+network %>% compile(
+  loss = "categorical_crossentropy",
+  optimizer = "rmsprop", #<<
+  metrics = c("accuracy")
+)
+```
+
+]
+
+.center[.content-box-grey[RMSprop is typically a great default optimizer.]]
+
+---
+# Tracking additional metrics
+
+In addition to the loss function, there are many other metrics we can track.
+
+.pull-left[
+
+* mean squared error (MSE)
+* mean absolute error (MAE)
+* mean absolute percentage error (MAPE)
+* mean squared logarithmic error (MSLE)
+* squared hinge
+* log cosine hinge
+* overall accuracy
+* binary cross entropy
+* categorical hinge
+* categorical cross entropy
+* sparse categorical cross entropy
+* Kullback-Leibler divergence
+* Poisson
+* cosine proximity
+* can even build your own custom metrics to track!
+
+]
+
+---
+# Tracking additional metrics
+
+In addition to the loss function, there are many other metrics we can track.
+
+.pull-left[
+
+* mean squared error (MSE)
+* mean absolute error (MAE)
+* mean absolute percentage error (MAPE)
+* mean squared logarithmic error (MSLE)
+* squared hinge
+* log cosine hinge
+* .blue[overall accuracy]
+* binary cross entropy
+* categorical hinge
+* categorical cross entropy
+* sparse categorical cross entropy
+* Kullback-Leibler divergence
+* Poisson
+* cosine proximity
+* can even build your own custom metrics to track!
+
+]
+
+.pull-right[
+
+```{r, eval=FALSE}
+network %>% compile(
+  loss = "categorical_crossentropy",
+  optimizer = "rmsprop", 
+  metrics = c("accuracy") #<<
+)
+```
+
+]
 
 ---
 # Network compilation summary
 
+.pull-left-narrow[
+<br><br><br>
+
+1. Loss function
+
+2. Backpropagation optimizer
+
+3. Additional metrics tracked
+
+]
+
+.pull-right-wide[
+
+```{r, echo=FALSE}
+knitr::include_graphics('images/compile_summary.png')
+```
+
+]
 
 ---
 class: clear, center, middle
 
 .font500.bold[Training loop]
+
+---
+# Supply data
+
+
+.pull-left[
+
+* We use `fit()` to start executing model training
+
+* First, we need to supply the features and target response for our training data
+
+]
+
+.pull-right[
+
+```{r, eval=FALSE}
+history <- network %>% 
+  fit(train_images, #<< 
+      train_labels, #<<
+      batch_size = 128, 
+      epochs = 20, 
+      validation_split = 0.2)
+```
+
+]
+
+---
+# Batches & epochs
+
+
+---
+# Batch gradient descent
+
+
+---
+# Stochastic gradient descent
+
+
+---
+# Mini-batch stochastic gradient descent
+
+
+.pull-left[
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/training_gif.gif")
+```
+
+]
+
+---
+# Epochs
+
+
+---
+# Validation
+
+
+---
+# Training loop summary
+
 

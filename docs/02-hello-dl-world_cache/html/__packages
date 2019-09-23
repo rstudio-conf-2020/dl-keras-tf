@@ -2,3 +2,6 @@ base
 keras
 dplyr
 ggplot2
+geoR
+gganimate
+purrr

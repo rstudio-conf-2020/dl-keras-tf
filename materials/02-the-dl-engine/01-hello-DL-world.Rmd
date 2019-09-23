@@ -1,6 +1,6 @@
 ---
 title: "The 'Hello World' of Deep Learning"
-output: html_document
+output: html_notebook
 ---
 
 # Installation
@@ -191,7 +191,7 @@ network %>% compile(
 ```{r train}
 history <- network %>% 
   fit(train_images, train_labels, 
-      epochs = 20, batch_size = 128, 
+      batch_size = 128, epochs = 20, 
       validation_split = 0.2)
 ```
 
@@ -224,7 +224,7 @@ network %>% compile(
 # use optimal number of epochs
 history <- network %>% 
   fit(train_images, train_labels, 
-      epochs = _____, batch_size = 128, 
+      batch_size = 128, epochs = _____, 
       validation_split = 0.2)
 ```
 
@@ -250,13 +250,13 @@ metrics$acc
 You can predict either the probability of each class. Note that column 1 is for 
 digit 0, column 2 is for digit 1, ..., column 10 is for digit 9.
 
-```{r make-predictions}
+```{r predict-probabilities}
 network %>% predict_proba(test_images[1:10,])
 ```
 
 Or you can predict the class
 
-```{r make-predictions}
+```{r predict-classes}
 network %>% predict_classes(test_images[1:10,])
 ```
 

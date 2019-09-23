@@ -1,0 +1,450 @@
+---
+title: "Case Study 3: IMDB -- Binary Classification of Movie Reviews"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(keras)      # for deep learning
+library(tidyverse)  # for dplyr, ggplot2, purrr
+```
+
+In this case study, our objective is to classify movie reviews as positive or
+negative. This is a classic _binary classification_, which aims to predict one 
+of two classes. To predict whether a review is positive or negative, we will use
+the text of the movie review.
+
+# The IMDB dataset
+
+slides:
+  - IMDB
+
+Our data consists of 50,000 movie reviews from [IMDB](https://www.imdb.com/).
+First, let's grab our data and unpack them into training vs test and features vs
+labels.
+
+```{r get-data, warning = FALSE}
+imdb <- dataset_imdb(num_words = 10000)
+c(c(train_data, train_labels), c(test_data, test_labels)) %<-% imdb
+
+length(train_data)   # 25K reviews in our training data
+length(test_data)    # 25K reviews in our test data
+```
+
+# Understanding our data
+
+slides:
+  - illustrate shape of data
+  - illustrate review
+
+The reviews have been preprocessed, and each review is encoded as a sequence of 
+word indexes (integers). For convenience, words are indexed by overall frequency 
+in the dataset. For example, the integer "14" encodes the 14th most frequent 
+word in the data.
+
+```{r first-review}
+train_data[[1]]
+```
+
+We can map the integer values back the original word index. The integer number 
+corresponds to the position in the word count list and the name of the vector is 
+the actual word. 
+
+```{r map-review-to-words}
+word_index <- dataset_imdb_word_index() %>% 
+  unlist() %>%                                 
+  sort() %>%                                   
+  names()                                      
+
+# The indices are offset by 3 since 0, 1, and 2 are reserved for "padding", 
+# "start of sequence", and "unknown"
+train_data[[1]] %>% 
+  map_chr(~ ifelse(.x >= 3, word_index[.x - 3], "?")) %>%
+  cat()
+```
+
+Our response variable is just a vector of 1s (positive reviews) and 0s (negative
+reviews).
+
+```{r labels}
+str(train_labels)
+
+# our labels are equally balanced between positive (1s) and negative (0s)
+# reviews
+table(train_labels)
+```
+
+
+# Preparing the features
+
+slides:
+  - vectorization
+  - one-hot encoding
+  - importance of data being small, typically btwn 0-1
+  - illustrate how the IMDB data compares to MNIST
+
+All inputs and response values in a neural network must be tensors of either 
+floating-point or integer data. Moreover, our feature values should not be
+relatively large compared to the randomized initial weights _and_ all our 
+features should take values in roughtly the same range.
+
+Consequently, we need to _vectorize_ our data into a format conducive to neural 
+networks. For this data set, we'll transform our list of article reviews to a
+2D tensor of 0s and 1s representing if the word was used (aka one-hot encode).
+
+```{r prep-features}
+# number of unique words will be the number of features
+n_features <- mapply(c, train_data, test_data, SIMPLIFY = TRUE) %>% 
+  unlist() %>% 
+  max()
+
+# function to create 2D tensor (aka matrix)
+vectorize_sequences <- function(sequences, dimension = n_features) {
+  # Create a matrix of 0s
+  results <- matrix(0, nrow = length(sequences), ncol = dimension)
+
+  # Populate the matrix with 1s
+  for (i in seq_along(sequences))
+    results[i, sequences[[i]]] <- 1
+  results
+}
+
+# apply to training and test data
+train_data_vec <- vectorize_sequences(train_data)
+test_data_vec <- vectorize_sequences(test_data)
+```
+
+
+# Preparing the labels
+
+In contrast MNIST, the labels of a binary classification will just be one value, 
+0 or 1, so we will just make the integer vector numeric.
+
+```{r prep-labels}
+# prepare training labels
+train_labels <- as.numeric(train_labels)
+str(train_labels)
+
+# prepare test labels
+test_labels <- as.numeric(test_labels)
+str(test_labels)
+```
+
+
+# DL Model 1
+
+Slides:
+- Discuss what the loss function means
+- Tips regarding batch size and epochs
+
+## Define the network
+
+Since we are performing binary classification, our output activation function 
+will be the _sigmoid activation function_.
+
+```{r architecture}
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 16, activation = "relu", input_shape = n_features) %>% 
+  layer_dense(units = 16, activation = "relu") %>% 
+  layer_dense(units = 1, activation = "sigmoid")
+```
+
+## View a summary of the network
+
+```{r summary}
+summary(network)
+```
+
+## Compile
+
+We're going to use _binary crossentropy_ since we only have two possible classes.
+
+```{r compile}
+network %>% compile(
+  optimizer = "rmsprop",
+  loss = "binary_crossentropy",
+  metrics = c("accuracy")
+)
+```
+
+## Train our model
+
+Now let's train our network for 20 epochs:
+
+```{r train}
+history <- network %>% fit(
+  train_data_vec,
+  train_labels,
+  epochs = 20,
+  batch_size = 512,
+  validation_split = 0.2
+)
+```
+
+Check out our initial resuls:
+
+```{r initial-results}
+history
+```
+
+
+# Customizing compilation
+
+- show how we can use optimizer, loss, and metric functions
+- demo a custom built metric??
+- takeaway 
+   - we can customize if necessary
+   - RMSProp and default learning rate is typically good enough
+
+Sometimes you may want to configure the parameters of your optimizer or pass a
+custom loss (or metric) function. We can do so by passing optimizer, loss, 
+and/or metric functions to the `compile` arguments.
+
+* optimizers all start with `optimizer_` (https://keras.rstudio.com/reference/index.html#section-optimizers)
+* losses all start with `loss_` (https://keras.rstudio.com/reference/index.html#section-losses)
+* metricss all start with `metric_` (https://keras.rstudio.com/reference/index.html#section-metrics)
+
+```{r custom-compile}
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 16, activation = "relu", input_shape = n_features) %>% 
+  layer_dense(units = 16, activation = "relu") %>% 
+  layer_dense(units = 1, activation = "sigmoid")
+
+# create metric using backend tensor functions
+metric_mean_pred <- custom_metric("mean_pred", function(y_true, y_pred) {
+  k_mean(y_pred)
+})
+
+network %>% compile(
+  optimizer = optimizer_rmsprop(lr = 0.0005), # default learning rate = 0.001
+  loss = loss_binary_crossentropy,
+  metrics = c("accuracy", metric_mean_pred)
+)
+
+history <- network %>% fit(
+  train_data_vec,
+  train_labels,
+  epochs = 20,
+  batch_size = 512,
+  validation_split = 0.2
+)
+```
+
+
+## YOUR TURN
+
+1. Test out different gradient descent optimizers (i.e. Adagrad, Adam)
+2. Test out different learning rates in the optimizers
+
+```{r your-turn-1}
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 16, activation = "relu", input_shape = n_features) %>% 
+  layer_dense(units = 16, activation = "relu") %>% 
+  layer_dense(units = 1, activation = "sigmoid")
+
+# create metric using backend tensor functions
+metric_mean_pred <- custom_metric("mean_pred", function(y_true, y_pred) {
+  k_mean(y_pred)
+})
+
+network %>% compile(
+  optimizer = ______, 
+  loss = "binary_crossentropy",
+  metrics = c("accuracy")
+)
+
+history <- network %>% fit(
+  train_data_vec,
+  train_labels,
+  epochs = 20,
+  batch_size = 512,
+  validation_split = 0.2
+)
+```
+
+# Validation procedures
+
+- discuss importance of holding out the test
+- show how you can also supply a validation set
+- takeaway
+   - we can supply a validation set two different ways
+   - if data is ordered then should randomize
+   - discuss when cross-validation is required and how to incorporate
+
+So far we have performed model validation by using `validation_split`. Sometimes 
+this may not be appropriate. `validation_split` selects the last XX% samples in 
+the x and y data provided. So, if our data is ordered than this could skew our
+results.  
+
+An alternative is to create our own validation data and supply it via 
+`validation_data`. First we extract our own train vs. validation data sets:
+
+```{r create-validation}
+set.seed(123)
+index <- sample(1:nrow(train_data_vec), size = floor(nrow(train_data_vec) * 0.8))
+
+x_train <- train_data_vec[index,]
+y_train <- train_labels[index]
+
+x_val <- train_data_vec[-index,]
+y_val <- train_labels[-index]
+
+length(y_train)
+length(y_val)
+```
+
+Now, we can supply our validation data to `validation_data`:
+
+```{r train-with-validation}
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 16, activation = "relu", input_shape = n_features) %>% 
+  layer_dense(units = 16, activation = "relu") %>% 
+  layer_dense(units = 1, activation = "sigmoid")
+
+network %>% compile(
+  optimizer = "rmsprop", 
+  loss = "binary_crossentropy",
+  metrics = c("accuracy")
+)
+
+history <- network %>% fit(
+  x_train,                             # supply our new training features data
+  y_train,                             # supply our new training labels data
+  epochs = 20,
+  batch_size = 512,
+  validation_data = list(x_val, y_val) # supply our validation data
+  )
+```
+
+
+You probably noticed that the loss score from our original model differs from
+the loss score of this last one. Although all hyperparameter settings are the 
+same, there will always be some variance in our loss score based on randomization 
+in the model and the fact that we have different observations in our validation 
+set. 
+
+As the number of observations in our data increases, variance in our loss score 
+will decrease. However, we do not always have the option to just go out and get 
+more data. So, if we want to gain a more accurate understanding of the loss score 
+and its variance we can perform _k-fold cross validation_. 
+
+```{r create-folds}
+# number of folds
+k <- 5
+
+# randomize data before making folds
+set.seed(123)
+indices <- sample(1:nrow(train_data_vec))
+
+# divide the ordered indices into k intervals, labelled 1:k.
+folds <- cut(indices, breaks = k, labels = FALSE)
+str(folds)
+```
+
+
+
+```{r perform-kfold-cv}
+# create a data frame to store results
+results <- data.frame()
+
+for (i in seq_len(k)) {
+  cat("processing fold #", i, "\n")
+  
+  # Prepare the training and validation data for each fold
+  val_indices <- which(folds == i, arr.ind = TRUE) 
+  
+  # validation set: the ith partition
+  x_val <- train_data_vec[val_indices,]
+  y_val <- train_labels[val_indices]
+  
+  # Training set: all other partitions
+  x_train <- train_data_vec[-val_indices,]
+  y_train <- train_labels[-val_indices]
+  
+  # Create our model blueprint
+  network <- keras_model_sequential() %>% 
+    layer_dense(units = 16, activation = "relu", input_shape = n_features) %>% 
+    layer_dense(units = 16, activation = "relu") %>% 
+    layer_dense(units = 1, activation = "sigmoid") %>% 
+    compile(
+      optimizer = "rmsprop",
+      loss = "binary_crossentropy",
+      metrics = c("accuracy")
+      )
+
+  # Train our model with and supply train / validation data
+  history <- network %>% fit(
+    x_train,                             
+    y_train,                            
+    epochs = 20,
+    batch_size = 512,
+    validation_data = list(x_val, y_val),
+    verbose = FALSE
+    )
+   
+  # Extract the performance data            
+  model_performance <- as.data.frame(history) %>% mutate(fold = i)
+  results <- rbind(results, model_performance)
+} 
+```
+
+We can plot the results:
+
+```{r plot-kfold-results, message=FALSE}
+ggplot(results, aes(epoch, value, color = data)) +
+  geom_point(alpha = 0.5) + 
+  geom_smooth() +
+  facet_wrap(~ metric, ncol = 1)
+```
+
+But if we zoom in on the validation loss we can see the variance that exists:
+
+```{r plot-kfold-val-results, message=FALSE}
+results %>%
+  filter(data == 'validation', metric == 'loss') %>%
+  ggplot(aes(epoch, value)) +
+  geom_point(alpha = 0.5) +
+  stat_summary(fun.data = "mean_cl_boot", colour = "red") +
+  geom_smooth()
+```
+
+If we pick the epoch with the lowest average validation loss, we can see that 
+our validation loss is about 
+
+```{r, message=FALSE}
+# which epic has lowest avg loss
+best_epoc <- results %>%
+  group_by(epoch) %>%
+  filter(metric == 'loss', data == 'validation') %>%
+  summarise(avg_loss = mean(value), 
+            std_loss = sd(value)) %>%
+  top_n(-1, wt = avg_loss)
+
+best_epoc
+```
+
+If we re-train our model with all the training data and use the best epoch, we
+should see similar results within reason based on our k-fold variance:
+
+```{r}
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 16, activation = "relu", input_shape = n_features) %>% 
+  layer_dense(units = 16, activation = "relu") %>% 
+  layer_dense(units = 1, activation = "sigmoid") %>% 
+  compile(
+    optimizer = "rmsprop", 
+    loss = "binary_crossentropy",
+    metrics = c("accuracy")
+  )
+
+history <- network %>% fit(
+  train_data_vec,                             
+  train_labels,                             
+  epochs = best_epoc$epoch,
+  batch_size = 512
+  )
+
+network %>% evaluate(test_data_vec, test_labels)
+```
+

@@ -1,0 +1,334 @@
+---
+title: "Case Study 2: Reuters -- Multi-class Classification of News Articles"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(keras)     # for deep learning
+library(tidyverse) # for dplyr, ggplot2, & purrr
+```
+
+
+
+# Part 1: Data Preparation
+
+## Obtain data
+
+```{r data, warning = FALSE}
+reuters <- dataset_reuters(num_words = 10000)
+c(c(train_data, train_labels), c(test_data, test_labels)) %<-% reuters
+```
+
+## Examine data:
+
+```{r strImagesPre}
+length(train_data)
+length(test_data)
+```
+
+An example of the data
+
+```{r}
+train_data[[1]]
+```
+
+Map values back onto the lexicon which is stored as a named list. Each item in the list is an integer vector of length one. This number corresponds to the position in the word count list and the name of the vector is the actual word. 
+
+```{r}
+word_index <- dataset_reuters_word_index() %>% 
+  unlist() %>%                      
+  sort() %>%                       
+  names()                   
+
+train_data[[1]] %>% 
+  map_chr(~ ifelse(.x >= 3, word_index[.x - 3], "?")) %>% 
+  cat()
+```
+
+## Prepare the data:
+
+Using one-hot encoding
+
+```{r normImages}
+vectorize_sequences <- function(sequences, dimension = 10000) {
+  # Create a matrix of 0s
+  results <- matrix(0, nrow = length(sequences), ncol = dimension)
+
+  # Populate the matrix with 1s
+  for (i in seq_len(sequences))
+    results[i, sequences[[i]]] <- 1
+  results
+}
+
+train_data_vec <- vectorize_sequences(train_data)
+test_data_vec <- vectorize_sequences(test_data)
+```
+
+Let's look at the first example from the training set. Recall that these are the index positions of the words 
+
+```{r}
+train_example <- sort(unique(train_data[[1]]))
+train_example
+```
+
+Now we have a large matrix, where each row is 10000 elements long. Wherever we have a value in the above data set, the matrix has a 1
+
+```{r}
+# Just the first 100 values in the first entry (row)
+train_data_vec[1,1:100]
+```
+
+We can confirm this by counting the values:
+
+```{r}
+sum(train_data_vec[1,]) == length(train_example)
+```
+
+The position of the 1s corresponds to the indices above:
+
+```{r}
+which(as.logical(train_data_vec[1,]))
+```
+
+## Prepare labels:
+
+The `_labels` objects contain the news wire labels. Each newswire can only have one *label* (i.e. "sigle-label"), from a total of 46 possible *classes* (i.e. "multi-class"). The classes are just given numerical values (0 - 45), it doesn't matter what they are actually called, although that information would be helpful in understanding mis-labeling.
+
+```{r strLabelsPre}
+str(train_labels)
+sort(unique(train_labels))
+```
+
+Some classes are very common, which we'll see play out in our confusion matrix below 
+
+```{r plotLabelsPre}
+train_labels %>% 
+  plyr::count() %>%
+  ggplot(aes(x, freq)) +
+  geom_col()
+```
+
+The distribution of the test and training set should be roughly equivalent, so let's have a look. 
+
+```{r}
+data.frame(x = train_labels) %>% 
+  group_by(x) %>% 
+  summarise(train_freq = 100 * n()/length(train_data)) -> train_labels_df
+
+data.frame(x  = test_labels) %>% 
+  group_by(x) %>% 
+  summarise(train_freq = 100 * n()/length(test_data)) %>% 
+  inner_join(train_labels_df, by="x") %>% 
+  gather(key, value, -x) %>% 
+  ggplot(aes(x, value, fill = key)) +
+  geom_col(position = "dodge") +
+  scale_y_continuous("Percentage", limits = c(0,40), expand = c(0,0)) +
+  scale_x_continuous("Label", breaks = 0:45, expand = c(0,0)) +
+  scale_fill_manual("", labels = c("test","train"), values = c("#AEA5D0", "#54C8B7")) +
+  theme_classic() +
+  theme(legend.position = c(0.8, 0.8),
+        axis.line.x = element_blank(),
+        axis.text = element_text(colour = "black"))
+```
+
+We treat these just like how we treated the MNIST labels in the previous unit. We make the format match the output we expect to get from softmax so that we can make a direct comparison.
+
+```{r prepLabels}
+train_labels_vec <- to_categorical(train_labels)
+test_labels_vec <- to_categorical(test_labels)
+```
+
+```{r strLabelsPost}
+str(train_labels_vec)
+str(test_labels_vec)
+```
+
+Notice the similiarity to how we prepared our training data with one-hot encoding, both are sparse matrices. Each row in the training data contains a 1 at the position where that word is present, and in the labels, each row contains a maximum of a single 1, indicating the class. 
+
+# Part 2: Define Network
+
+## Define the network
+
+```{r architecture}
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 64, activation = "relu", input_shape = c(10000)) %>% 
+  layer_dense(units = 64, activation = "relu") %>% 
+  layer_dense(units = 46, activation = "softmax")
+
+```
+
+## View a summary of the network
+
+```{r summary}
+summary(network)
+```
+
+## Compile
+
+```{r compile}
+network %>% compile(
+  optimizer = "rmsprop",
+  loss = "categorical_crossentropy",
+  metrics = c("accuracy")
+)
+```
+
+# Part 3: Validate our approach
+
+Let's set apart 1,000 samples in our training data to use as a validation set:
+
+```{r}
+index <- 1:1000
+
+val_data_vec <- train_data_vec[index,]
+train_data_vec <- train_data_vec[-index,]
+
+val_labels_vec <- train_labels_vec[index,]
+train_labels_vec <- train_labels_vec[-index,]
+```
+
+Now let's train our network for 20 epochs:
+
+```{r echo=TRUE, results = "hide", warning = FALSE}
+history <- network %>% fit(
+  train_data_vec,
+  train_labels_vec,
+  epochs = 20,
+  batch_size = 512,
+  validation_data = list(val_data_vec, val_labels_vec)
+)
+```
+
+Let's display its loss and accuracy curves:
+
+```{r}
+plot(history)
+```
+
+The network begins to overfit after nine epochs. Let's train a new network from scratch for nine epochs and then evaluate it on the test set.
+
+```{r, echo=TRUE, results='hide'}
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 64, activation = "relu", input_shape = c(10000)) %>% 
+  layer_dense(units = 64, activation = "relu") %>% 
+  layer_dense(units = 46, activation = "softmax")
+  
+network %>% compile(
+  optimizer = "rmsprop",
+  loss = "categorical_crossentropy",
+  metrics = c("accuracy")
+)
+
+history <- network %>% fit(
+  train_data_vec,
+  train_labels_vec,
+  epochs = 9,
+  batch_size = 512,
+  validation_data = list(val_data_vec, val_labels_vec)
+)
+```
+
+# Part 4: Using sparse categorical crossentropy
+
+Above, we vectorized the labels, like what we did with the MNIST data set. Alternatively, we could have just used the original integer values. To showcase this, let's create a new network, `network_int`, so that we don't mix up our results. The network architecture is the same:
+
+```{r}
+network_int <- keras_model_sequential() %>% 
+  layer_dense(units = 64, activation = "relu", input_shape = c(10000)) %>% 
+  layer_dense(units = 64, activation = "relu") %>% 
+  layer_dense(units = 46, activation = "softmax")
+```
+
+Here, the only thing we need to chance is the loss function. `categorical_crossentropy`, expects the labels to follow a categorical encoding, but `sparse_categorical_crossentropy` expects integer labels. 
+
+```{r}
+network_int %>% compile(
+  optimizer = "rmsprop",
+  loss = "sparse_categorical_crossentropy",
+  metrics = c("accuracy")
+)
+```
+
+Before we train the model, let's make a validation set, like we did above. We'll use the original training set for this.
+
+```{r}
+val_train_labels <- train_labels[index]
+train_labels <- train_labels[-index]
+```
+
+Now let's train our model `network_int` using the integer data, instead of the vectorized data:
+
+```{r}
+history_int <- network_int %>% fit(
+  train_data_vec,
+  train_labels,
+  epochs = 9,
+  batch_size = 512,
+  validation_data = list(val_data_vec, val_train_labels)
+)
+```
+
+This new loss function is mathematically the same as `categorical_crossentropy`. It just has a different interface. When we look at our metrics below we'll use the original model, that accessed the vectorized data. If you want to use `network_int` make sure you use the original integer labels of the test set, `test_labels`, not `test_labels_vec`. 
+
+# Part 5: Check output
+
+Let's return to our original model using the vectorized data:
+
+## Metrics
+
+```{r metrics}
+metrics <- network %>% evaluate(test_data_vec, test_labels_vec)
+```
+
+```{r}
+metrics
+metrics$acc
+# Error rate: incorrect calling
+1 - metrics$acc
+```
+
+## Predictions
+
+```{r predictions}
+network %>% predict_classes(test_data_vec[1:10,])
+```
+
+```{r allPredictions}
+predictions <- network %>% predict_classes(test_data_vec)
+actual <- unlist(test_labels)
+totalmisses <- sum(predictions != actual)
+```
+
+# Confusion Matrix
+
+```{r confusion, echo = F}
+data.frame(target = actual,
+           prediction = predictions) %>% 
+  filter(target != prediction) %>% 
+  group_by(target, prediction) %>%
+  count() %>%
+  ungroup() %>%
+  mutate(perc = n/nrow(.)*100) %>% 
+  filter(n > 1) %>% 
+  ggplot(aes(target, prediction, size = n)) +
+  geom_point(shape = 15, col = "#9F92C6") +
+  scale_x_continuous("Actual Target", breaks = 0:45) +
+  scale_y_continuous("Prediction", breaks = 0:45) +
+  scale_size_area(breaks = c(2,5,10,15), max_size = 5) +
+  coord_fixed() +
+  ggtitle(paste(totalmisses, "mismatches")) +
+  theme_classic() +
+  theme(rect = element_blank(),
+        axis.line = element_blank(),
+        axis.text = element_text(colour = "black"))
+
+```
+
+# Session Info
+
+```{r}
+sessionInfo()
+```
+
