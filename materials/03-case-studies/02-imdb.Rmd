@@ -1,0 +1,531 @@
+---
+title: "Case Study 2: IMDB -- Binary Classification of Movie Reviews"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(keras)      # for deep learning
+library(tidyverse)  # for dplyr, ggplot2, purrr
+```
+
+In this case study, our objective is to classify movie reviews as positive or
+negative. This is a classic _binary classification_, which aims to predict one 
+of two classes. To predict whether a review is positive or negative, we will use
+the text of the movie review.
+
+Throughout this case study you will learn a few new concepts:
+
+* Vectorizing text with one-hot encoding
+* How binary crossentropy works
+* Alternative gradient descent optimizers and custom loss and metric functions
+* Best practices for model capacity and dynamically assessing the impact of more 
+  or less layers and nodes.
+
+
+# The IMDB dataset
+
+slides:
+  - IMDB
+
+Our data consists of 50,000 movie reviews from [IMDB](https://www.imdb.com/).
+First, let's grab our data and unpack them into training vs test and features vs
+labels.
+
+```{r get-data, warning = FALSE}
+imdb <- dataset_imdb(num_words = 10000)
+c(c(train_data, train_labels), c(test_data, test_labels)) %<-% imdb
+
+length(train_data)   # 25K reviews in our training data
+length(test_data)    # 25K reviews in our test data
+```
+
+# Understanding our data
+
+slides:
+  - illustrate shape of data
+  - illustrate review
+
+The reviews have been preprocessed, and each review is encoded as a sequence of 
+word indexes (integers). For convenience, words are indexed by overall frequency 
+in the dataset. For example, the integer "14" encodes the 14th most frequent 
+word in the data.
+
+```{r first-review}
+train_data[[1]]
+```
+
+We can map the integer values back the original word index. The integer number 
+corresponds to the position in the word count list and the name of the vector is 
+the actual word. 
+
+```{r map-review-to-words}
+word_index <- dataset_imdb_word_index() %>% 
+  unlist() %>%                                 
+  sort() %>%                                   
+  names()                                      
+
+# The indices are offset by 3 since 0, 1, and 2 are reserved for "padding", 
+# "start of sequence", and "unknown"
+train_data[[1]] %>% 
+  map_chr(~ ifelse(.x >= 3, word_index[.x - 3], "?")) %>%
+  cat()
+```
+
+Our response variable is just a vector of 1s (positive reviews) and 0s (negative
+reviews).
+
+```{r labels}
+str(train_labels)
+
+# our labels are equally balanced between positive (1s) and negative (0s)
+# reviews
+table(train_labels)
+```
+
+
+# Preparing the features
+
+slides:
+  - vectorization
+  - one-hot encoding
+  - importance of data being small, typically btwn 0-1
+  - illustrate how the IMDB data compares to MNIST
+
+All inputs and response values in a neural network must be tensors of either 
+floating-point or integer data. Moreover, our feature values should not be
+relatively large compared to the randomized initial weights _and_ all our 
+features should take values in roughtly the same range.
+
+Consequently, we need to _vectorize_ our data into a format conducive to neural 
+networks. For this data set, we'll transform our list of article reviews to a
+2D tensor of 0s and 1s representing if the word was used (aka one-hot encode).
+
+```{r prep-features}
+# number of unique words will be the number of features
+n_features <- c(train_data, test_data) %>%  
+  unlist() %>% 
+  max()
+
+# function to create 2D tensor (aka matrix)
+vectorize_sequences <- function(sequences, dimension = n_features) {
+  # Create a matrix of 0s
+  results <- matrix(0, nrow = length(sequences), ncol = dimension)
+
+  # Populate the matrix with 1s
+  for (i in seq_along(sequences))
+    results[i, sequences[[i]]] <- 1
+  results
+}
+
+# apply to training and test data
+train_data_vec <- vectorize_sequences(train_data)
+test_data_vec <- vectorize_sequences(test_data)
+```
+
+
+# Preparing the labels
+
+In contrast MNIST, the labels of a binary classification will just be one value, 
+0 or 1, so we will just make the integer vector numeric.
+
+```{r prep-labels}
+# prepare training labels
+train_labels <- as.numeric(train_labels)
+str(train_labels)
+
+# prepare test labels
+test_labels <- as.numeric(test_labels)
+str(test_labels)
+```
+
+
+# Initial model
+
+Slides:
+- Discuss what the loss function means
+- Tips regarding batch size and epochs
+
+## Define the network
+
+Since we are performing binary classification, our output activation function 
+will be the _sigmoid activation function_.
+
+```{r architecture}
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 16, activation = "relu", input_shape = n_features) %>% 
+  layer_dense(units = 16, activation = "relu") %>% 
+  layer_dense(units = 1, activation = "sigmoid")
+```
+
+## View a summary of the network
+
+```{r summary}
+summary(network)
+```
+
+## Compile
+
+We're going to use _binary crossentropy_ since we only have two possible classes.
+
+```{r compile}
+network %>% compile(
+  optimizer = "rmsprop",
+  loss = "binary_crossentropy",
+  metrics = c("accuracy")
+)
+```
+
+## Train our model
+
+Now let's train our network for 20 epochs:
+
+```{r train, include=FALSE}
+history <- network %>% fit(
+  train_data_vec,
+  train_labels,
+  epochs = 20,
+  batch_size = 512,
+  validation_split = 0.2
+)
+```
+
+Check out our initial resuls:
+
+```{r initial-results}
+history
+```
+
+
+# Customizing compilation
+
+- show how we can use different optimizers, loss, and metric functions
+- demo a custom built metric??
+- takeaway 
+   - we can customize if necessary
+   - RMSProp and default learning rate is typically good enough
+
+Sometimes you may want to configure the parameters of your optimizer or pass a
+custom loss (or metric) function. We can do so by passing optimizer, loss, 
+and/or metric functions to the `compile` arguments.
+
+* optimizers all start with `optimizer_` (https://keras.rstudio.com/reference/index.html#section-optimizers)
+* losses all start with `loss_` (https://keras.rstudio.com/reference/index.html#section-losses)
+* metricss all start with `metric_` (https://keras.rstudio.com/reference/index.html#section-metrics)
+
+```{r custom-compile, include=FALSE}
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 16, activation = "relu", input_shape = n_features) %>% 
+  layer_dense(units = 16, activation = "relu") %>% 
+  layer_dense(units = 1, activation = "sigmoid")
+
+# create metric using backend tensor functions
+metric_mean_pred <- custom_metric("mean_pred", function(y_true, y_pred) {
+  k_mean(y_pred)
+})
+
+network %>% compile(
+  optimizer = optimizer_sgd(lr = 0.005),  # default SGD learning rate = 0.01
+  loss = loss_binary_crossentropy,
+  metrics = c("accuracy", metric_mean_pred)
+)
+
+history <- network %>% fit(
+  train_data_vec,
+  train_labels,
+  epochs = 20,
+  batch_size = 512,
+  validation_split = 0.2
+)
+```
+
+```{r custom-compile-results}
+history
+```
+
+
+
+## YOUR TURN
+
+1. Test out different gradient descent optimizers (i.e. Adagrad, Adam)
+2. Test out different learning rates in the optimizers
+3. You may need to increase the epochs and/or add the learning rate adjuster 
+   (i.e early stopping and learning rate adjuster callbacks)
+
+```{r your-turn-1, include=FALSE}
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 16, activation = "relu", input_shape = n_features) %>% 
+  layer_dense(units = 16, activation = "relu") %>% 
+  layer_dense(units = 1, activation = "sigmoid")
+
+network %>% compile(
+  optimizer = ______, 
+  loss = "binary_crossentropy",
+  metrics = c("accuracy")
+)
+
+history <- network %>% fit(
+  train_data_vec,
+  train_labels,
+  epochs = 20,
+  batch_size = 512,
+  validation_split = 0.2
+)
+```
+
+# Regularizing with layers and nodes
+
+slides:
+  - discuss large network vs smaller network
+  - best practices
+    - # layers
+    - # nodes
+    - funnel vs. flat shape
+    - show how it doesn't really matter in this example but it does impact
+      performance for the Ames and MNIST data
+    
+In our original model we used $2^4 = 16$ neurons in each of our two hidden 
+layers. The number of layers and neurons in our model controls the _capacity_ 
+of our model. How do we know how to set our model capacity? There are some 
+_best practices for controlling capacity_. However, this is a tuning parameter 
+and is largely based on trial and error.
+
+
+## Variant 1: Larger or smaller layers?
+
+Here, we'll use a larger range of neurons (from $2^2 = 4$ to $2^8 = 256$) 
+in each hidden layer.
+
+To do this, we'll define a function `dl_model` that allows us to define 
+and compile our DL network with the specified number of neurons based on $2^n$. 
+This function returns a data frame with the training and validation loss and 
+accuracy for each epoch and number of neurons:
+
+```{r powerto-function}
+dl_model <- function(powerto = 6) {
+  
+  network <- keras_model_sequential() %>%
+    layer_dense(units = 2^powerto, activation = "relu", input_shape = n_features) %>% 
+    layer_dense(units = 2^powerto, activation = "relu") %>% 
+    layer_dense(units = 1, activation = "sigmoid") %>%
+    compile(
+      optimizer = optimizer_rmsprop(lr = 0.0001),
+      loss = "binary_crossentropy",
+      metrics = c("accuracy")
+      )
+  
+  history <- network %>% 
+    fit(
+      train_data_vec,
+      train_labels, 
+      epochs = 25,
+      batch_size = 512,
+      validation_split = 0.2,
+      verbose = FALSE,
+      callbacks = callback_reduce_lr_on_plateau(patience = 4)
+    )
+  
+  output <- as.data.frame(history) %>%
+    mutate(neurons = 2^powerto)
+  
+  return(output)
+  }
+```
+
+Let's also define a helper function that simply pulls out the minimum loss score 
+from the above output (this is not necessary, just informational):
+
+```{r helper-fx}
+get_min_loss <- function(output) {
+  output %>%
+    filter(data == "validation", metric == "loss") %>%
+    summarize(min_loss = min(value)) %>%
+    pull(min_loss) %>%
+    round(3)
+}
+```
+
+Now we can iterate over $2^2 = 4$ to $2^8 = 256$ neurons in each layer:
+
+```{r iterate-over-n-neurons}
+# so that we can store results
+results <- data.frame()
+powerto_range <- 2:8
+
+for (i in powerto_range) {
+  cat("Running model with", 2^i, "neurons per hidden layer: ")
+  m <- dl_model(i)
+  results <- rbind(results, m)
+  loss <- get_min_loss(m)
+  cat(loss, "\n", append = TRUE)
+}
+```
+
+```{r plot-results}
+ggplot(results, aes(epoch, value, color = factor(neurons))) +
+  geom_line() +
+  geom_point(data = filter(results, neurons == 64), show.legend = FALSE) +
+  facet_grid(metric ~ data, scales = 'free_y')
+```
+
+
+## Variant 2: More or less layers?
+
+We can perform a similar approach to assess the impact that the number of layers 
+has on model performance. The following modifies our `dl_model` so that we can 
+dynamically alter the number of layers and neurons.
+
+```{r nlayers-function}
+dl_model <- function(nlayers = 2, powerto = 6) {
+  
+  # Create a model with a single hidden input layer
+  network <- keras_model_sequential() %>%
+    layer_dense(units = 2^powerto, activation = "relu", input_shape = n_features)
+  
+  # Add additional hidden layers based on input
+  if (nlayers > 1) {
+    for (i in seq_along(nlayers - 1)) {
+      network %>% layer_dense(units = 2^powerto, activation = "relu")
+    }
+  }
+  
+  # Add final output layer
+  network %>% layer_dense(units = 1, activation = "sigmoid")
+  
+  
+  # Add compile step
+  network %>% compile(
+      optimizer = optimizer_rmsprop(lr = 0.0001),
+      loss = "binary_crossentropy",
+      metrics = c("accuracy")
+      )
+  
+  # Train model
+  history <- network %>% 
+    fit(
+      train_data_vec,
+      train_labels, 
+      epochs = 25,
+      batch_size = 512,
+      validation_split = 0.2,
+      verbose = FALSE,
+      callbacks = callback_reduce_lr_on_plateau(patience = 4)
+    )
+  
+  # Create formated output for downstream plotting & analysis
+  output <- as.data.frame(history) %>%
+    mutate(nlayers = nlayers, neurons = 2^powerto)
+  
+  return(output)
+  }
+```
+
+Now we can iterate over a range of layers and neurons in each layer to assess 
+the impact to performance. For time, we'll use hidden layers with 64 nodes and 
+just assess the impact of adding more layers:
+
+```{r iterate-over-n-layers}
+# so that we can store results
+results <- data.frame()
+nlayers <- 1:8
+
+for (i in nlayers) {
+  cat("Running model with", i, "hidden layer and 64 neurons per layer: ")
+  m <- dl_model(nlayers = i, powerto = 6)
+  results <- rbind(results, m)
+  loss <- get_min_loss(m)
+  cat(loss, "\n", append = TRUE)
+}
+```
+
+```{r plot-results2}
+ggplot(results, aes(epoch, value, color = factor(nlayers))) +
+  geom_line() +
+  geom_point(data = filter(results, nlayers == 2), show.legend = FALSE) +
+  facet_grid(metric ~ data, scales = 'free_y')
+```
+
+# Evaluate
+
+Now let's snag our best parameters, train our final model, and evaluate it on 
+our test data:
+
+```{r evaluate-final-model}
+# Get best model parameters
+best_mod <- results %>% 
+  filter(data == 'validation', metric == 'loss') %>% 
+  top_n(-1, wt = value)
+
+best_nlayers <- best_mod$nlayers
+best_epoch <- best_mod$epoch
+
+# Create a model with a single hidden input layer
+final_model <- keras_model_sequential() %>%
+  layer_dense(units = 64, activation = "relu", input_shape = n_features)
+
+# Add additional hidden layers based on optimal # of layers (`best_nlayers`)
+if (best_nlayers > 1) {
+  for (i in seq_along(best_nlayers - 1)) {
+    final_model %>% layer_dense(units = 64, activation = "relu")
+  }
+}
+
+# Add final output layer
+final_model %>% layer_dense(units = 1, activation = "sigmoid")
+
+
+# Add compile step
+history <- final_model %>% compile(
+    optimizer = optimizer_rmsprop(lr = 0.0001),
+    loss = "binary_crossentropy",
+    metrics = c("accuracy")
+    )
+
+# Train model based on optimal number of epochs (`best_epoch`)
+final_model %>% 
+  fit(
+    train_data_vec,
+    train_labels, 
+    epochs = best_epoch,
+    batch_size = 512,
+    validation_split = 0.2,
+    verbose = FALSE,
+    callbacks = callback_reduce_lr_on_plateau(patience = 4)
+  )
+
+# Evaluate on test data
+final_model %>% evaluate(test_data_vec, test_labels)
+```
+
+# Predictions
+
+We can predict the probability that reviews in the test set will be positive or 
+negative.
+
+```{r predictions}
+predictions <- final_model %>% predict(test_data_vec)
+head(predictions)
+```
+
+# ROC curve
+
+```{r roc-curve, message=FALSE}
+library(ROCR)
+
+probs <- as.vector(predictions)
+
+prediction(probs, test_labels) %>%
+  performance(measure = "tpr", x.measure = "fpr") %>%
+  plot()
+```
+
+# Confusion matrix
+
+```{r confusion-matrix}
+predicted_class <- factor(ifelse(probs > 0.5, 1, 0), levels = c(1, 0))
+actual_class <- factor(test_labels, levels = c(1, 0))
+
+caret::confusionMatrix(predicted_class, actual_class)
+```
+

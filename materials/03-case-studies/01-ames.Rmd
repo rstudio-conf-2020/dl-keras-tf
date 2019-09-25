@@ -1,0 +1,581 @@
+---
+title: "Case Study 1: Ames -- Regression to predict Ames, IA Home Sales Prices"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Initialize package
+# install.packages(keras)
+library(keras)     # for deep learning
+library(tidyverse) # for dplyr, ggplot2, etc.
+library(rsample)   # for data splitting
+library(recipes)   # for feature engineering
+```
+
+In this case study, our objective is to predict the sales price of a home. This 
+is a _regression_ problem since the goal is to predict any real number across
+some spectrum (\$119,201, \$168,594, \$301,446, etc). To predict the sales 
+price, we will use numeric and categorical features of the home.
+
+Throughout this case study you will learn a few new concepts:
+
+* Vectorization and standardization of features
+* How the MSE/MSLE loss function works
+* Best practices for batch size & epochs
+* What callbacks are and how to start applying them
+* Variability in model performance will always exist
+* How to apply different validation procedures
+
+
+# The Ames housing dataset
+
+For this case study we will use the [Ames housing dataset](http://jse.amstat.org/v19n3/decock.pdf) 
+provided by the __AmesHousing__ package.
+
+```{r get-data, warning = FALSE}
+ames <- AmesHousing::make_ames()
+dim(ames)
+```
+
+# Understanding our data
+
+This data has been partially cleaned up and has no missing data:
+
+```{r}
+sum(is.na(ames))
+```
+
+But this tabular data is a combination of numeric and categorical data that we  
+need to address.
+
+```{r ames-structure}
+glimpse(ames)
+```
+
+The numeric variables are on different scales. For example:
+
+```{r numeric-ranges, message=FALSE, warning=FALSE}
+ames %>%
+  select(Lot_Area, Lot_Frontage, Year_Built, Gr_Liv_Area, Garage_Cars, Mo_Sold) %>%
+  gather(feature, value) %>%
+  ggplot(aes(feature, value)) +
+  geom_boxplot() +
+  scale_y_log10()
+```
+
+There are categorical features that could be ordered:
+
+```{r numeric-categories}
+ames %>%
+  select(matches("(Qual|Cond|QC|Qu)$")) %>%
+  glimpse()
+```
+
+And some of the categorical features have many levels:
+
+```{r}
+ames %>%
+  select_if(~ is.factor(.) & length(levels(.)) > 8) %>%
+  glimpse()
+```
+
+
+# Create train & test splits
+
+The first thing that you may notice is that we do not have a train and test set 
+similar to how MNIST was already set up for us. So, we need to create our own 
+training and testing samples, which we can do with the __rsample__ package.
+
+```{r}
+set.seed(123)
+ames_split <- initial_split(ames, prop = 0.8)
+ames_train <- analysis(ames_split)
+ames_test <- assessment(ames_split)
+
+dim(ames_train)
+dim(ames_test)
+```
+
+
+# Preparing the data
+
+slides:
+  - vectorization
+  - feature engineering
+  - one-hot encoding
+  - importance of data being small, typically btwn 0-1 or standardized
+  - illustrate what the final tensor looks like
+
+All inputs and response values in a neural network must be tensors of either 
+floating-point or integer data. Moreover, our feature values should not be
+relatively large compared to the randomized initial weights _and_ all our 
+features should take values in roughtly the same range.
+
+Consequently, we need to _vectorize_ our data into a format conducive to neural 
+networks. For this data set, we'll transform our data by:
+
+- removing any zero-variance features
+- condensing unique levels of categorical features to "other"
+- ordinal encoding the quality features
+- normalize numeric feature distributions
+- standardizing numeric features to mean = 0, std dev = 1
+- feature eng. steps with rsample
+- one-hot encoding remaining categorical features
+
+```{r}
+blueprint <- recipe(Sale_Price ~ ., data = ames_train) %>%
+  step_nzv(all_nominal()) %>%
+  step_other(all_nominal(), threshold = .01, other = "other") %>%
+  step_integer(matches("(Qual|Cond|QC|Qu)$")) %>%
+  step_YeoJohnson(all_numeric(), -all_outcomes()) %>%
+  step_center(all_numeric(), -all_outcomes()) %>%
+  step_scale(all_numeric(), -all_outcomes()) %>%
+  step_dummy(all_nominal(), -all_outcomes(), one_hot = TRUE)
+
+blueprint
+```
+
+This step computes any relavent information (mean and std deviation of numeric 
+features, names of one-hot encoded features) on the training data so there is 
+no information leakage from the test data.
+
+```{r}
+prepare <- prep(blueprint, training = ames_train)
+prepare
+```
+
+Now we can now vectorize our training and test data.
+
+```{r}
+baked_train <- bake(prepare, new_data = ames_train)
+baked_test <- bake(prepare, new_data = ames_test)
+
+baked_train
+```
+
+Lastly, we need to create the final feature and response objects for train and 
+test data. Since __keras__ and __tensorflow__ require our inputs/outputs to be 
+seperate objects we need to separate them. In doing so, our features need to be 
+a 2D tensor which is why we apply `as.matrix` and our response needs to be a 
+vector which is why we apply `pull`.
+
+```{r}
+x_train <- select(baked_train, -Sale_Price) %>% as.matrix()
+y_train <- baked_train %>% pull(Sale_Price)
+
+x_test <- select(baked_test, -Sale_Price) %>% as.matrix()
+y_test <- baked_test %>% pull(Sale_Price)
+```
+
+Our final feature set now has 155 input variables:
+
+```{r}
+dim(x_train)
+dim(x_test)
+```
+
+# Initial model
+
+slides:
+  * How the MSE/MSLE loss function works
+  * Best practices for batch size & epochs
+
+Our initial model looks fairly similar to the MNIST model we applied. However, 
+note the following differences:
+
+* Final output layer has `units = 1` and no activation function since this is a 
+  regression problem.
+* We are using a different loss and metric function.
+* The batch size is much smaller
+
+```{r initial-model, include=FALSE}
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
+  layer_dense(units = 128, activation = "relu") %>%
+  layer_dense(units = 1)
+
+network %>% compile(
+    optimizer = "rmsprop",
+    loss = "msle",
+    metrics = c("mae")
+  )
+``` 
+
+```{r model-summary}
+summary(network)
+```  
+
+```{r train}
+history <- network %>% fit(
+  x_train,
+  y_train,
+  epochs = 20,
+  batch_size = 32,
+  validation_split = 0.2
+)
+```
+
+Our results show a quick decrease but it's hard to tell if our validation loss 
+has stopped improving or not. 
+
+```{r}
+plot(history) + scale_y_log10()
+```
+
+# YOUR TURN!
+
+Try different batch sizes and epochs and see how model performance changes. 
+Remember, batch sizes are typically powers of 2 (i.e. 16, 32, 64, 128, 256).
+
+```{r your-turn-1}
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
+  layer_dense(units = 128, activation = "relu") %>%
+  layer_dense(units = 1) %>%
+  compile(
+    optimizer = "rmsprop",
+    loss = "msle",
+    metrics = c("mae")
+  )
+
+history <- network %>% fit(
+  x_train,
+  y_train,
+  epochs = ____,
+  batch_size = ____,
+  validation_split = 0.2
+)
+```
+
+
+
+# Callbacks
+
+Slides:
+  - what are callbacks
+  - early stopping
+  - reduce lr on plateau
+  
+If we add early stopping, we can now crank up the number of epochs and let the 
+training automatically stop after we experience no improvement in our loss after
+`patience` number of epochs.
+  
+```{r initial-model-early-stopping, include=FALSE}
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
+  layer_dense(units = 128, activation = "relu") %>%
+  layer_dense(units = 1) %>%
+  compile(
+    optimizer = "rmsprop",
+    loss = "msle",
+    metrics = c("mae")
+  )
+
+history <- network %>% fit(
+  x_train,
+  y_train,
+  epochs = 250,
+  batch_size = 32,
+  validation_split = 0.2,
+  callbacks = callback_early_stopping(patience = 10)
+)
+```
+
+```{r early-stopping-model-performance}
+history
+
+plot(history) + scale_y_log10()
+```
+
+One thing you may notice is that there is significant learning happening for the
+first 15-20 epochs and then the model slowly chips away at the loss for the next
+~100+ epochs.  We can speed up this process with two things:
+
+1. customize our optimizer with a larger learning rate to try speed up the 
+   downhill traversal of the gradient descent
+2. add a callback that slowly reduces the learning rate by a factor of 0.1 if 
+   we don't experience improvement in our loss for `patience` number of epochs.
+
+```{r initial-model-adj-lr, include=FALSE}
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
+  layer_dense(units = 128, activation = "relu") %>%
+  layer_dense(units = 1) %>%
+  compile(
+    optimizer = optimizer_rmsprop(lr = 0.03),
+    loss = "msle",
+    metrics = c("mae")
+  )
+
+history <- network %>% fit(
+  x_train,
+  y_train,
+  epochs = 50,
+  batch_size = 32,
+  validation_split = 0.2,
+  callbacks = list(
+        callback_early_stopping(patience = 10),
+        callback_reduce_lr_on_plateau(factor = 0.2, patience = 5)
+    )
+)
+```
+
+Now we see a much faster process of model training; it only takes ~ 1/10 the 
+number of epochs and it appears that we actually see an increase in performance!
+
+```{r adj-lr-model-performance}
+history
+
+plot(history) + scale_y_log10()
+```
+
+# YOUR TURN!
+
+Try different variations of learning rate, patience parameters, and learning 
+rate reduction factor.  Here are a couple of things to keep in mind:
+
+- _optimizer learning rate_ ranges worth exploring differ depending on the 
+  optimizer but for RMSProp common ranges include 0.1-0.001.
+- _learning rate reduction factor_ typically range from 0.5-0.1.  
+- the patience value for _early stopping_ should not be shorter than the 
+  patience value for _learning rate reduction_, otherwise the learning rate will 
+  never have the opportunity to decrease.
+
+```{r your-turn-2}
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
+  layer_dense(units = 128, activation = "relu") %>%
+  layer_dense(units = 1) %>%
+  compile(
+    optimizer = optimizer_rmsprop(lr = ____),
+    loss = "msle",
+    metrics = c("mae")
+  )
+
+history <- network %>% fit(
+  x_train,
+  y_train,
+  epochs = 50,
+  batch_size = 32,
+  validation_split = 0.2,
+  callbacks = list(
+        callback_early_stopping(patience = ____),
+        callback_reduce_lr_on_plateau(factor = ____, patience = ____)
+    )
+)
+```
+
+
+# Validation procedures
+
+- discuss importance of holding out the test
+- show how you can also supply a validation set
+- takeaway
+   - we can supply a validation set two different ways
+   - if data is ordered then should randomize
+   - discuss when cross-validation is required and how to incorporate
+
+So far we have performed model validation by using `validation_split`. Sometimes 
+this may not be appropriate. `validation_split` selects the last XX% samples in 
+the x and y data provided. So, if our data is ordered than this could skew our
+results.  
+
+An alternative is to create our own validation data and supply it via 
+`validation_data`. First we extract our own train vs. validation data sets:
+
+```{r create-validation}
+set.seed(123)
+index <- sample(1:nrow(x_train), size = floor(nrow(x_train) * 0.8))
+
+x_train_sub <- x_train[index,]
+y_train_sub <- y_train[index]
+
+x_val <- x_train[-index,]
+y_val <- y_train[-index]
+
+length(y_train_sub)
+length(y_val)
+```
+
+Now, we can supply our validation data to `validation_data`:
+
+```{r train-with-validation, include=FALSE}
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
+  layer_dense(units = 128, activation = "relu") %>%
+  layer_dense(units = 1) %>%
+  compile(
+    optimizer = optimizer_rmsprop(lr = 0.03),
+    loss = "msle",
+    metrics = c("mae")
+  )
+
+history <- network %>% fit(
+  x_train_sub,                           # supply our new training features data
+  y_train_sub,                           # supply our new training labels data
+  epochs = 25,
+  batch_size = 32,
+  validation_data = list(x_val, y_val),  # supply our validation data
+  callbacks = list(
+        callback_early_stopping(patience = 10),
+        callback_reduce_lr_on_plateau(factor = 0.2, patience = 5)
+    )
+)
+```
+
+```{r validation-model-performance}
+history
+```
+
+You probably noticed that the loss score from this last model differs from the 
+loss of the model previous to that one. Although all hyperparameter settings are 
+the same, there will always be some variance in our loss score based on 
+randomization in the model and the fact that we have different observations in 
+our validation set. 
+
+As the number of observations in our data increases, variance in our loss score 
+will decrease. However, we do not always have the option to just go out and get 
+more data. So, if we want to gain a more accurate understanding of the loss score 
+and its variance we can perform _k-fold cross validation_. 
+
+First, we need to create k folds:
+
+```{r create-folds}
+# number of folds
+k <- 10
+
+# randomize data before making folds
+set.seed(123)
+indices <- sample(1:nrow(x_train))
+
+# divide the ordered indices into k intervals, labelled 1:k.
+folds <- cut(indices, breaks = k, labels = FALSE)
+str(folds)
+```
+
+Now we can apply a `for` loop to iterate through the training data and perform 
+k-fold cross validation:
+
+```{r perform-kfold-cv}
+# create a data frame to store results
+results <- data.frame()
+
+for (i in seq_len(k)) {
+  cat("processing fold #", i, ":")
+  
+  # Prepare the training and validation data for each fold
+  val_indices <- which(folds == i, arr.ind = TRUE) 
+  
+  # validation set: the ith partition
+  x_val <- x_train[val_indices,]
+  y_val <- y_train[val_indices]
+  
+  # Training set: all other partitions
+  x_train_sub <- x_train[-val_indices,]
+  y_train_sub <- y_train[-val_indices]
+  
+  # Create our model blueprint
+  network <- keras_model_sequential() %>% 
+    layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
+    layer_dense(units = 128, activation = "relu") %>%
+    layer_dense(units = 1) %>%
+    compile(
+      optimizer = optimizer_rmsprop(lr = 0.03),
+      loss = "msle",
+      metrics = c("mae")
+    )
+
+  # Train our model with and supply train / validation data
+  history <- network %>% fit(
+    x_train_sub,                          
+    y_train_sub,                           
+    epochs = 25,
+    batch_size = 32,
+    validation_data = list(x_val, y_val),
+    verbose = FALSE,
+    callbacks = callback_reduce_lr_on_plateau(factor = 0.2, patience = 5)
+    )
+   
+  # Extract the performance data            
+  model_performance <- as.data.frame(history) %>% mutate(fold = i)
+  results <- rbind(results, model_performance)
+  
+  # append loop message with min loss for ith fold
+  min_loss <- round(min(history$metrics$val_loss), 4)
+  cat(min_loss, "\n", append = TRUE)
+} 
+```
+
+We can plot the results:
+
+```{r plot-kfold-results, message=FALSE}
+ggplot(results, aes(epoch, value, color = data)) +
+  geom_point(alpha = 0.5) + 
+  geom_smooth() +
+  facet_wrap(~ metric, ncol = 1, scales = "free_y")
+```
+
+But if we zoom in on the validation loss we can see the variance that exists:
+
+```{r plot-kfold-val-results, message=FALSE}
+results %>%
+  filter(data == 'validation', metric == 'loss') %>%
+  ggplot(aes(epoch, value)) +
+  geom_point(alpha = 0.5) +
+  stat_summary(fun.data = "mean_cl_boot", colour = "red") +
+  geom_smooth() +
+  scale_y_log10()
+```
+
+If we pick the epoch with the lowest average validation loss, we can see that 
+our validation loss is about 
+
+```{r, message=FALSE}
+# which epic has lowest avg loss
+best_epoch<- results %>%
+  group_by(epoch) %>%
+  filter(metric == 'loss', data == 'validation') %>%
+  summarise(avg_loss = mean(value), 
+            std_loss = sd(value)) %>%
+  top_n(-1, wt = avg_loss)
+
+best_epoch
+```
+
+If we re-train our model and use the best epoch, we should see similar results 
+within reason when scoring on new data:
+
+```{r train-evaluate, include=FALSE}
+network <- keras_model_sequential() %>%
+  layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
+  layer_dense(units = 128, activation = "relu") %>%
+  layer_dense(units = 1) %>%
+  compile(
+    optimizer = optimizer_rmsprop(lr = 0.03),
+    loss = "msle",
+    metrics = c("mae")
+  )
+
+history <- network %>% fit(
+  x_train,                             
+  y_train,                             
+  epochs = best_epoch$epoch,
+  batch_size = 32,
+  validation_split = 0.2,
+  callbacks = callback_reduce_lr_on_plateau(factor = 0.2, patience = 5)
+  )
+
+network %>% evaluate(x_test, y_test)
+```
+
+# Predictions
+
+We can predict the probability that reviews in the test set will be positive or 
+negative.
+
+```{r predictions}
+predictions <- final_model %>% predict(test_data_vec)
+head(predictions)
+```

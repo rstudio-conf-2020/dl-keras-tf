@@ -1,0 +1,469 @@
+---
+title: "Case Study 3: Reuters -- Multi-class Classification of News Articles"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(keras)     # for deep learning
+library(tidyverse) # for dplyr, ggplot2, & purrr
+```
+
+In this case study, our objective is to classify newswires into the topic they
+are discussing (i.e. coffee, housing, interest, money supply). This is a 
+_multi-class classification_ problem, which, similarly to the MNIST data, aims 
+to predict more than 2 classes. To predict the topic classification of a 
+newswire, we will use the text of the article.
+
+Throughout this case study you will learn a few new concepts:
+
+* How categorical crossentropy works
+* How and when to apply a very similar loss function (sparse categorical 
+  crossentropy)
+* What weight regularization is and how to incorporate it
+* What dropout is and how to incorporate it
+* Training our final model on all the data with a scheduled learning rate
+
+
+# The Reuters dataset
+
+For this case study we will use the [Reuters dataset](https://martin-thoma.com/nlp-reuters/) 
+which is another well known benchmarking dataset.
+
+```{r get-data, warning = FALSE}
+reuters <- dataset_reuters(num_words = 10000)
+c(c(train_data, train_labels), c(test_data, test_labels)) %<-% reuters
+
+length(train_data)   # 25K reviews in our training data
+length(test_data)    # 25K reviews in our test data
+```
+
+# Understanding our data
+
+slides:
+  - illustrate shape of data
+  - illustrate an article
+  
+```{r first-review}
+train_data[[1]]
+```  
+
+We can map the integer values back the original word index. The integer number 
+corresponds to the position in the word count list and the name of the vector is 
+the actual word. 
+
+```{r map-article-to-words}
+word_index <- dataset_reuters_word_index() %>% 
+  unlist() %>%                                 
+  sort() %>%                                   
+  names()                                      
+
+# The indices are offset by 3 since 0, 1, and 2 are reserved for "padding", 
+# "start of sequence", and "unknown"
+train_data[[1]] %>% 
+  map_chr(~ ifelse(.x >= 3, word_index[.x - 3], "?")) %>%
+  cat()
+```
+
+Our response variable is just an integer vector ranging from 0-45. Our response 
+variable is inbalanced.
+
+```{r labels}
+str(train_labels)
+
+# our labels are not equally balanced
+tibble::enframe(train_labels, name = NULL) %>%
+  ggplot(aes(value)) +
+  geom_bar()
+```
+
+
+# Preparing the features
+
+slides:
+  - illustrate how the Reuters data compares to MNIST & IMDB
+
+Similar to the IMDB case study, we need to _vectorize_ our data into a format 
+conducive to neural networks. For this data set, we'll transform our list of 
+newswires to a 2D tensor of 0s and 1s representing if the word was used (aka 
+one-hot encode).
+
+```{r prep-features}
+# number of unique words will be the number of features
+n_features <- c(train_data, test_data) %>% 
+  unlist() %>% 
+  max()
+
+# function to create 2D tensor (aka matrix)
+vectorize_sequences <- function(sequences, dimension = n_features) {
+  # Create a matrix of 0s
+  results <- matrix(0, nrow = length(sequences), ncol = dimension)
+
+  # Populate the matrix with 1s
+  for (i in seq_along(sequences))
+    results[i, sequences[[i]]] <- 1
+  results
+}
+
+# apply to training and test data
+x_train <- vectorize_sequences(train_data)
+x_test <- vectorize_sequences(test_data)
+```
+
+
+# Preparing the labels
+
+Similar to MNIST, we will one-hot encode our labels with `to_categorical()`
+
+```{r prep-labels}
+# prepare training labels
+y_train <- to_categorical(train_labels)
+cat('Training labels\n')
+y_train[1:10, 1:10]
+
+# prepare test labels
+y_test <- to_categorical(test_labels)
+cat('Test labels\n')
+y_test[1:10, 1:10]
+```
+
+
+# Initial model
+
+Slides:
+- Discuss what the loss function means
+
+First, let's randomize our data to make sure we don't have any ordering problems 
+when using `validation_split`:
+
+```{r randomize}
+# I use seed = 123 often but it has not significant meaning
+set.seed(123)
+index <- sample(1:nrow(x_train))
+x_train <- x_train[index,]
+y_train <- y_train[index,]
+```
+
+Since we are performing multi-class classification, our output activation function 
+will be the _softmax activation function_ and our loss function will be 
+_categorical crossentropy_.
+
+```{r initial-model, include=FALSE}
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 64, activation = "relu", input_shape = n_features) %>% 
+  layer_dense(units = 64, activation = "relu") %>% 
+  layer_dense(units = 46, activation = "softmax") %>%
+  compile(
+    optimizer = "rmsprop",
+    loss = "categorical_crossentropy",
+    metrics = c("accuracy")
+  )
+
+history <- network %>% fit(
+  x_train,
+  y_train,
+  epochs = 20,
+  batch_size = 512,
+  validation_split = 0.2
+)
+```
+
+Our model minimizes the loss score at the following epoch:
+
+```{r best-epoch}
+as.data.frame(history) %>%
+  filter(data == 'validation') %>%
+  spread(metric, value) %>%
+  filter(loss == min(loss))
+```
+
+
+# A different way to handle multi-class labels & loss
+
+slides:
+  - categorical crossentropy vs. sparse categorical crossentropy
+  - discuss what this loss actually looks like
+
+First, we need to re-order our labels to align with the randomized training data:
+
+```{r original-labels}
+train_labels <- train_labels[index]
+str(train_labels)
+```
+
+Now we supply the original `train_labels` for the response and simply change the 
+loss function to `sparse_categorical_crossentropy`. This new loss function is 
+mathematically the same as `categorical_crossentropy`.
+
+```{r sparse-crossentropy-model, include=FALSE}
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 64, activation = "relu", input_shape = n_features) %>% 
+  layer_dense(units = 64, activation = "relu") %>% 
+  layer_dense(units = 46, activation = "softmax") %>%
+  compile(
+    optimizer = "rmsprop",
+    loss = "sparse_categorical_crossentropy",
+    metrics = c("accuracy")
+  )
+
+history <- network %>% fit(
+  x_train,
+  train_labels, # using the original non-one-hot encoded labels
+  epochs = 20,
+  batch_size = 512,
+  validation_split = 0.2
+)
+```
+
+We will get nearly identical results; the only difference should come from 
+natural variance in our loss function due to randomness with our initial weights.
+
+```{r best-epoch2}
+as.data.frame(history) %>%
+  filter(data == 'validation') %>%
+  spread(metric, value) %>%
+  filter(loss == min(loss))
+```
+
+# Weight regularization
+
+Often, our models overfit and we can see this by the difference between the 
+training and validation losses. Sometimes mitigating overfitting can help to 
+create models that generalize to new, unseen data better. A common approach to 
+do so is by constraining the weights to be only small values, which makes the 
+distribution of weight values more _regular_. This is call _weight regularization_ 
+and there are three common types:
+
+- L1 regularization
+- L2 regularization (aka _weight decay_)
+- Combination of the two (i.e. elastic net)
+
+```{r weight-regularization, include=FALSE}
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 64, activation = "relu", input_shape = n_features,
+              kernel_regularizer = regularizer_l1(0.001)) %>% 
+  layer_dense(units = 64, activation = "relu", 
+              kernel_regularizer = regularizer_l1(0.001)) %>% 
+  layer_dense(units = 46, activation = "softmax") %>%
+  compile(
+    optimizer = "rmsprop",
+    loss = "categorical_crossentropy",
+    metrics = c("accuracy")
+  )
+
+history <- network %>% fit(
+  x_train,
+  y_train,
+  epochs = 50,
+  batch_size = 512,
+  validation_split = 0.2,
+  callbacks = callback_early_stopping(patience = 5)
+)
+```
+
+```{r best-epoch3}
+as.data.frame(history) %>%
+  spread(data, value) %>%
+  filter(metric == "loss") %>%
+  filter(validation == min(validation)) %>%
+  mutate(diff = validation - training)
+```
+
+
+# YOUR TURN!
+
+Test out the different `kernel_regularizer`s and see how adjusting the 
+regularization value impacts model performance and the difference between the 
+training and validation loss.
+
+```{r your-turn-1, include=FALSE}
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 64, activation = "relu", input_shape = n_features,
+              kernel_regularizer = ____) %>% 
+  layer_dense(units = 64, activation = "relu", 
+              kernel_regularizer = ____) %>% 
+  layer_dense(units = 46, activation = "softmax") %>%
+  compile(
+    optimizer = "rmsprop",
+    loss = "categorical_crossentropy",
+    metrics = c("accuracy")
+  )
+
+history <- network %>% fit(
+  x_train,
+  y_train,
+  epochs = 50,
+  batch_size = 512,
+  validation_split = 0.2,
+  callbacks = callback_early_stopping(patience = 5)
+)
+```
+
+# Dropout
+
+A regularization technique that has become more common, and highly effective, is 
+_dropout_. Dropout is applied to each layer and will randomly drop out (or set 
+to zero) XX% of the output features from that layer.
+
+```{r dropout, include=FALSE}
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 64, activation = "relu", input_shape = n_features) %>%
+  layer_dropout(0.3) %>%
+  layer_dense(units = 64, activation = "relu",) %>% 
+  layer_dropout(0.3) %>%
+  layer_dense(units = 46, activation = "softmax") %>%
+  compile(
+    optimizer = "rmsprop",
+    loss = "categorical_crossentropy",
+    metrics = c("accuracy")
+  )
+
+history <- network %>% fit(
+  x_train,
+  y_train,
+  epochs = 50,
+  batch_size = 512,
+  validation_split = 0.2,
+  callbacks = callback_early_stopping(patience = 5)
+)
+```
+
+```{r best-epoch4}
+as.data.frame(history) %>%
+  spread(data, value) %>%
+  filter(metric == "loss") %>%
+  filter(validation == min(validation, na.rm = TRUE)) %>%
+  mutate(diff = validation - training)
+```
+
+# YOUR TURN!
+
+Test out the different dropout rates; typical values range from 0.2-0.5.  Assess
+their impact on model performance and the difference between the training and 
+validation loss.
+
+```{r your-turn-2, include=FALSE}
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 64, activation = "relu", input_shape = n_features) %>%
+  layer_dropout(____) %>%
+  layer_dense(units = 64, activation = "relu",) %>% 
+  layer_dropout(____) %>%
+  layer_dense(units = 46, activation = "softmax") %>%
+  compile(
+    optimizer = "rmsprop",
+    loss = "categorical_crossentropy",
+    metrics = c("accuracy")
+  )
+
+history <- network %>% fit(
+  x_train,
+  y_train,
+  epochs = 50,
+  batch_size = 512,
+  validation_split = 0.2,
+  callbacks = callback_early_stopping(patience = 5)
+)
+```
+
+
+# A better way to train the final model
+
+So far, in our previous examples, we would perform model validation while we 
+are training our final model. Rather, the preferred approach is to find the 
+optimal model with validation and then train the final model on the entire 
+training dataset.
+
+So, assume the following is the optimal model found via validation:
+
+```{r best-model, include=FALSE}
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 64, activation = "relu", input_shape = n_features) %>%
+  layer_dropout(0.3) %>%
+  layer_dense(units = 64, activation = "relu",) %>% 
+  layer_dropout(0.3) %>%
+  layer_dense(units = 46, activation = "softmax") %>%
+  compile(
+    optimizer = optimizer_rmsprop(0.001),
+    loss = "categorical_crossentropy",
+    metrics = c("accuracy")
+  )
+
+history <- network %>% fit(
+  x_train,
+  y_train,
+  epochs = 50,
+  batch_size = 512,
+  validation_split = 0.2,
+  callbacks = list(
+    callback_early_stopping(patience = 10),
+    callback_reduce_lr_on_plateau(factor = 0.25, patience = 4)
+  )
+)
+```
+
+We can see that our learning rate has adjusted across the epochs as we told it 
+to:
+
+```{r adjusted-lr}
+history$metrics$lr
+```
+
+So how do we train our final model with all the training data and apply this 
+adjusted learning rate?  First, we need to create a learning rate schedule 
+function that takes an `epoch_index` and `lr` input. Both are required but `lr` 
+is only used if you are going to have a schedule based on the existing learning 
+rate.
+
+```{r lr-schedule-function}
+lr_schedule <- function(epoch_index, lr) {
+  
+  # create epoch to learning rate mapping
+  best_epochs <- which.min(history$metrics$val_loss)
+  epochs <- 0:(best_epochs - 1)
+  lr <- history$metrics$lr[1:best_epochs]
+  mapping <- data.frame(epochs, lr)
+  
+  mapping %>%
+    filter(epochs == epoch_index) %>%
+    pull(lr)
+}
+```
+
+Now we simply supply this function to a new callback that creates a desired 
+learning rate adjustment schedule. This allows us to apply the model to the 
+entire data set without having to do validation.
+
+```{r final-model, include=FALSE}
+# Train model based on number of epochs that minimized the loss
+num_epochs <- which.min(history$metrics$val_loss)
+
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 64, activation = "relu", input_shape = n_features) %>%
+  layer_dropout(0.3) %>%
+  layer_dense(units = 64, activation = "relu",) %>% 
+  layer_dropout(0.3) %>%
+  layer_dense(units = 46, activation = "softmax") %>%
+  compile(
+    optimizer = optimizer_rmsprop(0.001),
+    loss = "categorical_crossentropy",
+    metrics = c("accuracy")
+  )
+
+network %>% fit(
+  x_train,
+  y_train,
+  epochs = num_epochs,
+  batch_size = 512,
+  callbacks = callback_learning_rate_scheduler(lr_schedule)
+)
+```
+
+
+Evaluating our model on the test data results in similar results as our 
+validation loss scores.
+
+```{r evaluate-with-test}
+network %>% evaluate(x_test, y_test)
+```
+
