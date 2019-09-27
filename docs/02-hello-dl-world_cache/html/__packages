@@ -5,3 +5,11 @@ ggplot2
 geoR
 gganimate
 purrr
+tidyverse
+tibble
+tidyr
+readr
+stringr
+forcats
+rsample
+recipes

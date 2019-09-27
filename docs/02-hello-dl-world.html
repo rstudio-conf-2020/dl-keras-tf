@@ -1653,22 +1653,114 @@ history &lt;- network %&gt;%
 ]
 
 ---
-# Batches &amp; epochs
-
-
----
-# Batch gradient descent
-
-
----
-# Stochastic gradient descent
-
-
----
-# Mini-batch stochastic gradient descent
-
+# 3 variants of gradient descent
 
 .pull-left[
+
+1. .bold[Batch gradient descent]
+   - computes the error for each example in the training dataset and updates the 
+     weights &lt;u&gt;after all training examples have been evaluated&lt;/u&gt;
+   - .bold.green[Pros]:
+      - Fewer updates to the model can result in computational efficiencies
+      - Aggregation of errors leads to smoother gradient descent and, often, 
+        quicker convergence
+   - .bold.red[Cons]:
+      - Scales horribly to "longer" datasets
+      - Aggregation of errors often leads to convergence at local minimums
+]
+
+.pull-right[
+
+&lt;img src="02-hello-dl-world_files/figure-html/unnamed-chunk-86-1.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# 3 variants of gradient descent
+
+.pull-left[
+
+1. Batch gradient descent
+2. .bold[Stochastic gradient descent]
+   - randomly selects an individual ob, computes gradients and 
+     updates model weights &lt;u&gt;after this single observation has been evaluated&lt;/u&gt;
+   - .bold.green[Pros]:
+      - Makes individual weight updates much faster
+      - updating model on a single, random observation results in a very noisy 
+        gradient descent which helps avoid local minimums
+   - .bold.red[Cons]:
+      - Takes longer to converge which means can be computationally inefficient
+      - Noisy learning process can also make it hard for the algorithm to settle 
+        on an error minimum for the model.
+]
+
+.pull-right[
+
+&lt;img src="02-hello-dl-world_files/figure-html/unnamed-chunk-87-1.gif" style="display: block; margin: auto;" /&gt;
+
+]
+
+
+---
+# 3 variants of gradient descent
+
+.pull-left[
+
+1. Batch gradient descent
+2. Stochastic gradient descent
+3. .bold[Mini-batch gradient descent]
+   - randomly selects a subset of obs, computes gradients and updates model 
+     weights &lt;u&gt;after this subset has been evaluated&lt;/u&gt;
+   - .bold.green[Pros]:
+      - Balances efficiencies of batch vs. stochastic
+      - Balances robust convergence of batch with some stochastic nature to 
+        minimize local minima.
+   - .bold.red[Cons]:
+      - One more hyperparameter to think about
+   - Most common: `\(2^s \rightarrow 32, 64, 128, 256, 512\)`
+
+]
+
+.pull-right[
+
+&lt;img src="02-hello-dl-world_files/figure-html/unnamed-chunk-88-1.gif" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Epochs
+
+.pull-left.font110[
+
+- The number of times the learning algorithm will work through the entire 
+  training dataset.
+
+]
+
+.pull-right[
+
+&lt;img src="02-hello-dl-world_files/figure-html/unnamed-chunk-89-1.gif" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Epochs
+
+.pull-left.font110[
+
+- The number of times the learning algorithm will work through the entire 
+  training dataset.
+  
+
+```r
+history &lt;- network %&gt;% 
+  fit(train_images,  
+      train_labels, 
+*     batch_size = 128,
+*     epochs = 20,
+      validation_split = 0.2)
+```
+  
 
 ]
 
@@ -1681,13 +1773,149 @@ history &lt;- network %&gt;%
 ---
 # Epochs
 
+.pull-left.font100[
+
+- The number of times the learning algorithm will work through the entire 
+  training dataset.
+  
+- Enough epochs to where we see the loss converge to a minimum  
+
+]
+
+.pull-right[
+
+&lt;img src="images/example_learning_curve.png" width="1471" style="display: block; margin: auto;" /&gt;
+
+]
+
 
 ---
 # Validation
 
+.pull-left[
+
+* If we train a large enough model, theoretically, we should be able to produce 
+  an _identity function_.
+  
+* This is not our objective!
+
+]
+
+.pull-right[
+
+&lt;img src="02-hello-dl-world_files/figure-html/unnamed-chunk-93-1.png" style="display: block; margin: auto;" /&gt;
+
+
+]
+
+---
+# Validation
+
+.pull-left[
+
+* If we train a large enough model, theoretically, we should be able to produce 
+  an _identity function_.
+  
+* This is not our objective!
+
+* We want to identify the model and location that minimizes loss on _unseen data_.
+
+* `validation_split` will:
+   - select the last XX% of data in our training set,
+   - score our model on this validation set at the end of each epoch
+
+]
+
+.pull-right[
+
+&lt;img src="02-hello-dl-world_files/figure-html/unnamed-chunk-94-1.png" style="display: block; margin: auto;" /&gt;
+
+]
 
 ---
 # Training loop summary
+
+.pull-left-narrow[
+&lt;br&gt;&lt;br&gt;&lt;br&gt;
+
+1. Training features and labels
+
+2. Size of mini batches and number epochs
+
+3. Data used as "unseen" validation data
+
+]
+
+.pull-right-wide[
+
+&lt;br&gt;
+&lt;img src="images/training_summary.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Now you know!
+
+.pull-left[
+
+
+```r
+network &lt;- keras_model_sequential() %&gt;%
+  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %&gt;%
+  layer_dense(units = 10, activation = 'softmax')
+
+network %&gt;% compile(
+  loss = "categorical_crossentropy",
+  optimizer = "rmsprop",
+  metrics = c("accuracy")
+)
+
+history &lt;- network %&gt;% 
+  fit(train_images, train_labels, 
+      batch_size = 128, epochs = 20, 
+      validation_split = 0.2)
+```
+
+]
+
+--
+
+.pull-right[
+
+&lt;img src="https://media1.tenor.com/images/8e0b403d6b9f899f5a25cb39b476c308/tenor.gif?itemid=10118626" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Now you know!
+
+.pull-left[
+
+
+```r
+network &lt;- keras_model_sequential() %&gt;%
+  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %&gt;%
+  layer_dense(units = 10, activation = 'softmax')
+
+network %&gt;% compile(
+  loss = "categorical_crossentropy",
+  optimizer = "rmsprop",
+  metrics = c("accuracy")
+)
+
+history &lt;- network %&gt;% 
+  fit(train_images, train_labels, 
+      batch_size = 128, epochs = 20, 
+      validation_split = 0.2)
+```
+
+]
+
+.pull-right[
+
+&lt;img src="https://media2.giphy.com/media/pzuye8RSBJFgk/source.gif" style="display: block; margin: auto;" /&gt;
+
+]
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="libs/remark-latest.min.js"></script>
