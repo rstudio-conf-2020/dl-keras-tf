@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>3 Case Studies to Get Started</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Brad Boehmke" />
+    <meta name="date" content="2020-01-27" />
+    <link rel="stylesheet" href="custom.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# 3 Case Studies to Get Started
+### Brad Boehmke
+### 2020-01-27
+
+---
+
+class: clear, center, middle
+
+background-image: url(https://www.buyrentkenya.com/uploadedfiles/ed/5d/ae/ed5daec1-c0fc-4959-9640-97fac7c7f274.jpg)
+background-size: cover
+
+
+
+---
+# Vectorization &amp; standardization
+
+.font120.bold[_All inputs and response values in a neural network must be tensors of either 
+floating-point or integer data._]
+
+&lt;img src="images/vectorization.png" width="960" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Vectorization &amp; standardization
+
+.font120.bold[_Moreover, our feature values should not be relatively large compared to the randomized initial weights &lt;u&gt;and&lt;/u&gt; all our features should take values in roughly the same range._]
+
+.pull-left[
+
+- Values should not be significantly larger than the initial weights
+
+- Triggers large gradient updates that will prevent the network from converging
+
+]
+
+--
+
+.pull-right[
+
+- Option 1:
+   - standardize between 0-1
+   - easy when working with images since all features align to the same range
+   
+- Option 2:
+   - normalize each feature to have mean of 0
+   - normalize each feature to have standard deviation of 1
+   - common when working with features with different ranges
+
+]
+
+---
+# Feature engineering
+
+.pull-left[
+
+* Many different feature engineering techniques to do this plus other great things
+
+* Misperception that neural nets do not require feature engineering
+
+
+]
+
+.pull-right[
+
+]
+
+---
+# Feature engineering
+
+.pull-left[
+
+* Many different feature engineering techniques to do this plus other great things
+
+* Misperception that neural nets do not require feature engineering
+
+* [_Feature Engineering and Selection: A Practical Approach for Predictive Models_](http://www.feat.engineering/) by Max Kuhn &amp; Kjell Johnson
+
+
+]
+
+.pull-right[
+
+&lt;img src="https://images.tandf.co.uk/common/jackets/amazon/978113807/9781138079229.jpg" width="60%" height="60%" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Feature engineering
+
+.pull-left[
+
+* Many different feature engineering techniques to do this plus other great things
+
+* Misperception that neural nets do not require feature engineering
+
+* [_Feature Engineering and Selection: A Practical Approach for Predictive Models_](http://www.feat.engineering/) by Max Kuhn &amp; Kjell Johnson
+
+* [_Hands-On Machine Learning with R_](https://bradleyboehmke.github.io/HOML/) by Bradley Boehmke &amp; Brandon Greenwell
+
+]
+
+.pull-right[
+
+&lt;img src="https://bradleyboehmke.github.io/HOML/images/homl-cover.jpg" width="60%" height="60%" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Ames Example
+
+.pull-left.code70[
+
+
+```r
+blueprint &lt;- recipe(Sale_Price ~ ., data = ames_train) %&gt;%
+* step_nzv(all_nominal()) %&gt;%
+* step_other(all_nominal(), threshold = .01, other = "other") %&gt;%
+  step_integer(matches("(Qual|Cond|QC|Qu)$")) %&gt;%
+  step_YeoJohnson(all_numeric(), -all_outcomes()) %&gt;%
+  step_center(all_numeric(), -all_outcomes()) %&gt;%
+  step_scale(all_numeric(), -all_outcomes()) %&gt;%
+  step_dummy(all_nominal(), -all_outcomes(), one_hot = TRUE)
+```
+
+]
+
+.pull-right[
+
+* remove any constant categorical features
+* reduce any categorical levels that show in only 1% or less of the observations to a single "other" level
+
+]
+
+---
+# Ames Example
+
+.pull-left.code70[
+
+
+```r
+blueprint &lt;- recipe(Sale_Price ~ ., data = ames_train) %&gt;%
+  step_nzv(all_nominal()) %&gt;% 
+  step_other(all_nominal(), threshold = .01, other = "other") %&gt;% 
+* step_integer(matches("(Qual|Cond|QC|Qu)$")) %&gt;%
+  step_YeoJohnson(all_numeric(), -all_outcomes()) %&gt;%
+  step_center(all_numeric(), -all_outcomes()) %&gt;%
+  step_scale(all_numeric(), -all_outcomes()) %&gt;%
+  step_dummy(all_nominal(), -all_outcomes(), one_hot = TRUE)
+```
+
+]
+
+.pull-right[
+
+* .bold[Vectorization]: convert features that represent ordered quality metrics to numeric values
+   - `Overall_Qual` has 10 Levels: Very_Poor, Poor, Fair, Below_Average, Average, ..., Very_Excellent
+   - Converted to: 1, 2, 3, 4, ..., 10
+
+]
+
+
+
+---
+# Ames Example
+
+.pull-left.code70[
+
+
+```r
+blueprint &lt;- recipe(Sale_Price ~ ., data = ames_train) %&gt;%
+  step_nzv(all_nominal()) %&gt;% 
+  step_other(all_nominal(), threshold = .01, other = "other") %&gt;% 
+  step_integer(matches("(Qual|Cond|QC|Qu)$")) %&gt;% 
+* step_YeoJohnson(all_numeric(), -all_outcomes()) %&gt;%
+* step_center(all_numeric(), -all_outcomes()) %&gt;%
+* step_scale(all_numeric(), -all_outcomes()) %&gt;%
+  step_dummy(all_nominal(), -all_outcomes(), one_hot = TRUE)
+```
+
+]
+
+.pull-right[
+
+* .bold[Standardizes numeric values]
+
+* Yeo-Johnson normalizes value distributions, minimizes outliers which reduces large extreme values
+
+* Centering standardizes features to have mean of zero
+
+* Scaling standardizes feature to have standard deviation of zero
+
+&lt;img src="03-case-studies_files/figure-html/unnamed-chunk-7-1.png" style="display: block; margin: auto;" /&gt;
+
+
+]
+
+---
+# Ames Example
+
+.pull-left.code70[
+
+
+```r
+blueprint &lt;- recipe(Sale_Price ~ ., data = ames_train) %&gt;%
+  step_nzv(all_nominal()) %&gt;% 
+  step_other(all_nominal(), threshold = .01, other = "other") %&gt;% 
+  step_integer(matches("(Qual|Cond|QC|Qu)$")) %&gt;% 
+  step_YeoJohnson(all_numeric(), -all_outcomes()) %&gt;% 
+  step_center(all_numeric(), -all_outcomes()) %&gt;%
+  step_scale(all_numeric(), -all_outcomes()) %&gt;% 
+* step_dummy(all_nominal(), -all_outcomes(), one_hot = TRUE)
+```
+
+]
+
+.pull-right[
+
+* .bold[Vectorize remaining categorical features]
+
+* One-hot encoding
+
+&lt;img src="https://bradleyboehmke.github.io/HOML/images/ohe-vs-dummy.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Ames Example
+
+.pull-left.code70[
+
+
+```r
+blueprint &lt;- recipe(Sale_Price ~ ., data = ames_train) %&gt;%
+  step_nzv(all_nominal()) %&gt;% 
+  step_other(all_nominal(), threshold = .01, other = "other") %&gt;% 
+  step_integer(matches("(Qual|Cond|QC|Qu)$")) %&gt;% 
+  step_YeoJohnson(all_numeric(), -all_outcomes()) %&gt;% 
+  step_center(all_numeric(), -all_outcomes()) %&gt;%
+  step_scale(all_numeric(), -all_outcomes()) %&gt;% 
+  step_dummy(all_nominal(), -all_outcomes(), one_hot = TRUE)
+```
+
+]
+
+.pull-right[
+
+&lt;img src="https://github.com/rstudio/hex-stickers/blob/master/PNG/recipes.png?raw=true" width="50%" height="50%" style="display: block; margin: auto;" /&gt;
+
+.center[[https://tidymodels.github.io/recipes](https://tidymodels.github.io/recipes/)]
+
+]
+
+
+---
+# Error Metrics
+
+.pull-left.font80[
+
+.bold[MSE]:
+
+* the average of the squared error
+
+* `\(MSE = \frac{1}{n} \sum^n_{i=1}(Y_i - \widehat Y_i)^2\)`
+
+* squared component results in larger errors having larger penalties
+
+]
+
+.pull-right.font80[
+
+House 1:
+  - actuals `\(Y = 100,000\)`  
+  - predicted: `\(\widehat Y = 90,000\)` 
+  - error: `\(Y - \widehat Y = 10,000\)`
+  - SE: `\((Y - \widehat Y)^2 = 100,000,000\)` .white[
+  - MSLE: 0.1053605]
+
+House 2:
+  - actual: `\(Y = 350,000\)`
+  - predicted: `\(\widehat Y = 320,000\)`
+  - error: `\(Y - \widehat Y = 30,000\)`
+  - SE: `\((Y - \widehat Y)^2 = 900,000,000\)` .white[
+  - MSLE: 0.08961216]
+
+Total error:
+  - MSE: 500,000,000
+
+]
+
+---
+# Error Metrics
+
+.pull-left.font80[
+
+.bold[MSE]:
+
+* the average of the squared error
+
+* `\(MSE = \frac{1}{n} \sum^n_{i=1}(Y_i - \hat Y_i)^2\)`
+
+* squared component results in larger errors having larger penalties
+
+.bold[RMSE]:
+
+* commonly used to make error more interpretable
+
+* `\(RMSE = \sqrt{MSE}\)`
+
+]
+
+.pull-right.font80[
+
+House 1:
+  - actuals `\(Y = 100,000\)`  
+  - predicted: `\(\widehat Y = 90,000\)` 
+  - error: `\(Y - \widehat Y = 10,000\)`
+  - SE: `\((Y - \widehat Y)^2 = 100,000,000\)` .white[
+  - MSLE: 0.1053605]
+
+House 2:
+  - actual: `\(Y = 350,000\)`
+  - predicted: `\(\widehat Y = 320,000\)`
+  - error: `\(Y - \widehat Y = 30,000\)`
+  - SE: `\((Y - \widehat Y)^2 = 900,000,000\)` .white[
+  - MSLE: 0.08961216]
+  
+Total error:
+  - MSE: 500,000,000 
+  - .bold[RMSE]: `\(\sqrt{MSE} = 22,360.68\)`
+
+]
+
+---
+# Error Metrics
+
+.pull-left.font80[
+
+.bold[MSE]:
+
+* the average of the squared error
+
+* `\(MSE = \frac{1}{n} \sum^n_{i=1}(Y_i - \hat Y_i)^2\)`
+
+* squared component results in larger errors having larger penalties
+
+.bold[RMSE]:
+
+* commonly used to make error more interpretable
+
+* `\(RMSE = \sqrt{MSE}\)`
+
+.bold[MSLE / RMSLE]:
+
+* adjusts for magnitude of value when you want to treat XX% error equally
+
+* `\(MSE = \frac{1}{n} \sum^n_{i=1}(\log(Y_i) - \log(\hat Y_i))^2\)`
+
+]
+
+.pull-right.font80[
+
+House 1:
+  - actuals `\(Y = 100,000\)`  
+  - predicted: `\(\widehat Y = 90,000\)` 
+  - error: `\(Y - \widehat Y = 10,000\)`
+  - SE: `\((Y - \widehat Y)^2 = 100,000,000\)`
+  - MSLE: `\((\log(Y_i) - \log(\hat Y_i))^2 = 0.01110084\)`
+
+House 2:
+  - actual: `\(Y = 350,000\)`
+  - predicted: `\(\widehat Y = 320,000\)`
+  - error: `\(Y - \widehat Y = 30,000\)`
+  - MSE: `\((Y - \widehat Y)^2 = 900,000,000\)` 
+  - MSLE: `\((\log(Y_i) - \log(\hat Y_i))^2 = 0.008030339\)`
+  
+Total error:
+  - MSE: 500,000,000 
+  - RMSE: `\(\sqrt{MSE} = 22,360.68\)`
+  - .bold[MSLE]: 0.009565589
+
+]
+
+---
+# Batch sizes &amp; epochs
+
+* Recall that batch sizes commonly take on values of `\(2^s \rightarrow 32, 64, 128, 256, 512\)`
+
+* And we use enough epochs so that our learning rate reaches a minimum
+
+* General advice:
+   - large batch sizes ( `\(\geq 512\)`) tend to reach "sharp minimums" quickly which tend to generalize poorly
+   - small batch sizes ( `\(\leq 8\)`) tend to take many more epochs to converge
+   - can be influenced by size of data:
+      - larger `\(n\)` can afford larger batch sizes (128, 256, 512)
+      - smaller `\(n\)` often do better with smaller batch sizes (16, 32, 64)
+
+* Which is best...
+   - I typically start with 32 or 64
+   - Trial and error for your specific problem
+
+
+---
+# Callbacks
+
+.pull-left[
+
+Training a model can be like flying a paper airplane...
+
+&lt;br&gt;&lt;br&gt;
+
+...once you let go you have little control over its trajectory!
+
+]
+
+.pull-right[
+
+&lt;img src="https://media2.giphy.com/media/zMS612WWVzQPu/source.gif" width="80%" height="80%" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Callbacks
+
+.pull-left.font90[
+
+When training a model, sometimes we want to:
+
+&lt;br&gt;
+
+- automatically stop a model once performance has stopped improving
+
+- dynamically adjust values of certain parameters (i.e. learning rate)
+
+- log model information to use or visualize later on
+
+- continually save the model during training and save the model with the best performance
+
+.center[_These tasks and others can help control the trajectory of our model._]
+
+]
+
+---
+# Callbacks
+
+.pull-left.font90[
+
+When training a model, sometimes we want to:
+
+&lt;br&gt;
+
+- .blue[automatically stop a model once performance has stopped improving]
+
+- .red[dynamically adjust values of certain parameters (i.e. learning rate)]
+
+- .grey[log model information to use or visualize later on]
+
+- .purple[continually save the model during training and save the model with the best performance]
+
+.center[_These tasks and others can help control the trajectory of our model._]
+
+]
+
+.pull-right.font90[
+
+Callbacks provide a way to control and monitor our model during training:
+
+&lt;br&gt;
+
+- .blue[`callback_early_stopping()`]
+
+- .red[`callback_reduce_lr_on_plateau()`]
+
+- .red[`callback_learning_rate_scheduler()`]
+
+- .grey[`callback_csv_logger()`]
+
+- .purple[`callback_model_checkpoint()`]
+
+- and others (`keras::callback_xxx`)
+
+]
+
+---
+# Validation procedures
+
+.pull-left[
+
+So far, we've used `validation_split` to pull out XX% of our training data and use as "unseen" validation data.
+
+
+```r
+network %&gt;% fit(
+  x_train,
+  y_train,
+  epochs = 50,
+  batch_size = 32,
+* validation_split = 0.2
+)
+```
+
+]
+
+--
+
+.pull-right[
+
+We can also supply validation data with `validation_data` .white[more text to force on next line ttttttttttttttttt]
+
+
+
+
+```r
+network %&gt;% fit(
+  x_train,
+  y_train,
+  epochs = 50,
+  batch_size = 32,
+* validation_data = list(x_val, y_val)
+)
+```
+
+]
+
+---
+# Validation procedures
+
+.pull-left[
+
+Variability in validation results exists from two sources:
+
+1. randomness in initial weights .white[
+
+2. differences in the actual data used for validation]
+
+]
+
+.pull-right[
+
+&lt;img src="03-case-studies_files/figure-html/unnamed-chunk-15-1.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Validation procedures
+
+.pull-left[
+
+Variability in validation results exists from two sources:
+
+1. randomness in initial weights
+
+2. differences in the actual data used for validation
+
+]
+
+.pull-right[
+
+&lt;img src="03-case-studies_files/figure-html/unnamed-chunk-16-1.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Validation procedures
+
+.pull-left[
+
+Variability in validation results exists from two sources:
+
+1. randomness in initial weights
+
+2. differences in the actual data used for validation
+
+]
+
+.pull-right[
+
+* These difference become minimal for very large data sets
+
+* but can skew our confidence in smaller data sets ( `\(&lt;10\text{K}\)` observations)
+
+]
+
+---
+# _k_-fold cross validation
+
+.pull-left[
+
+* _k_-fold CV is a resampling method that randomly divides the training data into _k_ groups (aka folds) of approximately equal size
+
+* fit model on `\(k−1\)` folds and then the remaining fold is used to compute model performance
+
+* average the _k_ error estimates
+
+* typically use `\(k=5\)` or `\(k=10\)`
+
+]
+
+.pull-right[
+
+&lt;img src="https://bradleyboehmke.github.io/HOML/images/cv.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+class: clear, center, middle
+
+background-image: url(https://www.elitereaders.com/wp-content/uploads/2016/04/worst-movie-reviews-featured.jpg)
+background-size: cover
+
+---
+# IMDB review data
+
+
+---
+# Vectorizing text
+
+
+---
+# Data transformation
+
+compare before after data prep to MNIST
+
+
+---
+# Sigmoid activation
+
+recall how sigmoid activation gives us a 0-1 probability
+
+---
+# Binary crossentropy
+
+
+---
+# Customizing compile step
+
+
+---
+# Controlling the size of your network
+
+
+
+---
+class: clear, center, middle
+
+background-image: url(https://www.refinitiv.com/content/dam/marketing/en_us/images/product/knowledge-direct-news-screenshot.jpg.transform/rect-768/q82/image.jpg)
+background-size: cover
+
+---
+# Categorical crossentropy
+
+
+---
+# Sparse categorical crossentropy
+
+
+---
+# Weight regularization
+
+
+---
+# Dropout
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="libs/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

@@ -1,0 +1,742 @@
+---
+title: "3 Case Studies to Get Started"
+author: "Brad Boehmke"
+date: "2020-01-27"
+output:
+  xaringan::moon_reader:
+    css: ["custom.css"]
+    self_contained: false
+    lib_dir: libs
+    chakra: libs/remark-latest.min.js
+    nature:
+      ratio: '16:9'
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: clear, center, middle
+
+background-image: url(https://www.buyrentkenya.com/uploadedfiles/ed/5d/ae/ed5daec1-c0fc-4959-9640-97fac7c7f274.jpg)
+background-size: cover
+
+```{r setup, include=FALSE, cache=FALSE}
+# set working directory to docs folder
+setwd(here::here("docs"))
+
+# Set global R options
+options(htmltools.dir.version = FALSE, servr.daemon = TRUE)
+
+# Set global knitr chunk options
+knitr::opts_chunk$set(
+  fig.align = "center", 
+  cache = TRUE,
+  error = FALSE,
+  message = FALSE, 
+  warning = FALSE, 
+  collapse = TRUE 
+)
+
+# Use a clean black and white ggplot2 theme
+library(tidyverse)
+library(gganimate)
+thm <- theme_bw()
+theme_set(thm)
+```
+
+---
+# Vectorization & standardization
+
+.font120.bold[_All inputs and response values in a neural network must be tensors of either 
+floating-point or integer data._]
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/vectorization.png")
+```
+
+
+---
+# Vectorization & standardization
+
+.font120.bold[_Moreover, our feature values should not be relatively large compared to the randomized initial weights <u>and</u> all our features should take values in roughly the same range._]
+
+.pull-left[
+
+- Values should not be significantly larger than the initial weights
+
+- Triggers large gradient updates that will prevent the network from converging
+
+]
+
+--
+
+.pull-right[
+
+- Option 1:
+   - standardize between 0-1
+   - easy when working with images since all features align to the same range
+   
+- Option 2:
+   - normalize each feature to have mean of 0
+   - normalize each feature to have standard deviation of 1
+   - common when working with features with different ranges
+
+]
+
+---
+# Feature engineering
+
+.pull-left[
+
+* Many different feature engineering techniques to do this plus other great things
+
+* Misperception that neural nets do not require feature engineering
+
+
+]
+
+.pull-right[
+
+]
+
+---
+# Feature engineering
+
+.pull-left[
+
+* Many different feature engineering techniques to do this plus other great things
+
+* Misperception that neural nets do not require feature engineering
+
+* [_Feature Engineering and Selection: A Practical Approach for Predictive Models_](http://www.feat.engineering/) by Max Kuhn & Kjell Johnson
+
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE, out.height="60%", out.width="60%"}
+knitr::include_graphics("https://images.tandf.co.uk/common/jackets/amazon/978113807/9781138079229.jpg")
+```
+
+]
+
+---
+# Feature engineering
+
+.pull-left[
+
+* Many different feature engineering techniques to do this plus other great things
+
+* Misperception that neural nets do not require feature engineering
+
+* [_Feature Engineering and Selection: A Practical Approach for Predictive Models_](http://www.feat.engineering/) by Max Kuhn & Kjell Johnson
+
+* [_Hands-On Machine Learning with R_](https://bradleyboehmke.github.io/HOML/) by Bradley Boehmke & Brandon Greenwell
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE, out.height="60%", out.width="60%"}
+knitr::include_graphics("https://bradleyboehmke.github.io/HOML/images/homl-cover.jpg")
+```
+
+]
+
+---
+# Ames Example
+
+.pull-left.code70[
+
+```{r, eval=FALSE}
+blueprint <- recipe(Sale_Price ~ ., data = ames_train) %>%
+  step_nzv(all_nominal()) %>% #<<
+  step_other(all_nominal(), threshold = .01, other = "other") %>% #<<
+  step_integer(matches("(Qual|Cond|QC|Qu)$")) %>%
+  step_YeoJohnson(all_numeric(), -all_outcomes()) %>%
+  step_center(all_numeric(), -all_outcomes()) %>%
+  step_scale(all_numeric(), -all_outcomes()) %>%
+  step_dummy(all_nominal(), -all_outcomes(), one_hot = TRUE)
+```
+
+]
+
+.pull-right[
+
+* remove any constant categorical features
+* reduce any categorical levels that show in only 1% or less of the observations to a single "other" level
+
+]
+
+---
+# Ames Example
+
+.pull-left.code70[
+
+```{r, eval=FALSE}
+blueprint <- recipe(Sale_Price ~ ., data = ames_train) %>%
+  step_nzv(all_nominal()) %>% 
+  step_other(all_nominal(), threshold = .01, other = "other") %>% 
+  step_integer(matches("(Qual|Cond|QC|Qu)$")) %>% #<<
+  step_YeoJohnson(all_numeric(), -all_outcomes()) %>%
+  step_center(all_numeric(), -all_outcomes()) %>%
+  step_scale(all_numeric(), -all_outcomes()) %>%
+  step_dummy(all_nominal(), -all_outcomes(), one_hot = TRUE)
+```
+
+]
+
+.pull-right[
+
+* .bold[Vectorization]: convert features that represent ordered quality metrics to numeric values
+   - `Overall_Qual` has 10 Levels: Very_Poor, Poor, Fair, Below_Average, Average, ..., Very_Excellent
+   - Converted to: 1, 2, 3, 4, ..., 10
+
+]
+
+
+
+---
+# Ames Example
+
+.pull-left.code70[
+
+```{r, eval=FALSE}
+blueprint <- recipe(Sale_Price ~ ., data = ames_train) %>%
+  step_nzv(all_nominal()) %>% 
+  step_other(all_nominal(), threshold = .01, other = "other") %>% 
+  step_integer(matches("(Qual|Cond|QC|Qu)$")) %>% 
+  step_YeoJohnson(all_numeric(), -all_outcomes()) %>% #<<
+  step_center(all_numeric(), -all_outcomes()) %>% #<<
+  step_scale(all_numeric(), -all_outcomes()) %>% #<<
+  step_dummy(all_nominal(), -all_outcomes(), one_hot = TRUE)
+```
+
+]
+
+.pull-right[
+
+* .bold[Standardizes numeric values]
+
+* Yeo-Johnson normalizes value distributions, minimizes outliers which reduces large extreme values
+
+* Centering standardizes features to have mean of zero
+
+* Scaling standardizes feature to have standard deviation of zero
+
+```{r, echo=FALSE, fig.height=2.25}
+data.frame(x = rlnorm(1000, 10, 1)) %>%
+  mutate(`Regular values` = x,
+         `Standardized values` = scale(log(`Regular values`))) %>%
+  gather(type, values, -x) %>%
+  ggplot(aes(values)) +
+    geom_histogram(bins = 50) +
+    facet_wrap(~ type, scales = "free_x") +
+    scale_x_continuous(NULL, labels = scales::comma)
+```
+
+
+]
+
+---
+# Ames Example
+
+.pull-left.code70[
+
+```{r, eval=FALSE}
+blueprint <- recipe(Sale_Price ~ ., data = ames_train) %>%
+  step_nzv(all_nominal()) %>% 
+  step_other(all_nominal(), threshold = .01, other = "other") %>% 
+  step_integer(matches("(Qual|Cond|QC|Qu)$")) %>% 
+  step_YeoJohnson(all_numeric(), -all_outcomes()) %>% 
+  step_center(all_numeric(), -all_outcomes()) %>%
+  step_scale(all_numeric(), -all_outcomes()) %>% 
+  step_dummy(all_nominal(), -all_outcomes(), one_hot = TRUE) #<<
+```
+
+]
+
+.pull-right[
+
+* .bold[Vectorize remaining categorical features]
+
+* One-hot encoding
+
+```{r, echo=FALSE}
+knitr::include_graphics("https://bradleyboehmke.github.io/HOML/images/ohe-vs-dummy.png")
+```
+
+]
+
+---
+# Ames Example
+
+.pull-left.code70[
+
+```{r, eval=FALSE}
+blueprint <- recipe(Sale_Price ~ ., data = ames_train) %>%
+  step_nzv(all_nominal()) %>% 
+  step_other(all_nominal(), threshold = .01, other = "other") %>% 
+  step_integer(matches("(Qual|Cond|QC|Qu)$")) %>% 
+  step_YeoJohnson(all_numeric(), -all_outcomes()) %>% 
+  step_center(all_numeric(), -all_outcomes()) %>%
+  step_scale(all_numeric(), -all_outcomes()) %>% 
+  step_dummy(all_nominal(), -all_outcomes(), one_hot = TRUE)
+```
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE, out.height="50%", out.width="50%"}
+knitr::include_graphics("https://github.com/rstudio/hex-stickers/blob/master/PNG/recipes.png?raw=true")
+```
+
+.center[[https://tidymodels.github.io/recipes](https://tidymodels.github.io/recipes/)]
+
+]
+
+
+---
+# Error Metrics
+
+.pull-left.font80[
+
+.bold[MSE]:
+
+* the average of the squared error
+
+* $MSE = \frac{1}{n} \sum^n_{i=1}(Y_i - \widehat Y_i)^2$
+
+* squared component results in larger errors having larger penalties
+
+]
+
+.pull-right.font80[
+
+House 1:
+  - actuals $Y = 100,000$  
+  - predicted: $\widehat Y = 90,000$ 
+  - error: $Y - \widehat Y = 10,000$
+  - SE: $(Y - \widehat Y)^2 = 100,000,000$ .white[
+  - MSLE: 0.1053605]
+
+House 2:
+  - actual: $Y = 350,000$
+  - predicted: $\widehat Y = 320,000$
+  - error: $Y - \widehat Y = 30,000$
+  - SE: $(Y - \widehat Y)^2 = 900,000,000$ .white[
+  - MSLE: 0.08961216]
+
+Total error:
+  - MSE: 500,000,000
+
+]
+
+---
+# Error Metrics
+
+.pull-left.font80[
+
+.bold[MSE]:
+
+* the average of the squared error
+
+* $MSE = \frac{1}{n} \sum^n_{i=1}(Y_i - \hat Y_i)^2$
+
+* squared component results in larger errors having larger penalties
+
+.bold[RMSE]:
+
+* commonly used to make error more interpretable
+
+* $RMSE = \sqrt{MSE}$
+
+]
+
+.pull-right.font80[
+
+House 1:
+  - actuals $Y = 100,000$  
+  - predicted: $\widehat Y = 90,000$ 
+  - error: $Y - \widehat Y = 10,000$
+  - SE: $(Y - \widehat Y)^2 = 100,000,000$ .white[
+  - MSLE: 0.1053605]
+
+House 2:
+  - actual: $Y = 350,000$
+  - predicted: $\widehat Y = 320,000$
+  - error: $Y - \widehat Y = 30,000$
+  - SE: $(Y - \widehat Y)^2 = 900,000,000$ .white[
+  - MSLE: 0.08961216]
+  
+Total error:
+  - MSE: 500,000,000 
+  - .bold[RMSE]: $\sqrt{MSE} = 22,360.68$
+
+]
+
+---
+# Error Metrics
+
+.pull-left.font80[
+
+.bold[MSE]:
+
+* the average of the squared error
+
+* $MSE = \frac{1}{n} \sum^n_{i=1}(Y_i - \hat Y_i)^2$
+
+* squared component results in larger errors having larger penalties
+
+.bold[RMSE]:
+
+* commonly used to make error more interpretable
+
+* $RMSE = \sqrt{MSE}$
+
+.bold[MSLE / RMSLE]:
+
+* adjusts for magnitude of value when you want to treat XX% error equally
+
+* $MSE = \frac{1}{n} \sum^n_{i=1}(\log(Y_i) - \log(\hat Y_i))^2$
+
+]
+
+.pull-right.font80[
+
+House 1:
+  - actuals $Y = 100,000$  
+  - predicted: $\widehat Y = 90,000$ 
+  - error: $Y - \widehat Y = 10,000$
+  - SE: $(Y - \widehat Y)^2 = 100,000,000$
+  - MSLE: $(\log(Y_i) - \log(\hat Y_i))^2 = 0.01110084$
+
+House 2:
+  - actual: $Y = 350,000$
+  - predicted: $\widehat Y = 320,000$
+  - error: $Y - \widehat Y = 30,000$
+  - MSE: $(Y - \widehat Y)^2 = 900,000,000$ 
+  - MSLE: $(\log(Y_i) - \log(\hat Y_i))^2 = 0.008030339$
+  
+Total error:
+  - MSE: 500,000,000 
+  - RMSE: $\sqrt{MSE} = 22,360.68$
+  - .bold[MSLE]: 0.009565589
+
+]
+
+---
+# Batch sizes & epochs
+
+* Recall that batch sizes commonly take on values of $2^s \rightarrow 32, 64, 128, 256, 512$
+
+* And we use enough epochs so that our learning rate reaches a minimum
+
+* General advice:
+   - large batch sizes ( $\geq 512$) tend to reach "sharp minimums" quickly which tend to generalize poorly
+   - small batch sizes ( $\leq 8$) tend to take many more epochs to converge
+   - can be influenced by size of data:
+      - larger $n$ can afford larger batch sizes (128, 256, 512)
+      - smaller $n$ often do better with smaller batch sizes (16, 32, 64)
+
+* Which is best...
+   - I typically start with 32 or 64
+   - Trial and error for your specific problem
+
+
+---
+# Callbacks
+
+.pull-left[
+
+Training a model can be like flying a paper airplane...
+
+<br><br>
+
+...once you let go you have little control over its trajectory!
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE, out.height="80%", out.width="80%"}
+knitr::include_graphics("https://media2.giphy.com/media/zMS612WWVzQPu/source.gif")
+```
+
+]
+
+---
+# Callbacks
+
+.pull-left.font90[
+
+When training a model, sometimes we want to:
+
+<br>
+
+- automatically stop a model once performance has stopped improving
+
+- dynamically adjust values of certain parameters (i.e. learning rate)
+
+- log model information to use or visualize later on
+
+- continually save the model during training and save the model with the best performance
+
+.center[_These tasks and others can help control the trajectory of our model._]
+
+]
+
+---
+# Callbacks
+
+.pull-left.font90[
+
+When training a model, sometimes we want to:
+
+<br>
+
+- .blue[automatically stop a model once performance has stopped improving]
+
+- .red[dynamically adjust values of certain parameters (i.e. learning rate)]
+
+- .grey[log model information to use or visualize later on]
+
+- .purple[continually save the model during training and save the model with the best performance]
+
+.center[_These tasks and others can help control the trajectory of our model._]
+
+]
+
+.pull-right.font90[
+
+Callbacks provide a way to control and monitor our model during training:
+
+<br>
+
+- .blue[`callback_early_stopping()`]
+
+- .red[`callback_reduce_lr_on_plateau()`]
+
+- .red[`callback_learning_rate_scheduler()`]
+
+- .grey[`callback_csv_logger()`]
+
+- .purple[`callback_model_checkpoint()`]
+
+- and others (`keras::callback_xxx`)
+
+]
+
+---
+# Validation procedures
+
+.pull-left[
+
+So far, we've used `validation_split` to pull out XX% of our training data and use as "unseen" validation data.
+
+```{r, eval=FALSE}
+network %>% fit(
+  x_train,
+  y_train,
+  epochs = 50,
+  batch_size = 32,
+  validation_split = 0.2 #<<
+)
+```
+
+]
+
+--
+
+.pull-right[
+
+We can also supply validation data with `validation_data` .white[more text to force on next line ttttttttttttttttt]
+
+
+
+```{r, eval=FALSE}
+network %>% fit(
+  x_train,
+  y_train,
+  epochs = 50,
+  batch_size = 32,
+  validation_data = list(x_val, y_val) #<<
+)
+```
+
+]
+
+---
+# Validation procedures
+
+.pull-left[
+
+Variability in validation results exists from two sources:
+
+1. randomness in initial weights .white[
+
+2. differences in the actual data used for validation]
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+df <- readr::read_csv("data/model_variance_due_to_weights.csv")
+
+p1 <- ggplot(df, aes(Epoch, Loss, group = Model)) +
+  geom_line(alpha = 0.1) +
+  scale_y_log10("log(Loss)") +
+  ggtitle("Learning curve variability")
+
+p2 <- df %>%
+  group_by(Model) %>%
+  summarize(Min_loss = min(Loss)) %>%
+  ggplot(aes(Min_loss)) +
+  geom_histogram() +
+  ggtitle("Minimum loss variability")
+
+gridExtra::grid.arrange(p1, p2)
+```
+
+]
+
+---
+# Validation procedures
+
+.pull-left[
+
+Variability in validation results exists from two sources:
+
+1. randomness in initial weights
+
+2. differences in the actual data used for validation
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+df <- readr::read_csv("data/model_variance_due_to_val_data.csv")
+
+p1 <- ggplot(df, aes(Epoch, Loss, group = Model)) +
+  geom_line(alpha = 0.1) +
+  scale_y_log10("log(Loss)") +
+  ggtitle("Learning curve variability")
+
+p2 <- df %>%
+  group_by(Model) %>%
+  summarize(Min_loss = min(Loss)) %>%
+  ggplot(aes(Min_loss)) +
+  geom_histogram() +
+  ggtitle("Minimum loss variability")
+
+gridExtra::grid.arrange(p1, p2)
+```
+
+]
+
+---
+# Validation procedures
+
+.pull-left[
+
+Variability in validation results exists from two sources:
+
+1. randomness in initial weights
+
+2. differences in the actual data used for validation
+
+]
+
+.pull-right[
+
+* These difference become minimal for very large data sets
+
+* but can skew our confidence in smaller data sets ( $<10\text{K}$ observations)
+
+]
+
+---
+# _k_-fold cross validation
+
+.pull-left[
+
+* _k_-fold CV is a resampling method that randomly divides the training data into _k_ groups (aka folds) of approximately equal size
+
+* fit model on $k−1$ folds and then the remaining fold is used to compute model performance
+
+* average the _k_ error estimates
+
+* typically use $k=5$ or $k=10$
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+knitr::include_graphics("https://bradleyboehmke.github.io/HOML/images/cv.png")
+```
+
+]
+
+---
+class: clear, center, middle
+
+background-image: url(https://www.elitereaders.com/wp-content/uploads/2016/04/worst-movie-reviews-featured.jpg)
+background-size: cover
+
+---
+# IMDB review data
+
+
+---
+# Vectorizing text
+
+
+---
+# Data transformation
+
+compare before after data prep to MNIST
+
+
+---
+# Sigmoid activation
+
+recall how sigmoid activation gives us a 0-1 probability
+
+---
+# Binary crossentropy
+
+
+---
+# Customizing compile step
+
+
+---
+# Controlling the size of your network
+
+
+
+---
+class: clear, center, middle
+
+background-image: url(https://www.refinitiv.com/content/dam/marketing/en_us/images/product/knowledge-direct-news-screenshot.jpg.transform/rect-768/q82/image.jpg)
+background-size: cover
+
+---
+# Categorical crossentropy
+
+
+---
+# Sparse categorical crossentropy
+
+
+---
+# Weight regularization
+
+
+---
+# Dropout
+

@@ -1,0 +1,14 @@
+base
+ggplot2
+gganimate
+tidyverse
+tibble
+tidyr
+readr
+purrr
+dplyr
+stringr
+forcats
+keras
+rsample
+recipes

@@ -146,7 +146,7 @@ prepare <- prep(blueprint, training = ames_train)
 prepare
 ```
 
-Now we can now vectorize our training and test data.
+We can now vectorize our training and test data.
 
 ```{r}
 baked_train <- bake(prepare, new_data = ames_train)
@@ -227,7 +227,7 @@ plot(history) + scale_y_log10()
 # YOUR TURN!
 
 Try different batch sizes and epochs and see how model performance changes. 
-Remember, batch sizes are typically powers of 2 (i.e. 16, 32, 64, 128, 256).
+Remember, batch sizes are typically powers of 2 (i.e. 16, 32, 64, 128, 256, 512).
 
 ```{r your-turn-1}
 network <- keras_model_sequential() %>% 
