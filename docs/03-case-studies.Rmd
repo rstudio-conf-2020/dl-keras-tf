@@ -38,6 +38,7 @@ knitr::opts_chunk$set(
 
 # Use a clean black and white ggplot2 theme
 library(tidyverse)
+library(keras)
 library(gganimate)
 thm <- theme_bw()
 theme_set(thm)
@@ -686,25 +687,157 @@ class: clear, center, middle
 
 background-image: url(https://www.elitereaders.com/wp-content/uploads/2016/04/worst-movie-reviews-featured.jpg)
 background-size: cover
-
 ---
-# IMDB review data
+# IMDB data set
 
+.pull-left[
+
+```{r, echo=FALSE}
+knitr::include_graphics("https://www.wikihow.com/images/thumb/4/46/Prepare-a-Review-on-IMDb-Step-6-Version-2.jpg/aid2512841-v4-728px-Prepare-a-Review-on-IMDb-Step-6-Version-2.jpg")
+```
+
+
+]
+
+.pull-right[
+
+* A  collection of 50,000 reviews from IMDB on the condition there are no more than 30 reviews per movie. 
+
+* The numbers of positive and negative reviews are equal. 
+   - .red[Negative] reviews: score $\leq$ 4 out of 10
+   - .green[Positive] reviews: score $\geq$ 7 out of 10
+   - Neutral reviews are not included. 
+   
+* The 50,000 reviews are divided evenly into the training and test set.
+
+]
 
 ---
 # Vectorizing text
 
+.pull-left[
+
+.bold[Before vectorization] $\rightarrow$ list of integers
+
+```{r, echo=FALSE}
+imdb <- dataset_imdb(num_words = 10000)
+c(c(train_data, train_labels), c(test_data, test_labels)) %<-% imdb
+```
+
+```{r}
+str(train_data)
+```
+
+
+]
+
+.pull-right[
+
+.bold[After vectorization] $\rightarrow$ 2D Tensor of 0s & 1s
+
+```{r, echo=FALSE}
+n_features <- c(train_data, test_data) %>%  
+  unlist() %>% 
+  max()
+
+# function to create 2D tensor (aka matrix)
+vectorize_sequences <- function(sequences, dimension = n_features) {
+  # Create a matrix of 0s
+  results <- matrix(0, nrow = length(sequences), ncol = dimension)
+
+  # Populate the matrix with 1s
+  for (i in seq_along(sequences))
+    results[i, sequences[[i]]] <- 1
+  results
+}
+
+# apply to training and test data
+train_data_vec <- vectorize_sequences(train_data)
+```
+
+```{r}
+colnames(train_data_vec) <- paste0("word", 1:ncol(train_data_vec))
+train_data_vec[, 1:10]
+```
+
+]
 
 ---
-# Data transformation
+# Vectorizing text
 
-compare before after data prep to MNIST
+.pull-left[
+
+list of integers $\rightarrow$ list of word indeces
+
+```{r, echo=FALSE}
+word_index <- dataset_imdb_word_index() %>% 
+  unlist() %>%                                 
+  sort() %>%                                   
+  names()
+
+c(c(train_data, train_labels), c(test_data, test_labels)) %<-% imdb
+
+for (i in seq_along(train_data)) {
+  train_data[[i]] <- train_data[[i]] %>% 
+  purrr::map_chr(~ ifelse(.x >= 3, word_index[.x - 3], "?"))
+}
+```
+
+```{r}
+str(train_data)
+```
+
+
+]
+
+.pull-right[
+
+2D Tensor of 0s & 1s $\rightarrow$ one-hot encoded words
+
+```{r, echo=FALSE}
+c(c(train_data, train_labels), c(test_data, test_labels)) %<-% imdb
+
+new_index <- unique(unlist(train_data)) %>% sort()
+new_index <- new_index - 3
+new_index <- new_index[new_index > 0]
+words_used <- word_index[new_index]
+words_used <- c("pad", "start", "unknown", words_used)
+```
+
+
+```{r}
+colnames(train_data_vec) <- words_used
+train_data_vec[, 1:10]
+```
+
+]
 
 
 ---
 # Sigmoid activation
 
-recall how sigmoid activation gives us a 0-1 probability
+.pull-left[
+
+Recall how sigmoid activation gives us a 0-1 probability
+
+]
+
+.pull-right.center[
+
+```{r, echo=FALSE, fig.height=4.5}
+x <- seq(-5, 5, by = 0.01)
+y <- 1 / (1 + exp(-x))
+df <- data.frame(x, y)
+ggplot(df, aes(x, y)) + 
+   geom_line() +
+   xlab("y") +
+   ylab("f(y)") +
+   ggtitle("Sigmoid activation function")
+```
+
+$f(y) = \frac{1}{1 + e^{-y}}$
+
+]
 
 ---
 # Binary crossentropy
