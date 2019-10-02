@@ -753,10 +753,11 @@ vectorize_sequences <- function(sequences, dimension = n_features) {
 
 # apply to training and test data
 train_data_vec <- vectorize_sequences(train_data)
+col_titles <- c("pad", "start", "unknown", paste0("word", 1:(ncol(train_data_vec)-3)))
+colnames(train_data_vec) <- col_titles
 ```
 
 ```{r}
-colnames(train_data_vec) <- paste0("word", 1:ncol(train_data_vec))
 train_data_vec[, 1:10]
 ```
 
@@ -802,11 +803,11 @@ new_index <- new_index - 3
 new_index <- new_index[new_index > 0]
 words_used <- word_index[new_index]
 words_used <- c("pad", "start", "unknown", words_used)
+colnames(train_data_vec) <- words_used
 ```
 
 
 ```{r}
-colnames(train_data_vec) <- words_used
 train_data_vec[, 1:10]
 ```
 
@@ -818,7 +819,9 @@ train_data_vec[, 1:10]
 
 .pull-left[
 
-Recall how sigmoid activation gives us a 0-1 probability
+* Recall how sigmoid activation gives us a 0-1 probability
+
+* In this case, we are predicting the probability that a review is positive.
 
 ]
 
@@ -831,20 +834,105 @@ df <- data.frame(x, y)
 ggplot(df, aes(x, y)) + 
    geom_line() +
    xlab("y") +
-   ylab("f(y)") +
-   ggtitle("Sigmoid activation function")
+   scale_y_continuous("f(y) = probability of event", labels = scales::percent) +
+   ggtitle("Sigmoid activation function") +
+   annotate("text", x = 2.5, y = 0.8, label = "Review is positive", hjust = 0) +
+   annotate("text", x = -5, y = 0.2, label = "Review is negative", hjust = 0) +
+   geom_hline(yintercept = 0.5, lty = "dashed", alpha = 0.25, size = 1.5)
 ```
 
+.font120[
 $f(y) = \frac{1}{1 + e^{-y}}$
+]
+]
+
+---
+# Binary crossentropy
+
+.pull-left[
+
+* Cross-entropy loss, or log loss, measures the performance of a classification model whose output is a probability value between 0 and 1. 
+
+* Cross-entropy loss increases as the predicted probability diverges from the actual label. 
+
+* So predicting a probability of .012 when the actual observation label is 1 would be bad and result in a high loss value
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE, fig.height=5.5}
+crossentropy <- data.frame(
+  prob = seq(0.01, 0.99, 0.01),
+  `label = 1` = NA,
+  `label = 0` = NA
+)
+for (iter in seq_along(crossentropy$prob)) {
+  prob <- crossentropy$prob[iter]
+  crossentropy[iter, 2] <- -(1 * log(prob) + (1-1) * log(1 - prob))
+  crossentropy[iter, 3] <- -(0 * log(prob) + (1-0) * log(1 - prob))
+}
+crossentropy %>% 
+  gather(label, loss, -prob) %>%
+  ggplot(aes(prob, loss, color = label)) +
+  geom_line(show.legend = FALSE) +
+  annotate("text", x = 0.12, y = 3, label = "label = 1", vjust = 0, hjust = 0, size = 8, color = "#00BFC4") +
+  annotate("text", x = 0.88, y = 3, label = "label = 0", vjust = 0, hjust = 1, size = 8, color = "#F8766D") +
+  ylab("Log loss") +
+  xlab("predicted probability")
+```
+
+$$-{(y \cdot \log(p) + (1 - y) \cdot \log(1 - p))}$$
 
 ]
 
 ---
 # Binary crossentropy
 
+.pull-left[
+
+* Cross-entropy loss, or log loss, measures the performance of a classification model whose output is a probability value between 0 and 1. 
+
+* Cross-entropy loss increases as the predicted probability diverges from the actual label. 
+
+* So predicting a probability of .012 when the actual observation label is 1 would be bad and result in a high loss value
+
+* Binary crossentropy is just the average of these values across all observations
+
+$$-\frac{1}{N} \sum^N_{i=1} {(y_i \cdot \log(p_i) + (1 - y_i) \cdot \log(1 - p_i))}$$
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE, fig.height=5.5}
+crossentropy <- data.frame(
+  prob = seq(0.01, 0.99, 0.01),
+  `label = 1` = NA,
+  `label = 0` = NA
+)
+for (iter in seq_along(crossentropy$prob)) {
+  prob <- crossentropy$prob[iter]
+  crossentropy[iter, 2] <- -(1 * log(prob) + (1-1) * log(1 - prob))
+  crossentropy[iter, 3] <- -(0 * log(prob) + (1-0) * log(1 - prob))
+}
+crossentropy %>% 
+  gather(label, loss, -prob) %>%
+  ggplot(aes(prob, loss, color = label)) +
+  geom_line(show.legend = FALSE) +
+  annotate("text", x = 0.12, y = 3, label = "label = 1", vjust = 0, hjust = 0, size = 8, color = "#00BFC4") +
+  annotate("text", x = 0.88, y = 3, label = "label = 0", vjust = 0, hjust = 1, size = 8, color = "#F8766D") +
+  ylab("Log loss") +
+  xlab("predicted probability")
+```
+
+$$-{(y \cdot \log(p) + (1 - y) \cdot \log(1 - p))}$$
+
+]
 
 ---
 # Customizing compile step
+
 
 
 ---
