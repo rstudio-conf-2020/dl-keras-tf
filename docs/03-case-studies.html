@@ -1164,7 +1164,7 @@ train_data_vec[, 1:10]
 
 * Binary crossentropy is just the average of these values across all observations
 
-`$$-\frac{1}{N} \sum^N_{i=1} {(y_i \cdot \log(p_i) + (1 - y_i) \cdot \log(1 - p_i))}$$`
+`$$-\frac{1}{N} \sum^{N=2}_{i=1} {(y_i \cdot \log(p_i) + (1 - y_i) \cdot \log(1 - p_i))}$$`
 
 ]
 
@@ -1179,12 +1179,228 @@ train_data_vec[, 1:10]
 ---
 # Customizing compile step
 
+.pull-left.font100[
 
+* The compile step allows us to specify how gradient descent will be deployed and the metrics to track
+
+* This can be customized multiple ways...
+
+]
+
+.pull-right[
+
+
+```r
+network %&gt;% compile(
+  optimizer = "rmsprop",
+  loss = "binary_crossentropy",
+  metrics = "accuracy",
+  loss_weights = NULL, 
+  sample_weight_mode = NULL,
+  weighted_metrics = NULL, 
+  target_tensors = NULL, 
+  ...
+)
+```
+
+]
+
+---
+# Customizing compile step
+
+.pull-left.font100[
+
+* The compile step allows us to specify how gradient descent will be deployed and the metrics to track
+
+* This can be customized multiple ways...
+   - We can customize our optimizer function (typically we only alter the learning rate)
+
+]
+
+.pull-right[
+
+
+```r
+network %&gt;% compile(
+* optimizer =  optimizer_sgd(lr = 0.005),
+  loss = "binary_crossentropy",
+  metrics = "accuracy",
+  loss_weights = NULL, 
+  sample_weight_mode = NULL,
+  weighted_metrics = NULL, 
+  target_tensors = NULL, 
+  ...
+)
+```
+
+]
+
+---
+# Customizing compile step
+
+.pull-left.font100[
+
+* The compile step allows us to specify how gradient descent will be deployed and the metrics to track
+
+* This can be customized multiple ways...
+   - We can customize our optimizer function
+   - We can create customized loss functions and metrics to pass
+
+]
+
+.pull-right[
+
+
+```r
+# create metric using backend tensor functions
+*metric_mean_pred &lt;- custom_metric("mean_pred", function(y_true, y_pred) {
+* k_mean(y_pred)
+*})
+
+network %&gt;% compile(
+  optimizer =  optimizer_sgd(lr = 0.005),
+* loss = loss_binary_crossentropy,
+* metrics = c("accuracy", metric_mean_pred)
+  loss_weights = NULL, 
+  sample_weight_mode = NULL,
+  weighted_metrics = NULL, 
+  target_tensors = NULL, 
+  ...
+)
+```
+
+]
+
+---
+# Customizing compile step
+
+.pull-left.font100[
+
+* The compile step allows us to specify how gradient descent will be deployed and the metrics to track
+
+* This can be customized multiple ways...
+   - We can customize our optimizer function
+   - We can create customized loss functions and metrics to pass
+   - We can include:
+      - weighted loss contributions
+      - weight metrics
+      - and more sophisticated control options
+
+]
+
+.pull-right[
+
+
+```r
+network %&gt;% compile(
+  optimizer =  optimizer_sgd(lr = 0.005),
+  loss = loss_binary_crossentropy, 
+  metrics = c("accuracy", metric_mean_pred) 
+* loss_weights = NULL,
+* sample_weight_mode = NULL,
+* weighted_metrics = NULL,
+* target_tensors = NULL,
+* ...
+)
+```
+
+]
 
 ---
 # Controlling the size of your network
 
+.pull-left[
 
+___Model capacity___ is controlled by:
+
+* number of layers (_depth_)
+* number of nodes (_width_)
+
+&lt;br&gt;&lt;br&gt;&lt;br&gt;
+.center.bold[Typically we see better performance (accuracy &amp; compute efficiency) by increasing the number of layers moreso than nodes]
+
+]
+
+.pull-right[
+
+&lt;img src="images/model_capacity_depth.png" width="90%" height="90%" style="display: block; margin: auto;" /&gt;&lt;img src="images/model_capacity_width.png" width="90%" height="90%" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Best practice for layers &amp; nodes .red[(for preditive models)]
+
+.pull-left[
+
+Layers are typically:
+
+- Tunnel shaped
+- Funnel shaped
+
+For best performance:
+
+- Nodes are powers of 2 (16, 32, 64, 128, etc.)
+- Relative to number of inputs (remember layers condense our features)
+- Consistent number of nodes per layer makes tuning easier
+- Last hidden layer should always have more nodes than the output layer
+
+
+
+]
+
+.pull-right[
+
+&lt;img src="images/model_capacity_depth.png" width="90%" height="90%" style="display: block; margin: auto;" /&gt;&lt;img src="images/model_capacity_funnel.png" width="90%" height="90%" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Ames Housing
+
+.pull-left[
+
+* Single hidden layer with varying # of neurons
+
+
+
+```r
+## # A tibble: 9 x 3
+##   neurons min_loss train_time
+##     &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;
+## 1       4   30.5         4.74
+## 2       8   37.5         4.61
+## 3      16   18.5         4.66
+## 4      32   13.9         4.77
+## 5      64    8.77        5.06
+## 6     128    6.33        5.20
+## 7     256    2.80        5.77
+## 8     512    1.11        7.25
+## 9    1024    0.139       8.75
+```
+
+
+]
+
+.pull-right[
+
+* Varying # of hidden layers with 128 neurons per layer
+
+
+```r
+## # A tibble: 8 x 3
+##   nlayers min_loss train_time
+##     &lt;int&gt;    &lt;dbl&gt;      &lt;dbl&gt;
+## 1       1    5.959       6.88
+## 2       2    0.824       4.32
+## 3       3    0.609       4.32
+## 4       4    0.750       4.54
+## 5       5    0.665       4.36
+## 6       6    0.998       4.43
+## 7       7    0.802       4.45
+## 8       8    0.603       4.78
+```
+
+]
 
 ---
 class: clear, center, middle
@@ -1195,10 +1411,65 @@ background-size: cover
 ---
 # Categorical crossentropy
 
+.pull-left[
+
+Remember our softmax activation function that produces the probability of each class?
+
+&lt;img src="images/softmax.png" width="800" style="display: block; margin: auto;" /&gt;
+
+]
+
+.pull-right[
+
+* Categorical crossentropy simply computes the log loss of the probability that the outcome is a particular class versus not being that class
+
+* i.e.: `\(y = 3\)` vs `\(y \neq 3\)` 
+
+* it just needs to sum up the probabilities of `\(y \neq 3\)`
+
+&lt;br&gt;
+
+`$$-\frac{1}{N} \sum^{N=C}_{i=1} {(y_i \cdot \log(p_i) + (1 - y_i) \cdot \log(1 - p_i))}$$`
+
+]
 
 ---
 # Sparse categorical crossentropy
 
+.pull-left[
+
+.bold[When your response is a vector of integers use sparse categorical crossentropy]
+
+
+
+
+
+```r
+str(train_labels)
+##  int [1:8982] 3 4 3 4 4 4 4 3 3 16 ...
+```
+
+.bold[When your response is a one-hot encoded tensor use categorical crossentropy]
+
+
+
+
+
+]
+
+.pull-right[
+
+* Categorical crossentropy simply computes the log loss of the probability that the outcome is a particular class versus not being that class
+
+* i.e.: `\(y = 3\)` vs `\(y \neq 3\)` 
+* it just needs to sum up the probabilities of `\(y \neq 3\)`
+
+* .red[___sparse categorical crossentropy___]
+   - mathematically the same
+   - does not require the summation
+   - requires less memory and is more efficient when dealing with ___many___ response categories (i.e. 10K)
+
+]
 
 ---
 # Weight regularization
