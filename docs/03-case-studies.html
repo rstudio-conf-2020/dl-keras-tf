@@ -19,7 +19,7 @@ class: center, middle, inverse, title-slide
 
 class: clear, center, middle
 
-background-image: url(https://www.buyrentkenya.com/uploadedfiles/ed/5d/ae/ed5daec1-c0fc-4959-9640-97fac7c7f274.jpg)
+background-image: url(images/home4sale.jpg)
 background-size: cover
 
 
@@ -233,7 +233,7 @@ blueprint &lt;- recipe(Sale_Price ~ ., data = ames_train) %&gt;%
 * One-hot encoding
 
 &lt;img src="https://bradleyboehmke.github.io/HOML/images/ohe-vs-dummy.png" style="display: block; margin: auto;" /&gt;
-
+house
 ]
 
 ---
@@ -257,7 +257,7 @@ blueprint &lt;- recipe(Sale_Price ~ ., data = ames_train) %&gt;%
 
 .pull-right[
 
-&lt;img src="https://github.com/rstudio/hex-stickers/blob/master/PNG/recipes.png?raw=true" width="50%" height="50%" style="display: block; margin: auto;" /&gt;
+&lt;img src="images/recipes.png" width="50%" height="50%" style="display: block; margin: auto;" /&gt;
 
 .center[[https://tidymodels.github.io/recipes](https://tidymodels.github.io/recipes/)]
 
@@ -1639,6 +1639,26 @@ train_labels
 
 ---
 # Dropout
+
+.pull-left[
+
+* During each run, each neuron has *p* probability of being dropped (set to 0)
+
+* Help prevent the model from latching onto happenstance patterns (noise) that are not significant
+
+* Tips:
+   - dropout rates range from 0.2 – 0.5
+   - usually applied to between each layer with the same rate
+   - larger dropout rates can increase convergence so you may need to increase # epochs
+
+]
+
+.pull-right[
+
+&lt;img src="images/dropout_illustration.png" width="960" style="display: block; margin: auto;" /&gt;
+
+
+]
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="libs/remark-latest.min.js"></script>

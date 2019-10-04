@@ -16,7 +16,7 @@ output:
 ---
 class: clear, center, middle
 
-background-image: url(https://www.buyrentkenya.com/uploadedfiles/ed/5d/ae/ed5daec1-c0fc-4959-9640-97fac7c7f274.jpg)
+background-image: url(images/home4sale.jpg)
 background-size: cover
 
 ```{r setup, include=FALSE, cache=FALSE}
@@ -266,7 +266,7 @@ blueprint <- recipe(Sale_Price ~ ., data = ames_train) %>%
 ```{r, echo=FALSE}
 knitr::include_graphics("https://bradleyboehmke.github.io/HOML/images/ohe-vs-dummy.png")
 ```
-
+house
 ]
 
 ---
@@ -290,7 +290,7 @@ blueprint <- recipe(Sale_Price ~ ., data = ames_train) %>%
 .pull-right[
 
 ```{r, echo=FALSE, out.height="50%", out.width="50%"}
-knitr::include_graphics("https://github.com/rstudio/hex-stickers/blob/master/PNG/recipes.png?raw=true")
+knitr::include_graphics("images/recipes.png")
 ```
 
 .center[[https://tidymodels.github.io/recipes](https://tidymodels.github.io/recipes/)]
@@ -1350,3 +1350,24 @@ ggplot() +
 ---
 # Dropout
 
+.pull-left[
+
+* During each run, each neuron has *p* probability of being dropped (set to 0)
+
+* Help prevent the model from latching onto happenstance patterns (noise) that are not significant
+
+* Tips:
+   - dropout rates range from 0.2 – 0.5
+   - usually applied to between each layer with the same rate
+   - larger dropout rates can increase convergence so you may need to increase # epochs
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/dropout_illustration.png")
+```
+
+
+]
