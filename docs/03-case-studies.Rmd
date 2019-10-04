@@ -1199,7 +1199,6 @@ $$-\frac{1}{N} \sum^{N=C}_{i=1} {(y_i \cdot \log(p_i) + (1 - y_i) \cdot \log(1 -
 ```{r, echo=FALSE}
 reuters <- dataset_reuters(num_words = 10000)
 c(c(train_data, train_labels), c(test_data, test_labels)) %<-% reuters
-
 ```
 
 
@@ -1209,10 +1208,13 @@ str(train_labels)
 
 .bold[When your response is a one-hot encoded tensor use categorical crossentropy]
 
+```{r, echo=FALSE}
+train_labels <- to_categorical(train_labels)
+```
 
 
 ```{r}
-
+train_labels
 ```
 
 ]
@@ -1234,6 +1236,116 @@ str(train_labels)
 ---
 # Weight regularization
 
+* Regular loss function: $\text{minimize} \left( MSE = \frac{1}{n} \sum^n_{i=1}(Y_i - \hat Y_i)^2 \right)$
+
+--
+
+* Weight regularization: $\text{minimize} \left( SSE + P \right)$
+
+--
+
+* $\text{L}^2$ norm (aka _weight decay_): $\text{minimize } \left( MSE + \lambda \sum^p_{j=1} w_j^2 \right)$
+
+<br>
+
+```{r, echo=FALSE, fig.height=4.2, fig.width=9}
+boston_train_x <- model.matrix(cmedv ~ ., pdp::boston)[, -1]
+boston_train_y <- pdp::boston$cmedv
+# model
+boston_ridge <- glmnet::glmnet(
+  x = boston_train_x,
+  y = boston_train_y,
+  alpha = 0
+)
+lam <- boston_ridge$lambda %>% 
+  as.data.frame() %>%
+  mutate(penalty = boston_ridge$a0 %>% names()) %>%
+  rename(lambda = ".")
+results <- boston_ridge$beta %>% 
+  as.matrix() %>% 
+  as.data.frame() %>%
+  rownames_to_column() %>%
+  gather(penalty, coefficients, -rowname) %>%
+  left_join(lam)
+result_labels <- results %>%
+  group_by(rowname) %>%
+  filter(lambda == min(lambda)) %>%
+  ungroup() %>%
+  top_n(5, wt = abs(coefficients)) %>%
+  mutate(var = paste0("w", 1:5))
+
+ggplot() +
+  geom_line(data = results, aes(lambda, coefficients, group = rowname, color = rowname), 
+            show.legend = FALSE) +
+  scale_x_log10(breaks = c(1, 7000), labels = c("small", "large")) +
+  geom_text(data = result_labels, aes(lambda, coefficients, label = var, color = rowname), 
+            nudge_x = -.06, show.legend = FALSE) +
+  ylab("weights")
+```
+
+---
+# Weight regularization
+
+* Regular loss function: $\text{minimize} \left( MSE = \frac{1}{n} \sum^n_{i=1}(Y_i - \hat Y_i)^2 \right)$
+
+* Weight regularization: $\text{minimize} \left( SSE + P \right)$
+
+* $\text{L}^2$ norm (aka _weight decay_): $\text{minimize } \left( MSE + \lambda \sum^p_{j=1} w_j^2 \right)$
+
+* $\text{L}^1$ norm: $\text{minimize } \left( MSE + \lambda \sum^p_{j=1} | w_j | \right)$
+
+```{r, echo=FALSE, fig.height=4, fig.width=9}
+# model
+boston_lasso <- glmnet::glmnet(
+  x = boston_train_x,
+  y = boston_train_y,
+  alpha = 1
+)
+lam <- boston_lasso$lambda %>% 
+  as.data.frame() %>%
+  mutate(penalty = boston_lasso$a0 %>% names()) %>%
+  rename(lambda = ".")
+results <- boston_lasso$beta %>% 
+  as.matrix() %>% 
+  as.data.frame() %>%
+  rownames_to_column() %>%
+  gather(penalty, coefficients, -rowname) %>%
+  left_join(lam)
+result_labels <- results %>%
+  group_by(rowname) %>%
+  filter(lambda == min(lambda)) %>%
+  ungroup() %>%
+  top_n(5, wt = abs(coefficients)) %>%
+  mutate(var = paste0("x", 1:5))
+ggplot() +
+  geom_line(data = results, aes(lambda, coefficients, group = rowname, color = rowname), 
+            show.legend = FALSE) +
+  scale_x_log10(breaks = c(0.01, 7), labels = c("small", "large")) +
+  geom_text(data = result_labels, aes(lambda, coefficients, label = var, color = rowname), 
+            nudge_x = -.05, show.legend = FALSE) +
+  ylab("weights")
+```
+
+---
+# Weight regularization
+
+* Regular loss function: $\text{minimize} \left( MSE = \frac{1}{n} \sum^n_{i=1}(Y_i - \hat Y_i)^2 \right)$
+
+* Weight regularization: $\text{minimize} \left( SSE + P \right)$
+
+* $\text{L}^2$ norm (aka _weight decay_): $\text{minimize } \left( MSE + \lambda \sum^p_{j=1} w_j^2 \right)$
+
+* $\text{L}^1$ norm: $\text{minimize } \left( MSE + \lambda \sum^p_{j=1} | w_j | \right)$
+
+* You can combine $\text{L}^1$ and $\text{L}^2$ akin to elastic nets
+
+--
+
+* Tips:
+   - Typical penalties range from 0-0.1 (common searches: 0.0001, 0.001, 0.1)
+   - $\text{L}^2$ is most common
+   - Can be used on all network types
+   - Common to first fit a large, overfit model & then regularize
 
 ---
 # Dropout
