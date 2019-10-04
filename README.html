@@ -7,6 +7,7 @@
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
 
@@ -268,7 +269,6 @@ code {
 }
 img {
   max-width:100%;
-  height: auto;
 }
 .tabbed-pane {
   padding-top: 12px;
@@ -342,18 +342,6 @@ summary {
 }
 </style>
 
-<script>
-$(document).ready(function () {
-  window.buildTabsets("TOC");
-});
-
-$(document).ready(function () {
-  $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
-  });
-});
-</script>
-
 <!-- code folding -->
 
 
@@ -403,9 +391,11 @@ $(document).ready(function () {
 <div id="is-this-course-for-me" class="section level2">
 <h2>Is this course for me?</h2>
 <p>Is this workshop for you? If you answer “yes” to these three questions, then this workshop is likely a good fit:</p>
-<p>1.Are you relatively new to the field of deep learning and neural networks but eager to learn? Or maybe you have applied a basic feedforward neural network but aren’t familiar with the other deep learning frameworks?</p>
-<p>2.Are you an experienced R user comfortable with the tidyverse, creating functions, and applying control (i.e. if, ifelse) and iteration (i.e. for, while) statements?</p>
-<p>3.Are you familiar with the machine learning process such as data splitting, feature engineering, resampling procedures (i.e. k-fold cross validation), hyperparameter tuning, and model validation?</p>
+<ol style="list-style-type: decimal">
+<li><p>Are you relatively new to the field of deep learning and neural networks but eager to learn? Or maybe you have applied a basic feedforward neural network but aren’t familiar with the other deep learning frameworks?</p></li>
+<li><p>Are you an experienced R user comfortable with the tidyverse, creating functions, and applying control (i.e. if, ifelse) and iteration (i.e. for, while) statements?</p></li>
+<li><p>Are you familiar with the machine learning process such as data splitting, feature engineering, resampling procedures (i.e. k-fold cross validation), hyperparameter tuning, and model validation?</p></li>
+</ol>
 <p>This workshop will provide some review of these topics but coming in with some exposure will help you stay focused on the deep learning details rather than the general modeling procedure details.</p>
 </div>
 <div id="prework" class="section level2">
@@ -478,7 +468,7 @@ RSTUDIO.CLOUD ACCOUNT, ETC.\]</span></p>
 </tr>
 <tr class="even">
 <td align="left">09:15 - 10:30</td>
-<td align="left">Sequence data &amp; LSTMs</td>
+<td align="left">Text, word embeddings &amp; RNNs</td>
 </tr>
 <tr class="odd">
 <td align="left">10:30 - 11:00</td>
@@ -486,7 +476,7 @@ RSTUDIO.CLOUD ACCOUNT, ETC.\]</span></p>
 </tr>
 <tr class="even">
 <td align="left">11:00 - 12:30</td>
-<td align="left">Anomaly detection</td>
+<td align="left">Time series, RNNs &amp; LSTMs</td>
 </tr>
 <tr class="odd">
 <td align="left">12:30 - 13:30</td>
@@ -494,7 +484,7 @@ RSTUDIO.CLOUD ACCOUNT, ETC.\]</span></p>
 </tr>
 <tr class="even">
 <td align="left">13:30 - 15:00</td>
-<td align="left">TBD</td>
+<td align="left">Autoencoders &amp; GANs</td>
 </tr>
 <tr class="odd">
 <td align="left">15:00 - 15:30</td>
@@ -533,6 +523,23 @@ $(document).ready(function () {
 
 
 </script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>
