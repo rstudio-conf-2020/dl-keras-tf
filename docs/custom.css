@@ -77,6 +77,14 @@ ul, ol {
   font-size: 100%;
 }
 
+.code125 .remark-code {
+  font-size: 125%;
+}
+
+.code150 .remark-code {
+  font-size: 150%;
+}
+
 .font10 {
   font-size: 10%;
 }

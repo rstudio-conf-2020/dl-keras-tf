@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>Computer vision &amp; CNNs</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Brad Boehmke" />
+    <meta name="date" content="2020-01-27" />
+    <link rel="stylesheet" href="custom.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Computer vision &amp; CNNs
+### Brad Boehmke
+### 2020-01-27
+
+---
+
+# Densely connected MLPs find common patterns
+
+
+
+.pull-left[
+
+&lt;img src="04-computer-vision-cnns_files/figure-html/unnamed-chunk-1-1.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+.pull-right[
+
+&lt;img src="04-computer-vision-cnns_files/figure-html/unnamed-chunk-2-1.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Densely connected MLPs find common patterns
+
+.pull-left[
+
+&lt;img src="04-computer-vision-cnns_files/figure-html/unnamed-chunk-3-1.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+.pull-right[
+
+&lt;img src="04-computer-vision-cnns_files/figure-html/unnamed-chunk-4-1.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+class: clear
+
+.red.font160[But they also expect the features to be conistently located...]
+
+.pull-left[
+
+&lt;img src="04-computer-vision-cnns_files/figure-html/unnamed-chunk-5-1.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+.pull-right[
+
+&lt;img src="04-computer-vision-cnns_files/figure-html/unnamed-chunk-6-1.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+class: clear, center, middle
+background-image: url(images/Computer-Vision.png)
+background-size: cover
+
+---
+# .red[Image variance]
+
+.pull-left[
+
+Computer vision should be robust to ___image variance___
+
+]
+
+.pull-right[
+
+&lt;img src="images/image_variance.png" width="80%" height="80%" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Convolutional neural networks (CNNs)
+
+&lt;br&gt;
+
+&lt;img src="https://iq.opengenus.org/content/images/2019/04/pic01-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# CNNs...
+
+.pull-left[
+
+.bold[identify a hierarchy of features]
+
+&lt;br&gt;
+
+&lt;img src="images/spatial_hierarchy.png" width="1001" style="display: block; margin: auto;" /&gt;
+
+
+]
+
+--
+
+.pull-right[
+
+ .bold[provide several features to allow for image variance]
+
+&lt;img src="images/image_variance.png" width="60%" height="60%" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Case studies
+
+.pull-left[
+.bold.center[MNIST]
+
+&lt;img src="https://upload.wikimedia.org/wikipedia/commons/2/27/MnistExamples.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+.pull-right[
+.bold.center[Cats vs Dogs]
+
+&lt;img src="images/woof_meow.jpg" width="600" style="display: block; margin: auto;" /&gt;
+
+
+]
+
+---
+# New concepts
+
+.pull-left.font140[
+* Image variance
+
+* Spatial hierarchy
+
+* Convolutions
+
+* Filters and kernels
+
+* Feature maps
+]
+
+.pull-right.font140[
+* Pooling
+
+* Flattening
+
+* Augmentation
+
+* Pre-trained networks
+]
+
+---
+class: clear, center, middle
+
+.font300.bold[MNIST revisited as a CNN]
+
+.opacity[
+&lt;img src="https://upload.wikimedia.org/wikipedia/commons/2/27/MnistExamples.png" width="100%" height="100%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+# The structure of CNN models
+
+&lt;br&gt;
+
+&lt;img src="images/CNN-structure.jpeg" width="1673" style="display: block; margin: auto;" /&gt;
+
+---
+# What the convolution operation is doing
+
+.pull-left[
+
+* A convolution layer has an input and a ___filter___ (aka kernel)
+
+* The filter is typically a 3x3 or 5x5 matrix of weights
+
+* Similar to MLP these weights are initially randomized, updated and optimized with backpropagation
+
+]
+
+.pull-right[
+
+&lt;img src="https://miro.medium.com/max/1026/1*cTEp-IvCCUYPTT0QpE3Gjg@2x.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# What the convolution operation is doing
+
+.pull-left[
+
+* We slide this filter over the inputs and perform a simple computation:
+
+`$$(1 \times 1) + (1 \times 0) + \cdots + (0 \times 0) + (1 \times 1)$$`
+
+* Results in a scalar value that goes into a new matrix called a ___feature map___
+
+]
+
+.pull-right[
+
+&lt;img src="https://miro.medium.com/max/1018/1*ghaknijNGolaA3DpjvDxfQ@2x.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# What the convolution operation is doing
+
+.pull-left[
+
+* We place this filter over the inputs and perform a simple computation:
+
+`$$(1 \times 1) + (1 \times 0) + \cdots + (0 \times 0) + (1 \times 1)$$`
+
+* Results in a scalar value that goes into a new matrix called a ___feature map___
+
+* We slide the filter and repeat the process to complete our feature map matrix
+
+]
+
+.pull-right[
+
+&lt;img src="https://cdn-media-1.freecodecamp.org/images/Htskzls1pGp98-X2mHmVy9tCj0cYXkiCrQ4t" width="110%" height="110%" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# What the convolution operation is doing
+
+.pull-left.opacity[
+
+* We place this filter over the inputs and perform a simple computation:
+
+`$$(1 \times 1) + (1 \times 0) + \cdots + (0 \times 0) + (1 \times 1)$$`
+
+* Results in a scalar value that goes into a new matrix called a ___feature map___
+
+* We slide the filter and repeat the process to complete our feature map matrix
+
+]
+
+.pull-right.opacity[
+
+&lt;img src="https://cdn-media-1.freecodecamp.org/images/Htskzls1pGp98-X2mHmVy9tCj0cYXkiCrQ4t" width="110%" height="110%" style="display: block; margin: auto;" /&gt;
+
+]
+
+But what does `filters = 32` mean?
+
+
+```r
+model &lt;- keras_model_sequential() %&gt;%
+* layer_conv_2d(filters = 32, ...)
+```
+
+---
+# Many feature maps
+
+.pull-left[
+
+* We're actually going to do this 32 times
+
+* Each convolution will use a different filter (different weights)
+
+]
+
+.pull-right[
+
+&lt;img src="images/multiple-feature-maps.png" width="1061" style="display: block; margin: auto;" /&gt;
+
+]
+
+
+---
+# Many feature maps
+
+.pull-left[
+
+* We're actually going to do this 32 times
+
+* Each convolution will use a different filter (different weights)
+
+* Each feature map will learn unique features represented in the image
+
+]
+
+.pull-right[
+
+&lt;img src="images/example-feature-maps.png" width="2097" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Many feature maps
+
+.pull-left[
+
+* We're actually going to do this 32 times
+
+* Each convolution will use a different filter (different weights)
+
+* Each feature map will learn unique features represented in the image
+
+* Consequently, the output of a convolution layer will typically be:
+   - smaller in width x height
+   - deeper due to the multiple feature maps
+
+]
+
+.pull-right[
+
+
+```r
+summary(model)
+Model: "sequential_1"
+______________________________________________________________
+Layer (type)               Output Shape             Param #   
+==============================================================
+*conv2d_1 (Conv2D)          (None, 26, 26, 32)       320
+______________________________________________________________
+max_pooling2d (MaxPooling2 (None, 13, 13, 32)       0         
+______________________________________________________________
+conv2d_2 (Conv2D)          (None, 11, 11, 64)       18496     
+______________________________________________________________
+max_pooling2d_1 (MaxPoolin (None, 5, 5, 64)         0         
+______________________________________________________________
+conv2d_3 (Conv2D)          (None, 3, 3, 64)         36928     
+==============================================================
+Total params: 55,744
+Trainable params: 55,744
+Non-trainable params: 0
+______________________________________________________________
+```
+
+]
+
+---
+# .red[Stride] &amp; padding
+
+.pull-left[
+
+* ___Stride___ specifies how much we move the convolution filter at each step
+   - most common is 1 (default)
+   - larger strides 
+      - less feature correlation
+      - less memory required
+      - minimizes overfitting
+   - pooling helps with many of these issues    
+]
+
+.pull-right[
+
+&lt;img src="https://miro.medium.com/max/790/1*L4T6IXRalWoseBncjRr4wQ@2x.gif" width="75%" height="75%" style="display: block; margin: auto;" /&gt;
+
+&lt;img src="https://miro.medium.com/max/721/1*4wZt9G7W7CchZO-5rVxl5g@2x.gif" width="70%" height="70%" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Stride &amp; .red[padding]
+
+.pull-left[
+
+* ___Stride___ specifies how much we move the convolution filter at each step
+
+* ___Padding___ zero padding adds a border with values of 0
+   - helps keep information at the edges
+   - prevents deep models from reducing feature map sizes too quickly
+]
+
+.pull-right[
+
+&lt;img src="https://miro.medium.com/max/1063/1*W2D564Gkad9lj3_6t9I2PA@2x.gif" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# What about images with .red[multiple channels?]
+
+.pull-left.font140[
+
+* Our filter/kernel simply becomes a cube
+
+]
+
+.pull-right[
+
+&lt;img src="https://miro.medium.com/max/326/1*NsiYxt8tPDQyjyH3C08PVA@2x.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# What about images with .red[multiple channels?]
+
+.pull-left.font120[
+
+* Our filter/kernel simply becomes a cube
+
+* but math doesn't get much more complex
+
+* and the output is still a scalar
+
+]
+
+.pull-right[
+
+&lt;img src="https://miro.medium.com/max/1280/1*ciDgQEjViWLnCbmX-EeSrA.gif" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# ReLU
+
+.pull-left.font110[
+
+* Note that we still use a ReLU activation function
+
+* This applies the ReLU activation across each feature map output from a convolution layer
+
+* Simply puts focus on non-negative values in the feature map
+
+
+```r
+*layer_conv_2d(..., activation = "relu", ...)
+```
+
+]
+
+.pull-right[
+
+&lt;br&gt;&lt;br&gt;
+
+&lt;img src="https://ujwlkarn.files.wordpress.com/2016/08/screen-shot-2016-08-07-at-6-18-19-pm.png?w=748" style="display: block; margin: auto;" /&gt;
+
+.center[This is why we say the first convolution layer is an _edge_ detector]
+
+]
+
+---
+# Pooling for downsampling
+
+.code125[
+
+
+```r
+model &lt;- keras_model_sequential() %&gt;%
+  layer_conv_2d() %&gt;%
+* layer_max_pooling_2d(pool_size = c(2, 2)) %&gt;%
+  ...
+```
+
+]
+
+---
+# Pooling for downsampling
+
+.pull-left[
+
+* After one or more convolution operations we usually perform pooling to reduce the dimensionality
+
+* Identifies the most prominent features within each feature map
+]
+
+.pull-right[
+
+&lt;img src="https://miro.medium.com/max/596/1*KQIEqhxzICU7thjaQBfPBQ.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Pooling for downsampling
+
+.pull-left[
+
+* After one or more convolution operations we usually perform pooling to reduce the dimensionality
+
+* Identifies the most prominent features within each feature map
+
+* Pooling reduces the width x height dimensions of each feature map independently, keeping the depth intact
+
+* 2x2 with a stride of 2 is most common
+]
+
+.pull-right[
+
+
+```r
+summary(model)
+Model: "sequential_1"
+______________________________________________________________
+Layer (type)               Output Shape             Param #   
+==============================================================
+conv2d_1 (Conv2D)          (None, 26, 26, 32)       320        
+______________________________________________________________
+*max_pooling2d (MaxPooling2 (None, 13, 13, 32)       0
+______________________________________________________________
+conv2d_2 (Conv2D)          (None, 11, 11, 64)       18496     
+______________________________________________________________
+max_pooling2d_1 (MaxPoolin (None, 5, 5, 64)         0         
+______________________________________________________________
+conv2d_3 (Conv2D)          (None, 3, 3, 64)         36928     
+==============================================================
+Total params: 55,744
+Trainable params: 55,744
+Non-trainable params: 0
+______________________________________________________________
+```
+
+]
+
+---
+# Pooling for downsampling
+
+
+.bold[Benefits]...
+
+* makes the feature dimensions smaller and more manageable
+
+* improves computation time &amp; controlls overfitting
+
+* makes the network invariant to image variance `\(\rightarrow\)` a small distortion in input will not change the output of pooling – since we take the maximum / average value in a local neighborhood)
+
+* helps us arrive at an almost scale invariant representation of our image
+
+&lt;img src="https://ujwlkarn.files.wordpress.com/2016/08/screen-shot-2016-08-06-at-12-45-35-pm.png?w=748" style="display: block; margin: auto;" /&gt;
+
+---
+# Multiple convolutions &amp; pooling
+
+.pull-left[
+
+.bold[The idea...]
+
+* More convolution steps results in more complicated features learnt
+
+* Initial layers typically find lower level detail features (i.e. edges)
+
+* Subsequent layers aggregate lower level features into larger ones
+
+* Facial recognition example:
+   - Layer 1 detects edges
+   - Layer 2 uses edges to identify facial items (i.e. eyes, nose, mouth)
+   - Layer 3 puts these features together into faces
+
+]
+
+.pull-right[
+
+.bold[A common misinterpretation...]
+
+&lt;img src="https://ujwlkarn.files.wordpress.com/2016/08/screen-shot-2016-08-10-at-12-58-30-pm.png?w=242&amp;h=256" width="80%" height="80%" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Multiple convolutions &amp; pooling
+
+In reality, early layers will resemble the initial images the most and subsequent layers create abstract images that only make sense mathematically.
+
+&lt;img src="images/2layer-cnn.png" width="80%" height="80%" style="display: block; margin: auto;" /&gt;
+
+---
+# Check this out!
+
+&lt;br&gt;&lt;br&gt;&lt;br&gt;
+.center[
+
+.font200[Spend a couple minutes playing around with this]
+
+.font150[http://scs.ryerson.ca/~aharley/vis/conv/flat.html]
+]
+
+---
+# Last step
+
+.pull-left.code60[
+
+___Flattening___ simply takes our last multidimensional convolution output and flattens it into a vector
+
+
+```r
+model %&gt;%
+*   layer_flatten() %&gt;%
+    layer_dense(units = 64, activation = "relu") %&gt;%
+    layer_dense(units = 10, activation = "softmax")
+
+summary(model)
+Model: "sequential_1"
+______________________________________________________________________________
+Layer (type)                       Output Shape              Param #      
+==============================================================================
+conv2d_1 (Conv2D)                  (None, 26, 26, 32)        320          
+______________________________________________________________________________
+max_pooling2d (MaxPooling2D)       (None, 13, 13, 32)          0            
+______________________________________________________________________________
+conv2d_2 (Conv2D)                  (None, 11, 11, 64)      18496        
+______________________________________________________________________________
+max_pooling2d_1 (MaxPooling2D)     (None, 5, 5, 64)            0            
+______________________________________________________________________________
+*conv2d_3 (Conv2D)                  (None, 3, 3, 64)        36928
+______________________________________________________________________________
+*flatten (Flatten)                  (None, 576)                 0
+______________________________________________________________________________
+dense (Dense)                      (None, 64)               36928        
+______________________________________________________________________________
+dense_1 (Dense)                    (None, 10)                 650          
+==============================================================================
+Total params: 93,322
+Trainable params: 93,322
+Non-trainable params: 0
+______________________________________________________________________________
+```
+
+]
+
+.pull-right[
+
+Feed into a densely connected MLP for final classification.
+
+&lt;img src="https://miro.medium.com/max/1025/1*IWUxuBpqn2VuV-7Ubr01ng.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Some tips for convolutional layers
+
+* Hyperparameters:
+   - filter size: 3x3, 5x5, 7x7
+   - stride size
+   - number of filters: `\(2^p \rightarrow\)` 32, 64, 128, ..., 1024
+   - number of convolutional layers
+
+* Pooling
+   - most common size: 2x2 or 3x3
+   - not necessary after every convolutional layer
+   - balance speed and efficiency with performance
+   
+* Since the convolution layer does most of the feature extraction, the capacity of the densely connected portion of the network can often be much smaller and use less epochs
+
+* Larger problem sets will require GPUs!
+
+---
+class: yourturn
+# Your Turn! (lines of code 131+)
+
+.font150[Spend 5 minutes adjusting various CNN components:]
+
+.font140[
+- change the number of filters
+- change filter/kernel size
+- adjust the stride
+- add padding
+- add more convolution layers
+]
+
+---
+class: center
+# Where are the images?
+
+&lt;br&gt;
+&lt;br&gt;
+
+.bold[Cats vs Dogs Case Study]
+
+[![cats-dogs](images/woof_meow.jpg)]()
+
+---
+class: clear, center, middle
+
+.font300.bold[Cats vs. Dogs]
+
+.opacity[
+&lt;img src="https://miro.medium.com/proxy/1*oB3S5yHHhvougJkPXuc8og.gif" width="85%" height="85%" style="display: block; margin: auto;" /&gt;
+]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="libs/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

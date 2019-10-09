@@ -1,0 +1,98 @@
+---
+title: "Computer Vision: Fine-tuning"
+author: "Rick Scavetta"
+output: html_document
+---
+
+# Data sources
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+
+# Initialize package
+library(keras)
+
+# define the directories:
+source("def_dir.R")
+```
+
+# Obtain a pre-trained convnet base
+
+```{r getConv}
+conv_base <- application_vgg16(
+  weights = "imagenet",
+  include_top = FALSE,
+  input_shape = c(150, 150, 3)
+)
+
+
+model <- keras_model_sequential() %>%
+  conv_base %>%
+  layer_flatten() %>%
+  layer_dense(units = 256, activation = "relu") %>%
+  layer_dense(units = 1, activation = "sigmoid")
+
+model
+
+```
+
+## Freezing
+
+```{r freezeParam}
+cat(length(model$trainable_weights), " trainable weights before freezing.\n")
+
+freeze_weights(conv_base)
+
+cat(length(model$trainable_weights), " trainable weights before freezing.\n")
+
+```
+
+
+```{r summaryConv}
+conv_base
+```
+
+
+
+# unfreezing:
+
+```{r}
+# Unfreezing previously frozen layers
+unfreeze_weights(conv_base, from = "block3_conv1")
+
+```
+
+# Fine-tuning
+
+```{r}
+# Fine-tuning the model
+model %>% compile(
+  loss = "binary_crossentropy",
+  optimizer = optimizer_rmsprop(lr = 1e-5),
+  metrics = c("accuracy")
+)
+history <- model %>% fit_generator(
+  train_generator,
+  steps_per_epoch = 100,
+  epochs = 100,
+  validation_data = validation_generator,
+  validation_steps = 50
+)
+```
+
+# 
+
+```{r}
+
+test_generator <- flow_images_from_directory(
+  test_dir,
+  test_datagen,
+  target_size = c(150, 150),
+  batch_size = 20,
+  class_mode = "binary"
+)
+
+model %>% evaluate_generator(test_generator, steps = 50)
+
+```
+

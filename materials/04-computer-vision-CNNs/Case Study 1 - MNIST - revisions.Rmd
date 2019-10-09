@@ -1,0 +1,326 @@
+---
+title: "Case Study 1: Single-label, Multi-class Classification with MNIST"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+
+# Initialize package
+# install.packages(keras)
+library(keras)
+library(tidyverse)
+```
+
+# Install tensorflow 
+
+It's only necessary to run this once. 
+
+```{r install, eval = F}
+# for GPU
+# install_keras(tensorflow = "gpu")
+
+# or CPU:
+# install_keras() # for cpu
+```
+
+## Part 1: Data Preparation
+
+## Obtain data
+
+```{r data}
+mnist <- dataset_mnist()
+c(c(train_images, train_labels), c(test_images, test_labels)) %<-% mnist
+
+load("MNISTCollection.RData")
+
+```
+
+## View images:
+
+```{r plotdigit1, fig.show = 'hold', out.width = '25%'}
+  image <- 1
+  plot(as.raster(train_images_original[image,,], max = 255), main = "original")
+  plot(as.raster(train_images_rearrange[image,,], max = 255), main = "rearrange")
+  plot(as.raster(train_images_scramble[image,,], max = 255), main = "scramble")
+  plot(as.raster(train_images_shift[image,,], max = 255), main = "shift")
+```
+
+## Visualizing the input
+
+Let's look at for example what all the 1's would look like:
+
+```{r plot numbers, cache = T}
+
+train_images_original_reshaped <- array_reshape(train_images_original, c(60000, 28 * 28))/255
+train_images_original_reshaped <- as_tibble(train_images_original_reshaped)
+train_images_original_reshaped$type <- 1
+
+
+train_images_rearrange_reshaped <- array_reshape(train_images_rearrange, c(60000, 28 * 28))/255
+train_images_rearrange_reshaped <- as_tibble(train_images_rearrange_reshaped)
+train_images_rearrange_reshaped$type <- 2
+
+train_images_scramble_reshaped <- array_reshape(train_images_scramble, c(60000, 28 * 28))/255
+train_images_scramble_reshaped <- as_tibble(train_images_scramble_reshaped)
+train_images_scramble_reshaped$type <- 3
+
+train_images_shift_reshaped <- array_reshape(train_images_shift, c(60000, 28 * 28))/255
+train_images_shift_reshaped <- as_tibble(train_images_shift_reshaped)
+train_images_shift_reshaped$type <- 4
+
+
+rbind(train_images_original_reshaped,
+      train_images_rearrange_reshaped,
+      train_images_scramble_reshaped,
+      train_images_shift_reshaped) %>%
+  as_tibble() %>% 
+  mutate(id = rep(as.factor(train_labels), 4)) %>%
+  group_by(type, id) %>% 
+  summarise_if(is.numeric, sum) %>% 
+  ungroup() %>% 
+  gather(key, value, -c(type, id)) %>% 
+  arrange(type, id) %>% 
+  mutate(x = rep(rep(rep(1:28, 28), 10),4),
+         y = rep(rep(rep(28:1, each = 28),10),4)) -> NEWDF
+
+library(RColorBrewer)
+ggplot(NEWDF, aes(x, y, fill = value)) +
+  geom_raster() +
+  coord_fixed() +
+  scale_fill_gradientn(colours = c("black", "white")) +
+  # scale_fill_gradientn(colours = (brewer.pal(9, "Reds"))) +
+  facet_grid(type ~ id) +
+  theme_void() +
+  theme(legend.position = "none",
+        strip.text = element_blank())
+
+# ggsave("compiledNumbers_bw.png", height = 6, width = 18, units = "in")
+
+```
+
+
+## Normalize data:
+
+### Training set
+
+```{r normImages, echo = FALSE}
+
+# # Before making a list:
+# train_images_original[1,,]
+# train_images_rearrange[1,,]
+# train_images_scramble[1,,]
+# train_images_shift[1,,]
+
+# Make a list:
+train_images <- list(train_images_original,
+                     train_images_rearrange,
+                     train_images_scramble,
+                     train_images_shift)
+
+# # After making a list:
+# train_images[[1]][1,,]
+# train_images[[2]][1,,]
+# train_images[[3]][1,,]
+# train_images[[4]][1,,]
+
+# Normalize
+train_images[[1]] <- array_reshape(train_images[[1]], c(60000, 28 * 28))/255
+train_images[[2]] <- array_reshape(train_images[[2]], c(60000, 28 * 28))/255
+train_images[[3]] <- array_reshape(train_images[[3]], c(60000, 28 * 28))/255
+train_images[[4]] <- array_reshape(train_images[[4]], c(60000, 28 * 28))/255
+
+# # After Normalizing:
+# train_images[[1]][1,]
+# train_images[[2]][1,]
+# train_images[[3]][1,]
+# train_images[[4]][1,]
+
+```
+
+### Test set
+
+```{r normTest, echo = FALSE}
+
+
+# # Before making a list:
+# test_images_original[1,,]
+# test_images_rearrange[1,,]
+# test_images_scramble[1,,]
+# test_images_shift[1,,]
+
+# Make a list:
+test_images <- list(test_images_original,
+                    test_images_rearrange,
+                    test_images_scramble,
+                    test_images_shift)
+
+# # After making a list:
+# test_images[[1]][1,,]
+# test_images[[2]][1,,]
+# test_images[[3]][1,,]
+# test_images[[4]][1,,]
+
+# Normalize
+test_images[[1]] <- array_reshape(test_images[[1]], c(10000, 28 * 28))/255
+test_images[[2]] <- array_reshape(test_images[[2]], c(10000, 28 * 28))/255
+test_images[[3]] <- array_reshape(test_images[[3]], c(10000, 28 * 28))/255
+test_images[[4]] <- array_reshape(test_images[[4]], c(10000, 28 * 28))/255
+
+# # After Normalizing:
+# test_images[[1]][1,]
+# test_images[[2]][1,]
+# test_images[[3]][1,]
+# test_images[[4]][1,]
+
+
+```
+
+
+## Prepare labels:
+
+```{r prepLabels}
+train_labels <- to_categorical(train_labels)
+test_labels <- to_categorical(test_labels)
+```
+
+# Part 2: Define Network
+
+## Define & Compile the network
+
+```{r architecture}
+makeNetwork <- function() {
+  keras_model_sequential() %>%
+    layer_dense(units = 512, activation = "relu", input_shape = c(28 * 28)) %>%
+    layer_dense(units = 10, activation = "softmax") %>%
+    compile(
+      optimizer = "rmsprop",
+      loss = "categorical_crossentropy",
+      metrics = c("accuracy")
+      )
+}
+```
+
+## Train the model
+
+### Model 1
+
+```{r train1}
+network1 <- makeNetwork()
+# summary(network1)
+
+network1 %>%
+  fit(train_images[[1]], train_labels, epochs = 5, batch_size = 128) -> history1
+```
+
+### Model 2
+
+```{r train2}
+network2 <- makeNetwork()
+# summary(network2)
+
+network2 %>%
+  fit(train_images[[2]], train_labels, epochs = 5, batch_size = 128) -> history2
+```
+
+### Model 3
+
+```{r train3}
+network3 <- makeNetwork()
+# summary(network3)
+
+network3 %>%
+  fit(train_images[[3]], train_labels, epochs = 5, batch_size = 128) -> history3
+```
+
+### Model 4
+
+```{r train4}
+network4 <- makeNetwork()
+# summary(network4)
+
+network4 %>%
+  fit(train_images[[4]], train_labels, epochs = 5, batch_size = 128) -> history4
+```
+
+
+# Part 3: Check output
+## Plot all histories
+
+```{r plotTraining1}
+plot(history1)
+
+AllHistory <- rbind(
+  data.frame(history1,
+             id = 1),
+  data.frame(history2,
+             id = 2),
+  data.frame(history3,
+             id = 3),
+  data.frame(history4,
+             id = 4)
+  )
+
+levels(AllHistory$metric) <- c("Accuracy", "Loss")
+
+library(ggplot2)
+ggplot(AllHistory, aes(epoch, value, col = factor(id))) +
+  geom_line(size = 1, alpha = 0.65, position = position_dodge(0.2)) +
+  facet_wrap(~metric, scales = "free", nrow = 2) +
+  scale_color_brewer("Series", 
+                     palette = "Dark2",
+                     labels = c("Original",
+                                "Rearranged\nquadrants",
+                                "Rearranged\nrows and columns",
+                                "Random shift")) +
+  labs(x = "Epochs", y = "Value") +
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        axis.text = element_text(color = "black"))
+  
+# ggsave("training_results.pdf", height = 6, width = 10, units = "in")
+
+  
+```
+
+```{r}
+AllHistory %>% 
+  spread(metric, value) %>% 
+  filter(epoch == 5) %>% 
+  knitr::kable() 
+```
+
+
+## Metrics
+
+```{r metrics1}
+
+library(tidyr)
+library(dplyr)
+data.frame(X1 = unlist(network1 %>% evaluate(test_images[[1]], test_labels)),
+           X2 = unlist(network2 %>% evaluate(test_images[[2]], test_labels)),
+           X3 = unlist(network3 %>% evaluate(test_images[[3]], test_labels)),
+           X4 = unlist(network4 %>% evaluate(test_images[[4]], test_labels))) %>% 
+  mutate(metric = row.names(.)) %>% 
+  gather(key, value, -metric) -> results_test 
+
+results_test$key <- factor(results_test$key, labels = c("Original",
+                                                        "Rearranged\nquadrants",
+                                                        "Rearranged\nrows and columns",
+                                                        "Random shift"))
+results_test$metric <- factor(results_test$metric, labels = c("Accuracy", "Loss"))
+
+results_test %>% 
+  ggplot(aes(col = key, y = value, x = metric)) +
+  geom_point(alpha = 0.65, position = position_dodge(0.2)) +
+  scale_color_brewer("Series", 
+                     palette = "Dark2") +
+  labs(x = "Metric", y = "Value") +
+  theme_classic() +
+  theme(axis.line.x = element_blank(),
+        axis.text = element_text(color = "black"))
+
+ggsave("test_results.pdf", height = 10, width = 6, units = "in")
+
+
+```

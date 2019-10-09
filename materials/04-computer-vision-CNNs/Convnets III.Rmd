@@ -1,0 +1,209 @@
+---
+title: "Computer Vision: Optimization"
+author: "Rick Scavetta"
+output: html_document
+---
+
+# Data sources
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+
+# Initialize package
+library(keras)
+
+# define the directories:
+source("def_dir.R")
+```
+
+# Obtain a pre-trained convnet base
+
+```{r getConv}
+conv_base <- application_vgg16(
+  weights = "imagenet",
+  include_top = FALSE,
+  input_shape = c(150, 150, 3)
+)
+
+```
+
+```{r summaryConv}
+conv_base
+```
+
+# Extracting features using the pretrained convolutional base
+
+```{r dataGen0}
+
+datagen <- image_data_generator(rescale = 1/255)
+batch_size <- 20
+
+extract_features <- function(directory, sample_count) {
+  features <- array(0, dim = c(sample_count, 4, 4, 512))
+  labels <- array(0, dim = c(sample_count))
+  generator <- flow_images_from_directory(
+    directory = directory,
+    generator = datagen,
+    target_size = c(150, 150),
+    batch_size = batch_size,
+    class_mode = "binary"
+  )
+  i <- 0
+  while(TRUE) {
+    batch <- generator_next(generator)
+    inputs_batch <- batch[[1]]
+    labels_batch <- batch[[2]]
+    features_batch <- conv_base %>% predict(inputs_batch)
+    index_range <- ((i * batch_size)+1):((i + 1) * batch_size)
+    features[index_range,,,] <- features_batch
+    labels[index_range] <- labels_batch
+    i <- i + 1
+    if (i * batch_size >= sample_count)
+      break }
+  list(
+    features = features,
+    labels = labels
+  ) }
+
+
+train <- extract_features(train_dir, 2000)
+validation <- extract_features(validation_dir, 1000)
+test <- extract_features(test_dir, 1000)
+
+# train <- extract_features(paste0("/home/rstudio-user",sub("~","",train_dir)), 2000)
+# validation <- extract_features(paste0("/home/rstudio-user",sub("~","",validation_dir)), 1000)
+# test <- extract_features(paste0("/home/rstudio-user",sub("~","",test_dir)), 1000)
+
+```
+
+# Reshape features
+
+```{r reshape}
+reshape_features <- function(features) {
+  array_reshape(features, dim = c(nrow(features), 4 * 4 * 512))
+}
+train$features <- reshape_features(train$features)
+validation$features <- reshape_features(validation$features)
+test$features <- reshape_features(test$features)
+```
+
+# Define model
+
+Here we only need the densely connected classifier
+
+```{r denseModel}
+
+model <- keras_model_sequential() %>%
+  layer_dense(units = 256, activation = "relu", input_shape = 4 * 4 * 512) %>%
+  layer_dropout(rate = 0.5) %>%
+  layer_dense(units = 1, activation = "sigmoid")
+
+model
+
+```
+
+Compile and train:
+
+```{r modelTrain}
+
+model %>% compile(
+  optimizer = optimizer_rmsprop(lr = 2e-5),
+  loss = "binary_crossentropy",
+  metrics = c("accuracy")
+)
+
+history1 <- model %>% fit(
+  train$features, train$labels,
+  epochs = 30,
+  batch_size = 20,
+  validation_data = list(validation$features, validation$labels)
+)
+
+```
+
+# Plot results:
+
+```{r hist1}
+plot(history1)
+```
+
+# Combining a densely-connected neural network with the convolutional base
+
+```{r convModel}
+
+model <- keras_model_sequential() %>%
+  conv_base %>%
+  layer_flatten() %>%
+  layer_dense(units = 256, activation = "relu") %>%
+  layer_dense(units = 1, activation = "sigmoid")
+
+model
+
+```
+
+## Freezing
+
+```{r freezeParam}
+cat(length(model$trainable_weights), " trainable weights before freezing.\n")
+
+freeze_weights(conv_base)
+
+cat(length(model$trainable_weights), " trainable weights before freezing.\n")
+
+```
+
+# Training the model end-to-end with a frozen convolutional base
+
+```{r datagen1}
+
+train_datagen = image_data_generator(
+  rescale = 1/255,
+  rotation_range = 40,
+  width_shift_range = 0.2,
+  height_shift_range = 0.2,
+  shear_range = 0.2,
+  zoom_range = 0.2,
+  horizontal_flip = TRUE,
+  fill_mode = "nearest"
+)
+
+test_datagen <-
+  image_data_generator(rescale = 1/255)
+
+train_generator <- flow_images_from_directory(
+  train_dir,
+  train_datagen,
+  target_size = c(150, 150),
+  batch_size = 20,
+  class_mode = "binary"
+)
+
+validation_generator <- flow_images_from_directory(
+  validation_dir,
+  test_datagen,
+  target_size = c(150, 150),
+  batch_size = 20,
+  class_mode = "binary"
+)
+
+model %>% compile(
+  loss = "binary_crossentropy",
+  optimizer = optimizer_rmsprop(lr = 2e-5),
+  metrics = c("accuracy")
+)
+
+history2 <- model %>% fit_generator(
+  train_generator,
+  steps_per_epoch = 100,
+  epochs = 30,
+  validation_data = validation_generator,
+  validation_steps = 50
+)
+
+```
+
+# View history
+
+```{r hist2s}
+plot(history2)
+```

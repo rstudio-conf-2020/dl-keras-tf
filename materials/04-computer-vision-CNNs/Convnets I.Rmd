@@ -1,0 +1,135 @@
+---
+title: "Computer Vision: Intro to Convnets"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+
+# Initialize package
+library(keras)
+
+# define the directories:
+source("def_dir.R")
+```
+
+# Part 1: Data Preparation
+
+## Examine data:
+
+```{r strImagesPre}
+
+data.frame(Cats = c(length(list.files(train_cats_dir)),
+                    length(list.files(validation_cats_dir)),
+                    length(list.files(test_cats_dir))),
+           Dogs = c(length(list.files(train_dogs_dir)),
+                    length(list.files(validation_dogs_dir)),
+                    length(list.files(test_dogs_dir))),
+           row.names = c("Training", "Validation", "Test")) %>% 
+  knitr::kable()
+
+
+```
+
+## Define and compile model
+
+- Four sequential conv and max pooling layers
+- Flatten layer
+- Densly-connected network
+- Single binary output
+
+```{r}
+
+model <- keras_model_sequential() %>%
+  layer_conv_2d(filters = 32, kernel_size = c(3, 3), activation = "relu", input_shape = c(150, 150, 3)) %>%
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  
+  layer_conv_2d(filters = 64, kernel_size = c(3, 3), activation = "relu") %>% 
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  
+  layer_conv_2d(filters = 128, kernel_size = c(3, 3), activation = "relu") %>% 
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  
+  layer_conv_2d(filters = 128, kernel_size = c(3, 3), activation = "relu") %>% 
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  
+  layer_flatten() %>%
+  
+  layer_dense(units = 512, activation = "relu") %>%
+  layer_dense(units = 1, activation = "sigmoid")
+
+summary(model)
+
+```
+
+Compile the model:
+
+```{r}
+model %>% compile(
+  loss = "binary_crossentropy",
+  optimizer = optimizer_rmsprop(lr = 1e-4),
+  metrics = "accuracy"
+)
+
+```
+
+## Read images from directories
+
+Use `image_data_generator()`
+
+```{r}
+
+train_datagen <- image_data_generator(rescale = 1/255)
+validation_datagen <- image_data_generator(rescale = 1/255)
+
+train_generator <- flow_images_from_directory(
+  train_dir,
+  train_datagen,
+  target_size = c(150, 150),
+  batch_size = 20,
+  class_mode = "binary"
+)
+
+validation_generator <- flow_images_from_directory(
+  validation_dir,
+  validation_datagen,
+  target_size = c(150, 150),
+  batch_size = 20,
+  class_mode = "binary"
+)
+```
+
+View batches
+
+```{r}
+
+batch <- generator_next(train_generator)
+str(batch)
+
+```
+
+## Train the model
+
+```{r modelTrain}
+
+history <- model %>% fit_generator(
+  train_generator,
+  steps_per_epoch = 100,
+  epochs = 30,
+  validation_data = validation_generator,
+  validation_steps = 50
+)
+
+```
+
+View history
+
+```{r historyView}
+plot(history)
+```
+
+# Save the model
+
+```{r modelSave}
+model %>% save_model_hdf5("cats_and_dogs_small_1.h5")
+```
