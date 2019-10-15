@@ -8,7 +8,47 @@ knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 
 # Initialize package
 library(keras)
+```
 
+In this example, we are going to apply a CNN to classify dogs vs. cats images. 
+This will walk you through the fundamentals of importing images, applying image 
+augmentation, and performing classification.
+
+Learning objectives:
+
+- What image generators are, why and how to use them.
+- What image augmentation is, why and how to use them.
+
+# Part 1: Data Preparation
+
+## Image location
+
+We are going to use the Cats vs. Dogs Kaggle competition data set
+(https://www.kaggle.com/c/dogs-vs-cats/data). However, do to size and runtime 
+limitations, we are going to only use a subset of the data.  We have already 
+set up the directories which look like:
+
+```
+- data
+   └── dogs-vs-cats
+       └── train
+           └── cats
+               ├── cat.1.jpg
+               ├── cat.2.jpg
+               └── ...
+           └── dogs
+               ├── dog.1.jpg
+               ├── dog.2.jpg
+               └── ...
+       └── validation
+           ├── cats
+           └── dogs
+       └── test
+           ├── cats
+           └── dogs
+```
+
+```{r image-file-paths}
 # define the directories:
 image_dir <- here::here("docs", "data", "dogs-vs-cats")
 train_dir <- file.path(image_dir, "train")
@@ -26,11 +66,9 @@ valid_dogs_dir <- file.path(valid_dir, "dogs")
 test_dogs_dir <- file.path(test_dir, "dogs")
 ```
 
-# Part 1: Data Preparation
-
 ## Examine data:
 
-```{r strImagesPre}
+```{r verify-data}
 cat("Cat images:", "\n")
 cat("total training cat images:", length(list.files(train_cats_dir)), "\n")
 cat("total validation cat images:", length(list.files(valid_cats_dir)), "\n")
@@ -51,10 +89,10 @@ cat("total test dog images:", length(list.files(test_dogs_dir)), "\n")
 - Densly-connected network
 - Single binary output
 
-```{r}
-
+```{r cnn-architecture}
 model <- keras_model_sequential() %>%
-  layer_conv_2d(filters = 32, kernel_size = c(3, 3), activation = "relu", input_shape = c(150, 150, 3)) %>%
+  layer_conv_2d(filters = 32, kernel_size = c(3, 3), activation = "relu", 
+                input_shape = c(150, 150, 3)) %>%
   layer_max_pooling_2d(pool_size = c(2, 2)) %>%
   
   layer_conv_2d(filters = 64, kernel_size = c(3, 3), activation = "relu") %>% 
@@ -72,26 +110,23 @@ model <- keras_model_sequential() %>%
   layer_dense(units = 1, activation = "sigmoid")
 
 summary(model)
-
 ```
 
 Compile the model:
 
-```{r}
+```{r cnn-compile}
 model %>% compile(
   loss = "binary_crossentropy",
   optimizer = optimizer_rmsprop(lr = 1e-4),
   metrics = "accuracy"
 )
-
 ```
 
 ## Read images from directories
 
 Use `image_data_generator()`
 
-```{r}
-
+```{r cnn-image-generator}
 train_datagen <- image_data_generator(rescale = 1/255)
 valid_datagen <- image_data_generator(rescale = 1/255)
 
@@ -114,17 +149,14 @@ validation_generator <- flow_images_from_directory(
 
 View batches
 
-```{r}
-
+```{r generator-structure}
 batch <- generator_next(train_generator)
 str(batch)
-
 ```
 
 ## Train the model
 
-```{r modelTrain}
-
+```{r cnn-train}
 history <- model %>% fit_generator(
   train_generator,
   steps_per_epoch = 100,
@@ -132,25 +164,24 @@ history <- model %>% fit_generator(
   validation_data = validation_generator,
   validation_steps = 50
 )
-
 ```
 
 View history
 
-```{r historyView}
+```{r plot-history}
 plot(history)
 ```
 
 # Save the model
 
-```{r modelSave}
+```{r save-model}
 model %>% save_model_hdf5("cats_and_dogs_small_1.h5")
 ```
 
 
-# Part 3: Data Augmentation
+# Part 3: Image Augmentation
 
-```{r}
+```{r image-augmentation}
 datagen <- image_data_generator(
   rescale = 1/255,
   rotation_range = 40,
@@ -164,7 +195,7 @@ datagen <- image_data_generator(
 ```
 
 
-```{r}
+```{r view-augmented-images}
 fnames <- list.files(train_cats_dir, full.names = TRUE)
 img_path <- fnames[[1]]
 
@@ -178,15 +209,15 @@ augmentation_generator <- flow_images_from_data(
   batch_size = 1
 )
 
-op <- par(mfrow = c(2, 2), pty = "s", mar = c(1, 0, 1, 0))
-for (i in 1:4) {
+op <- par(mfrow = c(2, 5), pty = "s", mar = c(0, 0.1, 0, 0.1))
+for (i in 1:10) {
   batch <- generator_next(augmentation_generator)
   plot(as.raster(batch[1,,,]))
 }
 par(op)
 ```
 
-```{r}
+```{r cnn-structure2}
 model <- keras_model_sequential() %>%
   layer_conv_2d(filters = 32, kernel_size = c(3, 3), activation = "relu", input_shape = c(150, 150, 3)) %>%
   layer_max_pooling_2d(pool_size = c(2, 2)) %>%
@@ -207,7 +238,7 @@ model %>% compile(
 )
 ```
 
-```{r}
+```{r augment-and-train}
 datagen <- image_data_generator(
   rescale = 1/255,
   rotation_range = 40,
@@ -246,7 +277,7 @@ history <- model %>%
   )
 ```
 
-```{r}
+```{r save-augmented-model}
 model %>% save_model_hdf5("cats_and_dogs_small_2.h5")
 ```
 
