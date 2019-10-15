@@ -1,0 +1,252 @@
+---
+title: "Computer vision & CNNs: Cats vs. Dogs"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+
+# Initialize package
+library(keras)
+
+# define the directories:
+image_dir <- here::here("docs", "data", "dogs-vs-cats")
+train_dir <- file.path(image_dir, "train")
+valid_dir <- file.path(image_dir, "validation")
+test_dir <- file.path(image_dir, "test")
+
+# create train, validation, and test file paths for cat images
+train_cats_dir <- file.path(train_dir, "cats")
+valid_cats_dir <- file.path(valid_dir, "cats")
+test_cats_dir <- file.path(test_dir, "cats")
+
+# create train, validation, and test file paths for cat images
+train_dogs_dir <- file.path(train_dir, "dogs")
+valid_dogs_dir <- file.path(valid_dir, "dogs")
+test_dogs_dir <- file.path(test_dir, "dogs")
+```
+
+# Part 1: Data Preparation
+
+## Examine data:
+
+```{r strImagesPre}
+cat("Cat images:", "\n")
+cat("total training cat images:", length(list.files(train_cats_dir)), "\n")
+cat("total validation cat images:", length(list.files(valid_cats_dir)), "\n")
+cat("total test cat images:", length(list.files(test_cats_dir)), "\n\n")
+
+cat("Dog images:", "\n")
+cat("total training dog images:", length(list.files(train_dogs_dir)), "\n")
+cat("total validation dog images:", length(list.files(valid_dogs_dir)), "\n")
+cat("total test dog images:", length(list.files(test_dogs_dir)), "\n")
+```
+
+# Part 2: Model 1
+
+## Define and compile model
+
+- Four sequential conv and max pooling layers
+- Flatten layer
+- Densly-connected network
+- Single binary output
+
+```{r}
+
+model <- keras_model_sequential() %>%
+  layer_conv_2d(filters = 32, kernel_size = c(3, 3), activation = "relu", input_shape = c(150, 150, 3)) %>%
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  
+  layer_conv_2d(filters = 64, kernel_size = c(3, 3), activation = "relu") %>% 
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  
+  layer_conv_2d(filters = 128, kernel_size = c(3, 3), activation = "relu") %>% 
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  
+  layer_conv_2d(filters = 128, kernel_size = c(3, 3), activation = "relu") %>% 
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  
+  layer_flatten() %>%
+  
+  layer_dense(units = 512, activation = "relu") %>%
+  layer_dense(units = 1, activation = "sigmoid")
+
+summary(model)
+
+```
+
+Compile the model:
+
+```{r}
+model %>% compile(
+  loss = "binary_crossentropy",
+  optimizer = optimizer_rmsprop(lr = 1e-4),
+  metrics = "accuracy"
+)
+
+```
+
+## Read images from directories
+
+Use `image_data_generator()`
+
+```{r}
+
+train_datagen <- image_data_generator(rescale = 1/255)
+valid_datagen <- image_data_generator(rescale = 1/255)
+
+train_generator <- flow_images_from_directory(
+  train_dir,
+  train_datagen,
+  target_size = c(150, 150),
+  batch_size = 20,
+  class_mode = "binary"
+)
+
+validation_generator <- flow_images_from_directory(
+  valid_dir,
+  valid_datagen,
+  target_size = c(150, 150),
+  batch_size = 20,
+  class_mode = "binary"
+)
+```
+
+View batches
+
+```{r}
+
+batch <- generator_next(train_generator)
+str(batch)
+
+```
+
+## Train the model
+
+```{r modelTrain}
+
+history <- model %>% fit_generator(
+  train_generator,
+  steps_per_epoch = 100,
+  epochs = 30,
+  validation_data = validation_generator,
+  validation_steps = 50
+)
+
+```
+
+View history
+
+```{r historyView}
+plot(history)
+```
+
+# Save the model
+
+```{r modelSave}
+model %>% save_model_hdf5("cats_and_dogs_small_1.h5")
+```
+
+
+# Part 3: Data Augmentation
+
+```{r}
+datagen <- image_data_generator(
+  rescale = 1/255,
+  rotation_range = 40,
+  width_shift_range = 0.2,
+  height_shift_range = 0.2,
+  shear_range = 0.2,
+  zoom_range = 0.2,
+  horizontal_flip = TRUE,
+  fill_mode = "nearest"
+)
+```
+
+
+```{r}
+fnames <- list.files(train_cats_dir, full.names = TRUE)
+img_path <- fnames[[1]]
+
+img <- image_load(img_path, target_size = c(150, 150))
+img_array <- image_to_array(img)
+img_array <- array_reshape(img_array, c(1, 150, 150, 3))
+
+augmentation_generator <- flow_images_from_data(
+  img_array,
+  generator = datagen,
+  batch_size = 1
+)
+
+op <- par(mfrow = c(2, 2), pty = "s", mar = c(1, 0, 1, 0))
+for (i in 1:4) {
+  batch <- generator_next(augmentation_generator)
+  plot(as.raster(batch[1,,,]))
+}
+par(op)
+```
+
+```{r}
+model <- keras_model_sequential() %>%
+  layer_conv_2d(filters = 32, kernel_size = c(3, 3), activation = "relu", input_shape = c(150, 150, 3)) %>%
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  layer_conv_2d(filters = 64, kernel_size = c(3, 3), activation = "relu") %>% 
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  layer_conv_2d(filters = 128, kernel_size = c(3, 3), activation = "relu") %>% 
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  layer_conv_2d(filters = 128, kernel_size = c(3, 3), activation = "relu") %>% 
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  layer_flatten() %>%
+  layer_dense(units = 512, activation = "relu") %>%
+  layer_dense(units = 1, activation = "sigmoid")
+
+model %>% compile(
+  loss = "binary_crossentropy",
+  optimizer = optimizer_rmsprop(lr = 1e-4),
+  metrics = "accuracy"
+)
+```
+
+```{r}
+datagen <- image_data_generator(
+  rescale = 1/255,
+  rotation_range = 40,
+  width_shift_range = 0.2,
+  height_shift_range = 0.2,
+  shear_range = 0.2,
+  zoom_range = 0.2,
+  horizontal_flip = TRUE,
+)
+
+test_datagen <- image_data_generator(rescale = 1/255)
+
+train_generator <- flow_images_from_directory(
+  train_dir,
+  datagen,
+  target_size = c(150, 150),
+  batch_size = 32,
+  class_mode = "binary"
+)
+
+validation_generator <- flow_images_from_directory(
+  valid_dir,
+  test_datagen,
+  target_size = c(150, 150),
+  batch_size = 32,
+  class_mode = "binary"
+)
+
+history <- model %>%
+  fit_generator(
+    train_generator,
+    steps_per_epoch = 100,
+    epochs = 100,
+    validation_data = validation_generator,
+    validation_steps = 50
+  )
+```
+
+```{r}
+model %>% save_model_hdf5("cats_and_dogs_small_2.h5")
+```
+

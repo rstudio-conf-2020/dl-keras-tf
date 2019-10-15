@@ -1,5 +1,5 @@
 ---
-title: "Computer vision & CNNs"
+title: "Computer vision & CNNs: MNIST revisted"
 author: "Brad Boehmke"
 date: "2020-01-27"
 output:
