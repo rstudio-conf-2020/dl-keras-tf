@@ -1,24 +1,40 @@
 ---
-title: "Computer Vision: Optimization"
-author: "Rick Scavetta"
-output: html_document
+title: "Computer vision & CNNs: Transfer Learning"
+output: html_notebook
 ---
-
-# Data sources
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 
 # Initialize package
 library(keras)
+```
 
+# Part 1: Data Preparation
+
+## Image location
+
+```{r image-file-paths}
 # define the directories:
-source("def_dir.R")
+image_dir <- here::here("docs", "data", "dogs-vs-cats")
+train_dir <- file.path(image_dir, "train")
+valid_dir <- file.path(image_dir, "validation")
+test_dir <- file.path(image_dir, "test")
+
+# create train, validation, and test file paths for cat images
+train_cats_dir <- file.path(train_dir, "cats")
+valid_cats_dir <- file.path(valid_dir, "cats")
+test_cats_dir <- file.path(test_dir, "cats")
+
+# create train, validation, and test file paths for cat images
+train_dogs_dir <- file.path(train_dir, "dogs")
+valid_dogs_dir <- file.path(valid_dir, "dogs")
+test_dogs_dir <- file.path(test_dir, "dogs")
 ```
 
 # Obtain a pre-trained convnet base
 
-```{r getConv}
+```{r pretrained-model}
 conv_base <- application_vgg16(
   weights = "imagenet",
   include_top = FALSE,
@@ -27,13 +43,13 @@ conv_base <- application_vgg16(
 
 ```
 
-```{r summaryConv}
+```{r vgg16-model-structure}
 conv_base
 ```
 
 # Extracting features using the pretrained convolutional base
 
-```{r dataGen0}
+```{r image-generator-feature-extraction}
 
 datagen <- image_data_generator(rescale = 1/255)
 batch_size <- 20
@@ -67,18 +83,13 @@ extract_features <- function(directory, sample_count) {
 
 
 train <- extract_features(train_dir, 2000)
-validation <- extract_features(validation_dir, 1000)
+validation <- extract_features(valid_dir, 1000)
 test <- extract_features(test_dir, 1000)
-
-# train <- extract_features(paste0("/home/rstudio-user",sub("~","",train_dir)), 2000)
-# validation <- extract_features(paste0("/home/rstudio-user",sub("~","",validation_dir)), 1000)
-# test <- extract_features(paste0("/home/rstudio-user",sub("~","",test_dir)), 1000)
-
 ```
 
 # Reshape features
 
-```{r reshape}
+```{r reshape-features}
 reshape_features <- function(features) {
   array_reshape(features, dim = c(nrow(features), 4 * 4 * 512))
 }
@@ -91,7 +102,7 @@ test$features <- reshape_features(test$features)
 
 Here we only need the densely connected classifier
 
-```{r denseModel}
+```{r model-classifier}
 
 model <- keras_model_sequential() %>%
   layer_dense(units = 256, activation = "relu", input_shape = 4 * 4 * 512) %>%
@@ -104,7 +115,7 @@ model
 
 Compile and train:
 
-```{r modelTrain}
+```{r train-model}
 
 model %>% compile(
   optimizer = optimizer_rmsprop(lr = 2e-5),
@@ -123,13 +134,15 @@ history1 <- model %>% fit(
 
 # Plot results:
 
-```{r hist1}
+```{r plot-model1-history}
 plot(history1)
 ```
 
+# ------------------------- ONLY RUN ON GPU!! ----------------------------------
+
 # Combining a densely-connected neural network with the convolutional base
 
-```{r convModel}
+```{r CNN-base-and-classifier}
 
 model <- keras_model_sequential() %>%
   conv_base %>%
@@ -143,7 +156,7 @@ model
 
 ## Freezing
 
-```{r freezeParam}
+```{r freeze-parameters}
 cat(length(model$trainable_weights), " trainable weights before freezing.\n")
 
 freeze_weights(conv_base)
@@ -154,7 +167,7 @@ cat(length(model$trainable_weights), " trainable weights before freezing.\n")
 
 # Training the model end-to-end with a frozen convolutional base
 
-```{r datagen1}
+```{r train-end-to-end}
 
 train_datagen = image_data_generator(
   rescale = 1/255,
@@ -204,6 +217,6 @@ history2 <- model %>% fit_generator(
 
 # View history
 
-```{r hist2s}
+```{r plot-model2-history}
 plot(history2)
 ```

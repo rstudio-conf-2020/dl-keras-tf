@@ -18,12 +18,13 @@ Learning objectives:
 
 - What image generators are, why and how to use them.
 - What image augmentation is, why and how to use them.
+- A new regularization technique called dropout.
 
 # Part 1: Data Preparation
 
 ## Image location
 
-We are going to use the Cats vs. Dogs Kaggle competition data set
+We are going to use the Dogs vs. Cats Kaggle competition data set
 (https://www.kaggle.com/c/dogs-vs-cats/data). However, do to size and runtime 
 limitations, we are going to only use a subset of the data.  We have already 
 set up the directories which look like:
@@ -66,7 +67,10 @@ valid_dogs_dir <- file.path(valid_dir, "dogs")
 test_dogs_dir <- file.path(test_dir, "dogs")
 ```
 
-## Examine data:
+## Data set
+
+Although there are 25,000 images in this data set, we are going to use a very 
+small subset, which includes:
 
 ```{r verify-data}
 cat("Cat images:", "\n")
@@ -80,9 +84,23 @@ cat("total validation dog images:", length(list.files(valid_dogs_dir)), "\n")
 cat("total test dog images:", length(list.files(test_dogs_dir)), "\n")
 ```
 
+Let's check out the first 10 cat and dog images:
+
+```{r example-images}
+op <- par(mfrow = c(4, 5), pty = "s", mar = c(0.1, 0.1, 0.1, 0.1))
+for (i in 1:10) {
+  plot(as.raster(jpeg::readJPEG(paste0(train_cats_dir, "/cat.", i, ".jpg"))))
+  plot(as.raster(jpeg::readJPEG(paste0(train_dogs_dir, "/dog.", i, ".jpg"))))
+}
+par(op)
+```
+
 # Part 2: Model 1
 
 ## Define and compile model
+
+We're going to set up a simple CNN model that contains steps you saw in the 
+previous module. This CNN includes:
 
 - Four sequential conv and max pooling layers
 - Flatten layer
@@ -124,7 +142,22 @@ model %>% compile(
 
 ## Read images from directories
 
-Use `image_data_generator()`
+`image_data_generator` will:
+
+1. Read the image files
+2. Decode the image to RGB grids of pixels
+3. Convert these into floating point tensors
+4. Rescale pixel values to [0, 1] interval
+
+`image_data_generator` provides other capabilities that we'll look at shortly.
+
+`flow_images_from_directory` will:
+
+1. Apply `image_data_generator`
+2. To a batch of 20 images at a time
+3. From our training directory (randomly shuffling btwn subdirectories)
+4. Resize these images to be consistent size of 150x150 pixels
+5. Apply binary labels
 
 ```{r cnn-image-generator}
 train_datagen <- image_data_generator(rescale = 1/255)
@@ -147,7 +180,9 @@ validation_generator <- flow_images_from_directory(
 )
 ```
 
-View batches
+If we get the first batch from the generator, you will see that it yields 20 
+images of 150x150 pixels with three channels (20, 150, 150, 3) along with their 
+binary labels (0, 1).
 
 ```{r generator-structure}
 batch <- generator_next(train_generator)
@@ -155,6 +190,19 @@ str(batch)
 ```
 
 ## Train the model
+
+To train our model we'll use `fit_generator` which is the equivalent of `fit` 
+for data generators.  We provide it our generators for the training and 
+validation data.  Plus, we need to specify:
+
+- `steps_per_epoch`: how many samples to draw from the training generator before 
+  declaring an epoch over. Our generator supplies batches of 20 and we have 
+  2,000 training images so we need 100 steps.
+- `validation_steps`: how many samples to draw from the validation generator. 
+  Our generator supplies batches of 20 and we have 1,000 validation images so we
+  need 50 steps.
+  
+**Without a GPU this will take approximately 20 minutes to train**  
 
 ```{r cnn-train}
 history <- model %>% fit_generator(
@@ -194,6 +242,10 @@ datagen <- image_data_generator(
 )
 ```
 
+- Read in the image and resize it
+- Converts to an array with shape (150, 150, 3)
+- Reshapes it to (1, 150, 150, 3)
+- Generates batches of randomly transformed images.
 
 ```{r view-augmented-images}
 fnames <- list.files(train_cats_dir, full.names = TRUE)
@@ -217,6 +269,14 @@ for (i in 1:10) {
 par(op)
 ```
 
+Using dropout:
+
+- Four sequential conv and max pooling layers
+- Flatten layer
+- Dropout (new)
+- Densly-connected network
+- Single binary output
+
 ```{r cnn-structure2}
 model <- keras_model_sequential() %>%
   layer_conv_2d(filters = 32, kernel_size = c(3, 3), activation = "relu", input_shape = c(150, 150, 3)) %>%
@@ -228,6 +288,7 @@ model <- keras_model_sequential() %>%
   layer_conv_2d(filters = 128, kernel_size = c(3, 3), activation = "relu") %>% 
   layer_max_pooling_2d(pool_size = c(2, 2)) %>%
   layer_flatten() %>%
+  layer_dropout(rate = 0.5) %>%
   layer_dense(units = 512, activation = "relu") %>%
   layer_dense(units = 1, activation = "sigmoid")
 
