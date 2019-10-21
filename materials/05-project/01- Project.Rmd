@@ -238,9 +238,14 @@ model %>% compile(
 
 history_pretrained <- model %>% fit(
   train$features, train$labels,
-  epochs = 15,
+  epochs = 20,
   batch_size = 32,
   validation_data = list(validation$features, validation$labels)
 )
 
 ```
+
+```{r}
+model %>% evaluate(test$features, test$labels)
+```
+
