@@ -179,26 +179,27 @@ extract_features <- function(directory, sample_count) {
     class_mode = "categorical"
   )
   i <- 0
-  while(TRUE) {
+  while (TRUE) {
+    cat("Processing batch", i + 1, "of", ceiling(sample_count / batch_size), "\n")
     batch <- generator_next(generator)
     inputs_batch <- batch[[1]]
     labels_batch <- batch[[2]]
     features_batch <- conv_base %>% predict(inputs_batch)
-    index_range <- ((i * batch_size)+1):((i + 1) * batch_size)
+    index_range <- ((i * batch_size) + 1):((i + 1) * batch_size)
     features[index_range,,,] <- features_batch
     labels[index_range, ] <- labels_batch
     i <- i + 1
-    if (i * batch_size >= sample_count)
-      break }
+    if (i * batch_size >= sample_count) break
+    }
   list(
     features = features,
     labels = labels
-  ) }
+  ) 
+  }
 
-
-train <- extract_features(train_dir, n_train_images)
-validation <- extract_features(valid_dir, n_valid_images)
-test <- extract_features(test_dir, n_test_images)
+train <- extract_features(train_dir, 32*129)
+validation <- extract_features(valid_dir, 32*43)
+test <- extract_features(test_dir, 32*43)
 ```
 
 # Reshape features
@@ -217,14 +218,12 @@ test$features <- reshape_features(test$features)
 Here we only need the densely connected classifier
 
 ```{r model-classifier}
-
 model <- keras_model_sequential() %>%
-  layer_dense(units = 256, activation = "relu", input_shape = 4 * 4 * 512) %>%
+  layer_dense(units = 256, activation = "relu", input_shape = ncol(train$features)) %>%
   layer_dropout(rate = 0.5) %>%
-  layer_dense(units = 1, activation = "softmax")
+  layer_dense(units = 8, activation = "softmax")
 
 model
-
 ```
 
 Compile and train:
@@ -233,14 +232,14 @@ Compile and train:
 
 model %>% compile(
   optimizer = optimizer_rmsprop(lr = 2e-5),
-  loss = "binary_crossentropy",
+  loss = "categorical_crossentropy",
   metrics = c("accuracy")
 )
 
-history1 <- model %>% fit(
+history_pretrained <- model %>% fit(
   train$features, train$labels,
-  epochs = 30,
-  batch_size = 20,
+  epochs = 15,
+  batch_size = 32,
   validation_data = list(validation$features, validation$labels)
 )
 
