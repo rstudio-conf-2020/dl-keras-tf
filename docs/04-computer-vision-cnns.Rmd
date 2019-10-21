@@ -812,3 +812,414 @@ class: clear, center, middle
 knitr::include_graphics("https://miro.medium.com/proxy/1*oB3S5yHHhvougJkPXuc8og.gif")
 ```
 ]
+
+```{r image-file-paths, echo=FALSE}
+# define the directories:
+image_dir <- here::here("docs", "data", "dogs-vs-cats")
+train_dir <- file.path(image_dir, "train")
+valid_dir <- file.path(image_dir, "validation")
+test_dir <- file.path(image_dir, "test")
+
+# create train, validation, and test file paths for cat images
+train_cats_dir <- file.path(train_dir, "cats")
+valid_cats_dir <- file.path(valid_dir, "cats")
+test_cats_dir <- file.path(test_dir, "cats")
+
+# create train, validation, and test file paths for cat images
+train_dogs_dir <- file.path(train_dir, "dogs")
+valid_dogs_dir <- file.path(valid_dir, "dogs")
+test_dogs_dir <- file.path(test_dir, "dogs")
+```
+
+---
+# Image augmentation
+
+.pull-left[
+
+There are many approaches we can take to augment images such as:
+
+- rotate the image
+- shift the image vertically and horizontally
+- shear the image
+- zoom in and out
+- flip the orientation
+
+```{r, eval=FALSE}
+datagen <- image_data_generator(
+  rescale = 1/255,
+  rotation_range = 40,
+  width_shift_range = 0.2,
+  height_shift_range = 0.2,
+  shear_range = 0.2,
+  zoom_range = 0.2,
+  horizontal_flip = TRUE,
+  fill_mode = "nearest"
+)
+```
+
+]
+
+---
+# Image augmentation
+
+.pull-left[
+
+There are many approaches we can take to augment images such as:
+
+- .bold[rotate the image]
+- shift the image vertically and horizontally
+- shear the image
+- zoom in and out
+- flip the orientation
+
+```{r, eval=FALSE}
+datagen <- image_data_generator(
+  rescale = 1/255,
+  rotation_range = 40, #<<
+  width_shift_range = 0.2,
+  height_shift_range = 0.2,
+  shear_range = 0.2,
+  zoom_range = 0.2,
+  horizontal_flip = TRUE,
+  fill_mode = "nearest"
+)
+```
+
+]
+
+.pull-right[
+
+
+```{r, echo=FALSE}
+plot_image <- function(datagen, n = 16, row = 4, col = 4) {
+  # get the first cat image
+  fnames <- list.files(train_cats_dir, full.names = TRUE)
+  img_path <- fnames[[1]]
+  
+  # resize & reshape
+  img <- image_load(img_path, target_size = c(150, 150))
+  img_array <- image_to_array(img)
+  img_array <- array_reshape(img_array, c(1, 150, 150, 3))
+  
+  # generate a a single augmented image
+  augmentation_generator <- flow_images_from_data(
+    img_array,
+    generator = datagen,
+    batch_size = 1
+  )
+  
+  # plot 10 augmented images of the first cat image
+  op <- par(mfrow = c(row, col), mar = c(0.01, 0.01, 0.01, 0.01))
+  for (i in 1:n) {
+    batch <- generator_next(augmentation_generator)
+    plot(as.raster(batch[1,,,]))
+  }
+  par(op)
+}
+
+datagen <- image_data_generator(
+  rescale = 1/255,
+  rotation_range = 40,
+  #width_shift_range = 0.2,
+  #height_shift_range = 0.2,
+  #shear_range = 0.2,
+  #zoom_range = 0.2,
+  #horizontal_flip = TRUE,
+  #fill_mode = "nearest"
+)
+
+plot_image(datagen)
+```
+
+]
+
+---
+# Image augmentation
+
+.pull-left[
+
+There are many approaches we can take to augment images such as:
+
+- rotate the image
+- .bold[shift the image vertically and horizontally]
+- shear the image
+- zoom in and out
+- flip the orientation
+
+```{r, eval=FALSE}
+datagen <- image_data_generator(
+  rescale = 1/255,
+  rotation_range = 40, 
+  width_shift_range = 0.2, #<<
+  height_shift_range = 0.2, #<<
+  shear_range = 0.2,
+  zoom_range = 0.2,
+  horizontal_flip = TRUE,
+  fill_mode = "nearest"
+)
+```
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+datagen <- image_data_generator(
+  rescale = 1/255,
+  #rotation_range = 40,
+  width_shift_range = 0.2,
+  height_shift_range = 0.2,
+  #shear_range = 0.2,
+  #zoom_range = 0.2,
+  #horizontal_flip = TRUE,
+  #fill_mode = "nearest"
+)
+
+plot_image(datagen)
+```
+
+]
+
+---
+# Image augmentation
+
+.pull-left[
+
+There are many approaches we can take to augment images such as:
+
+- rotate the image
+- shift the image vertically and horizontally
+- .bold[shear the image]
+- zoom in and out
+- flip the orientation
+
+```{r, eval=FALSE}
+datagen <- image_data_generator(
+  rescale = 1/255,
+  rotation_range = 40, 
+  width_shift_range = 0.2, 
+  height_shift_range = 0.2,
+  shear_range = 0.2, #<<
+  zoom_range = 0.2,
+  horizontal_flip = TRUE,
+  fill_mode = "nearest"
+)
+```
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+datagen <- image_data_generator(
+  rescale = 1/255,
+  #rotation_range = 40,
+  #width_shift_range = 0.2,
+  #height_shift_range = 0.2,
+  shear_range = 25,
+  #zoom_range = 0.2,
+  #horizontal_flip = TRUE,
+  #fill_mode = "nearest"
+)
+
+plot_image(datagen)
+```
+
+]
+
+---
+# Image augmentation
+
+.pull-left[
+
+There are many approaches we can take to augment images such as:
+
+- rotate the image
+- shift the image vertically and horizontally
+- shear the image
+- .bold[zoom in and out]
+- flip the orientation
+
+```{r, eval=FALSE}
+datagen <- image_data_generator(
+  rescale = 1/255,
+  rotation_range = 40, 
+  width_shift_range = 0.2, 
+  height_shift_range = 0.2,
+  shear_range = 0.2, 
+  zoom_range = 0.2, #<<
+  horizontal_flip = TRUE,
+  fill_mode = "nearest"
+)
+```
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+datagen <- image_data_generator(
+  rescale = 1/255,
+  #rotation_range = 40,
+  #width_shift_range = 0.2,
+  #height_shift_range = 0.2,
+  #shear_range = 0.2,
+  zoom_range = 0.4,
+  #horizontal_flip = TRUE,
+  #fill_mode = "nearest"
+)
+
+plot_image(datagen)
+```
+
+]
+
+---
+# Image augmentation
+
+.pull-left[
+
+There are many approaches we can take to augment images such as:
+
+- rotate the image
+- shift the image vertically and horizontally
+- shear the image
+- zoom in and out
+- .bold[flip the orientation]
+
+```{r, eval=FALSE}
+datagen <- image_data_generator(
+  rescale = 1/255,
+  rotation_range = 40, 
+  width_shift_range = 0.2, 
+  height_shift_range = 0.2,
+  shear_range = 0.2, 
+  zoom_range = 0.2, 
+  horizontal_flip = TRUE, #<<
+  fill_mode = "nearest"
+)
+```
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+datagen <- image_data_generator(
+  rescale = 1/255,
+  #rotation_range = 40,
+  #width_shift_range = 0.2,
+  #height_shift_range = 0.2,
+  #shear_range = 0.2,
+  #zoom_range = 0.2,
+  horizontal_flip = TRUE,
+  #fill_mode = "nearest"
+)
+
+plot_image(datagen)
+```
+
+]
+
+---
+# Image augmentation
+
+.pull-left[
+
+There are many approaches we can take to augment images such as:
+
+- rotate the image
+- shift the image vertically and horizontally
+- shear the image
+- zoom in and out
+- flip the orientation
+
+```{r, eval=FALSE}
+datagen <- image_data_generator(
+  rescale = 1/255,
+  rotation_range = 40, 
+  width_shift_range = 0.2, 
+  height_shift_range = 0.2,
+  shear_range = 0.2, 
+  zoom_range = 0.2, 
+  horizontal_flip = TRUE, 
+  fill_mode = "nearest" #<<
+)
+```
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+datagen1 <- image_data_generator(
+  rescale = 1/255,
+  rotation_range = 40,
+  width_shift_range = 0.2,
+  height_shift_range = 0.2,
+  shear_range = 0.2,
+  zoom_range = 0.2,
+  horizontal_flip = TRUE,
+  fill_mode = "constant"
+)
+datagen2 <- image_data_generator(
+  rescale = 1/255,
+  rotation_range = 40,
+  width_shift_range = 0.2,
+  height_shift_range = 0.2,
+  shear_range = 0.2,
+  zoom_range = 0.2,
+  horizontal_flip = TRUE,
+  fill_mode = "nearest"
+)
+  
+# get the first cat image
+fnames <- list.files(train_cats_dir, full.names = TRUE)
+img_path <- fnames[[1]]
+
+# resize & reshape
+img <- image_load(img_path, target_size = c(150, 150))
+img_array <- image_to_array(img)
+img_array <- array_reshape(img_array, c(1, 150, 150, 3))
+
+# generate a a single augmented image
+augmentation_generator1 <- flow_images_from_data(
+  img_array,
+  generator = datagen1,
+  batch_size = 1
+)
+
+augmentation_generator2 <- flow_images_from_data(
+  img_array,
+  generator = datagen2,
+  batch_size = 1
+)
+
+# plot 10 augmented images of the first cat image
+op <- par(mfrow = c(2, 4), mar = c(0.01, 0.01, 0.01, 0.01))
+for (i in 1:8) {
+  if (i %in% 1:4) {
+    batch <- generator_next(augmentation_generator1)
+    plot(as.raster(batch[1,,,]))
+  }
+  if (i %in% 5:8) {
+    batch <- generator_next(augmentation_generator2)
+    plot(as.raster(batch[1,,,]))
+  }
+}
+par(op)
+```
+
+]
+
+---
+class: clear, center, middle
+
+.font300.bold[Transfer Learning]
+
+```{r, echo=FALSE, out.height="85%", out.width="85%"}
+knitr::include_graphics("images/transfer-sign.jpg")
+```
+
+---
+# TBD

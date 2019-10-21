@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
   <head>
-    <title>Computer vision &amp; CNNs</title>
+    <title>Computer vision &amp; CNNs: MNIST revisted</title>
     <meta charset="utf-8" />
     <meta name="author" content="Brad Boehmke" />
     <meta name="date" content="2020-01-27" />
@@ -11,7 +11,7 @@
     <textarea id="source">
 class: center, middle, inverse, title-slide
 
-# Computer vision &amp; CNNs
+# Computer vision &amp; CNNs: MNIST revisted
 ### Brad Boehmke
 ### 2020-01-27
 
@@ -682,6 +682,258 @@ class: clear, center, middle
 .opacity[
 &lt;img src="https://miro.medium.com/proxy/1*oB3S5yHHhvougJkPXuc8og.gif" width="85%" height="85%" style="display: block; margin: auto;" /&gt;
 ]
+
+
+
+---
+# Image augmentation
+
+.pull-left[
+
+There are many approaches we can take to augment images such as:
+
+- rotate the image
+- shift the image vertically and horizontally
+- shear the image
+- zoom in and out
+- flip the orientation
+
+
+```r
+datagen &lt;- image_data_generator(
+  rescale = 1/255,
+  rotation_range = 40,
+  width_shift_range = 0.2,
+  height_shift_range = 0.2,
+  shear_range = 0.2,
+  zoom_range = 0.2,
+  horizontal_flip = TRUE,
+  fill_mode = "nearest"
+)
+```
+
+]
+
+---
+# Image augmentation
+
+.pull-left[
+
+There are many approaches we can take to augment images such as:
+
+- .bold[rotate the image]
+- shift the image vertically and horizontally
+- shear the image
+- zoom in and out
+- flip the orientation
+
+
+```r
+datagen &lt;- image_data_generator(
+  rescale = 1/255,
+* rotation_range = 40,
+  width_shift_range = 0.2,
+  height_shift_range = 0.2,
+  shear_range = 0.2,
+  zoom_range = 0.2,
+  horizontal_flip = TRUE,
+  fill_mode = "nearest"
+)
+```
+
+]
+
+.pull-right[
+
+
+&lt;img src="04-computer-vision-cnns_files/figure-html/unnamed-chunk-41-1.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Image augmentation
+
+.pull-left[
+
+There are many approaches we can take to augment images such as:
+
+- rotate the image
+- .bold[shift the image vertically and horizontally]
+- shear the image
+- zoom in and out
+- flip the orientation
+
+
+```r
+datagen &lt;- image_data_generator(
+  rescale = 1/255,
+  rotation_range = 40, 
+* width_shift_range = 0.2,
+* height_shift_range = 0.2,
+  shear_range = 0.2,
+  zoom_range = 0.2,
+  horizontal_flip = TRUE,
+  fill_mode = "nearest"
+)
+```
+
+]
+
+.pull-right[
+
+&lt;img src="04-computer-vision-cnns_files/figure-html/unnamed-chunk-43-1.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Image augmentation
+
+.pull-left[
+
+There are many approaches we can take to augment images such as:
+
+- rotate the image
+- shift the image vertically and horizontally
+- .bold[shear the image]
+- zoom in and out
+- flip the orientation
+
+
+```r
+datagen &lt;- image_data_generator(
+  rescale = 1/255,
+  rotation_range = 40, 
+  width_shift_range = 0.2, 
+  height_shift_range = 0.2,
+* shear_range = 0.2,
+  zoom_range = 0.2,
+  horizontal_flip = TRUE,
+  fill_mode = "nearest"
+)
+```
+
+]
+
+.pull-right[
+
+&lt;img src="04-computer-vision-cnns_files/figure-html/unnamed-chunk-45-1.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Image augmentation
+
+.pull-left[
+
+There are many approaches we can take to augment images such as:
+
+- rotate the image
+- shift the image vertically and horizontally
+- shear the image
+- .bold[zoom in and out]
+- flip the orientation
+
+
+```r
+datagen &lt;- image_data_generator(
+  rescale = 1/255,
+  rotation_range = 40, 
+  width_shift_range = 0.2, 
+  height_shift_range = 0.2,
+  shear_range = 0.2, 
+* zoom_range = 0.2,
+  horizontal_flip = TRUE,
+  fill_mode = "nearest"
+)
+```
+
+]
+
+.pull-right[
+
+&lt;img src="04-computer-vision-cnns_files/figure-html/unnamed-chunk-47-1.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Image augmentation
+
+.pull-left[
+
+There are many approaches we can take to augment images such as:
+
+- rotate the image
+- shift the image vertically and horizontally
+- shear the image
+- zoom in and out
+- .bold[flip the orientation]
+
+
+```r
+datagen &lt;- image_data_generator(
+  rescale = 1/255,
+  rotation_range = 40, 
+  width_shift_range = 0.2, 
+  height_shift_range = 0.2,
+  shear_range = 0.2, 
+  zoom_range = 0.2, 
+* horizontal_flip = TRUE,
+  fill_mode = "nearest"
+)
+```
+
+]
+
+.pull-right[
+
+&lt;img src="04-computer-vision-cnns_files/figure-html/unnamed-chunk-49-1.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Image augmentation
+
+.pull-left[
+
+There are many approaches we can take to augment images such as:
+
+- rotate the image
+- shift the image vertically and horizontally
+- shear the image
+- zoom in and out
+- flip the orientation
+
+
+```r
+datagen &lt;- image_data_generator(
+  rescale = 1/255,
+  rotation_range = 40, 
+  width_shift_range = 0.2, 
+  height_shift_range = 0.2,
+  shear_range = 0.2, 
+  zoom_range = 0.2, 
+  horizontal_flip = TRUE, 
+* fill_mode = "nearest"
+)
+```
+
+]
+
+.pull-right[
+
+&lt;img src="04-computer-vision-cnns_files/figure-html/unnamed-chunk-51-1.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+class: clear, center, middle
+
+.font300.bold[Transfer Learning]
+
+&lt;img src="images/transfer-sign.jpg" width="85%" height="85%" style="display: block; margin: auto;" /&gt;
+
+---
+# TBD
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="libs/remark-latest.min.js"></script>

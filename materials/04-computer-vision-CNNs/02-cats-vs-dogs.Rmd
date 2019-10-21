@@ -12,13 +12,12 @@ library(keras)
 
 In this example, we are going to apply a CNN to classify dogs vs. cats images. 
 This will walk you through the fundamentals of importing images, applying image 
-augmentation, and performing classification.
+augmentation, and performing classification on them.
 
 Learning objectives:
 
 - What image generators are, why and how to use them.
 - What image augmentation is, why and how to use them.
-- A new regularization technique called dropout.
 
 # Part 1: Data Preparation
 
@@ -74,14 +73,14 @@ small subset, which includes:
 
 ```{r verify-data}
 cat("Cat images:", "\n")
-cat("total training cat images:", length(list.files(train_cats_dir)), "\n")
-cat("total validation cat images:", length(list.files(valid_cats_dir)), "\n")
-cat("total test cat images:", length(list.files(test_cats_dir)), "\n\n")
+cat(" - total training cat images:", length(list.files(train_cats_dir)), "\n")
+cat(" - total validation cat images:", length(list.files(valid_cats_dir)), "\n")
+cat(" - total test cat images:", length(list.files(test_cats_dir)), "\n\n")
 
 cat("Dog images:", "\n")
-cat("total training dog images:", length(list.files(train_dogs_dir)), "\n")
-cat("total validation dog images:", length(list.files(valid_dogs_dir)), "\n")
-cat("total test dog images:", length(list.files(test_dogs_dir)), "\n")
+cat(" - total training dog images:", length(list.files(train_dogs_dir)), "\n")
+cat(" - total validation dog images:", length(list.files(valid_dogs_dir)), "\n")
+cat(" - total test dog images:", length(list.files(test_dogs_dir)), "\n")
 ```
 
 Let's check out the first 10 cat and dog images:
@@ -227,7 +226,13 @@ model %>% save_model_hdf5("cats_and_dogs_small_1.h5")
 ```
 
 
-# Part 3: Image Augmentation
+# Part 3: Model 2 with image augmentation
+
+## Image Augmentation
+
+Our model above does ok but definitely has room for improvement. One approach 
+to improve performance is to collect more data. Unfortunately, this is not always 
+an option. An alternative is to use ___data augmentation___.
 
 ```{r image-augmentation}
 datagen <- image_data_generator(
@@ -242,25 +247,31 @@ datagen <- image_data_generator(
 )
 ```
 
-- Read in the image and resize it
-- Converts to an array with shape (150, 150, 3)
-- Reshapes it to (1, 150, 150, 3)
-- Generates batches of randomly transformed images.
+The following helps to visualize the idea of image augmentation by:
+
+- Reading in the first image and resizing it to 150x150,
+- Converting it to an array with shape (150, 150, 3),
+- Reshaping it to (1, 150, 150, 3),
+- Generating batches of randomly transformed images.
 
 ```{r view-augmented-images}
+# get the first cat image
 fnames <- list.files(train_cats_dir, full.names = TRUE)
 img_path <- fnames[[1]]
 
+# resize & reshape
 img <- image_load(img_path, target_size = c(150, 150))
 img_array <- image_to_array(img)
 img_array <- array_reshape(img_array, c(1, 150, 150, 3))
 
+# generate a a single augmented image
 augmentation_generator <- flow_images_from_data(
   img_array,
   generator = datagen,
   batch_size = 1
 )
 
+# plot 10 augmented images of the first cat image
 op <- par(mfrow = c(2, 5), pty = "s", mar = c(0, 0.1, 0, 0.1))
 for (i in 1:10) {
   batch <- generator_next(augmentation_generator)
@@ -269,11 +280,14 @@ for (i in 1:10) {
 par(op)
 ```
 
-Using dropout:
+## Model 2
+
+Let's create a new model that includes image augmentation and we'll apply the 
+dropout regularization method. The following creates a CNN architecture with:
 
 - Four sequential conv and max pooling layers
 - Flatten layer
-- Dropout (new)
+- Dropout layer (new)
 - Densly-connected network
 - Single binary output
 
@@ -299,8 +313,14 @@ model %>% compile(
 )
 ```
 
+Now we can add image augmentation to our `image_data_generator()`. The rest of 
+the inputs remain the same; however, we use larger batch size (32) and we do not 
+need to worry about `batch_size` x `steps_per_epoch` equaling the number of 
+training images since we are doing image augmentation.
+
 ```{r augment-and-train}
-datagen <- image_data_generator(
+# only augment training data
+train_datagen <- image_data_generator(
   rescale = 1/255,
   rotation_range = 40,
   width_shift_range = 0.2,
@@ -310,16 +330,19 @@ datagen <- image_data_generator(
   horizontal_flip = TRUE,
 )
 
+# do not augment test and validation data
 test_datagen <- image_data_generator(rescale = 1/255)
 
+# generate batches of data from training directory
 train_generator <- flow_images_from_directory(
   train_dir,
-  datagen,
+  train_datagen,
   target_size = c(150, 150),
   batch_size = 32,
   class_mode = "binary"
 )
 
+# generate batches of data from validation directory
 validation_generator <- flow_images_from_directory(
   valid_dir,
   test_datagen,
@@ -328,6 +351,7 @@ validation_generator <- flow_images_from_directory(
   class_mode = "binary"
 )
 
+# train model
 history <- model %>%
   fit_generator(
     train_generator,

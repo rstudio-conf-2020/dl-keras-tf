@@ -1,0 +1,247 @@
+---
+title: "Project 1: Classifying Images"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+
+# Initialize package
+library(keras)
+```
+
+# Part 1: Data Preparation
+
+## Image location
+
+
+```{r image-file-paths}
+# define the directories:
+image_dir <- here::here("docs", "data", "project1")
+train_dir <- file.path(image_dir, "train")
+valid_dir <- file.path(image_dir, "validation")
+test_dir <- file.path(image_dir, "test")
+```
+
+There are 8 total classes, each with fairly proportional number of train, 
+validation, and test images:
+
+```{r}
+classes <- list.files(train_dir)
+total_train <- 0
+total_valid <- 0
+total_test <- 0
+
+for (class in classes) {
+  # how many images in each class
+  n_train <- length(list.files(file.path(train_dir, class)))
+  n_valid <- length(list.files(file.path(valid_dir, class)))
+  n_test <- length(list.files(file.path(test_dir, class)))
+  
+  cat(crayon::underline(crayon::red(class)), ": ", 
+      "train (", n_train, "), ", 
+      "valid (", n_valid, "), ", 
+      "test (", n_test, ")", "\n", sep = "")
+  
+  # tally up totals
+  total_train <- total_train + n_train
+  total_valid <- total_valid + n_valid
+  total_test <- total_test + n_test
+}
+
+cat("\n", "total training images: ", total_train, "\n",
+    "total validation images: ", total_valid, "\n",
+    "total test images: ", total_test, sep = "")
+```
+
+Let's check out the first image from each class:
+
+```{r example-images}
+op <- par(mfrow = c(2, 4), mar = c(0.5, 0.2, 1, 0.2))
+for (class in classes) {
+  image_path <- list.files(file.path(train_dir, class), full.names = TRUE)[[1]]
+  plot(as.raster(jpeg::readJPEG(image_path)))
+  title(main = class)
+}
+       
+par(op)
+```
+
+# Part 2: End-to-End Trained CNN
+
+## Define and compile model
+
+```{r cnn-architecture}
+model <- keras_model_sequential() %>%
+  layer_conv_2d(filters = 32, kernel_size = c(3, 3), activation = "relu", 
+                input_shape = c(150, 150, 3)) %>%
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  
+  layer_conv_2d(filters = 64, kernel_size = c(3, 3), activation = "relu") %>% 
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  
+  layer_conv_2d(filters = 128, kernel_size = c(3, 3), activation = "relu") %>% 
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  
+  layer_conv_2d(filters = 128, kernel_size = c(3, 3), activation = "relu") %>% 
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  
+  layer_flatten() %>%
+  layer_dropout(rate = 0.2) %>%
+  layer_dense(units = 512, activation = "relu") %>%
+  layer_dense(units = length(classes), activation = "softmax")
+
+summary(model)
+```
+
+Compile the model:
+
+```{r cnn-compile}
+model %>% compile(
+  loss = "categorical_crossentropy",
+  optimizer = optimizer_rmsprop(lr = 1e-4),
+  metrics = "accuracy"
+)
+```
+
+```{r image-augmentation}
+# only augment training data
+train_datagen <- image_data_generator(
+  rescale = 1/255,
+  rotation_range = 40,
+  width_shift_range = 0.2,
+  height_shift_range = 0.2,
+  shear_range = 0.2,
+  zoom_range = 0.2,
+  horizontal_flip = TRUE,
+)
+
+# do not augment test and validation data
+test_datagen <- image_data_generator(rescale = 1/255)
+
+# generate batches of data from training directory
+train_generator <- flow_images_from_directory(
+  train_dir,
+  train_datagen,
+  target_size = c(150, 150),
+  batch_size = 32,
+  class_mode = "categorical"
+)
+
+# generate batches of data from validation directory
+validation_generator <- flow_images_from_directory(
+  valid_dir,
+  test_datagen,
+  target_size = c(150, 150),
+  batch_size = 32,
+  class_mode = "categorical"
+)
+```
+
+```{r cnn-train}
+history <- model %>% fit_generator(
+  train_generator,
+  steps_per_epoch = ceiling(total_train / 32),
+  epochs = 50,
+  validation_data = validation_generator,
+  validation_steps = ceiling(total_valid / 32)
+)
+```
+
+# Part 3: Transfer learning
+
+```{r pretrained-model}
+conv_base <- application_vgg16(
+  weights = "imagenet",
+  include_top = FALSE,
+  input_shape = c(150, 150, 3)
+)
+
+```
+
+```{r vgg16-model-structure}
+conv_base
+```
+
+```{r image-generator-feature-extraction}
+
+datagen <- image_data_generator(rescale = 1/255)
+batch_size <- 32
+
+extract_features <- function(directory, sample_count) {
+  features <- array(0, dim = c(sample_count, 4, 4, 512))
+  labels <- array(0, dim = c(sample_count, length(classes)))
+  generator <- flow_images_from_directory(
+    directory = directory,
+    generator = datagen,
+    target_size = c(150, 150),
+    batch_size = batch_size,
+    class_mode = "categorical"
+  )
+  i <- 0
+  while(TRUE) {
+    batch <- generator_next(generator)
+    inputs_batch <- batch[[1]]
+    labels_batch <- batch[[2]]
+    features_batch <- conv_base %>% predict(inputs_batch)
+    index_range <- ((i * batch_size)+1):((i + 1) * batch_size)
+    features[index_range,,,] <- features_batch
+    labels[index_range, ] <- labels_batch
+    i <- i + 1
+    if (i * batch_size >= sample_count)
+      break }
+  list(
+    features = features,
+    labels = labels
+  ) }
+
+
+train <- extract_features(train_dir, n_train_images)
+validation <- extract_features(valid_dir, n_valid_images)
+test <- extract_features(test_dir, n_test_images)
+```
+
+# Reshape features
+
+```{r reshape-features}
+reshape_features <- function(features) {
+  array_reshape(features, dim = c(nrow(features), 4 * 4 * 512))
+}
+train$features <- reshape_features(train$features)
+validation$features <- reshape_features(validation$features)
+test$features <- reshape_features(test$features)
+```
+
+# Define model
+
+Here we only need the densely connected classifier
+
+```{r model-classifier}
+
+model <- keras_model_sequential() %>%
+  layer_dense(units = 256, activation = "relu", input_shape = 4 * 4 * 512) %>%
+  layer_dropout(rate = 0.5) %>%
+  layer_dense(units = 1, activation = "softmax")
+
+model
+
+```
+
+Compile and train:
+
+```{r train-model}
+
+model %>% compile(
+  optimizer = optimizer_rmsprop(lr = 2e-5),
+  loss = "binary_crossentropy",
+  metrics = c("accuracy")
+)
+
+history1 <- model %>% fit(
+  train$features, train$labels,
+  epochs = 30,
+  batch_size = 20,
+  validation_data = list(validation$features, validation$labels)
+)
+
+```
