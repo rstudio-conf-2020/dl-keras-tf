@@ -60,7 +60,7 @@ train_cats_dir <- file.path(train_dir, "cats")
 valid_cats_dir <- file.path(valid_dir, "cats")
 test_cats_dir <- file.path(test_dir, "cats")
 
-# create train, validation, and test file paths for cat images
+# create train, validation, and test file paths for dog images
 train_dogs_dir <- file.path(train_dir, "dogs")
 valid_dogs_dir <- file.path(valid_dir, "dogs")
 test_dogs_dir <- file.path(test_dir, "dogs")

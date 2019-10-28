@@ -49,7 +49,7 @@ installed.
 `keras` has many built in data sets (or functions to automatically install data
 sets). Check out what data is available with `dataset_` + tab.
 
-We're going to use the _MNIST_ data set which is the "hello world" for learning
+We're going to use the ___MNIST___ data set which is the "hello world" for learning
 deep learning!
 
 ```{r data}
@@ -61,7 +61,7 @@ When we work with keras:
 
 * training and test sets need to be independent
 * features and labels (aka target, response) need to be independent
-* use `%<-%` for _object unpacking_ (see `?zeallot::%<-%`)
+* use `%<-%` for ___object unpacking___ (see `?zeallot::%<-%`)
 
 ```{r extract-train-test}
 c(c(train_images, train_labels), c(test_images, test_labels)) %<-% mnist
@@ -110,7 +110,7 @@ str(train_images)
 str(test_images)
 ```
 
-We need to reshape these into a 2D _tensor_
+We need to reshape these into a 2D ___tensor___
 
 ```{r reshape-to-2D-tensor}
 train_images <- array_reshape(train_images, c(60000, 28 * 28))
@@ -166,7 +166,7 @@ Nearly all DL models have a very similar training process:
 
 ```{r architecture}
 network <- keras_model_sequential() %>%
-  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %>%
+  layer_dense(units = 512, activation = 'relu', input_shape = ncol(train_images)) %>%
   layer_dense(units = 10, activation = 'softmax')
 ```
 
@@ -188,7 +188,7 @@ network %>% compile(
 
 ## 3. Execute training loop
 
-```{r train}
+```{r train, include=FALSE}
 history <- network %>% 
   fit(train_images, train_labels, 
       batch_size = 128, epochs = 20, 
@@ -212,7 +212,7 @@ plot(history) + ggtitle("My first deep learning model")
 
 ```{r optimal-model}
 network <- keras_model_sequential() %>%
-  layer_dense(units = 512, activation = _____, input_shape = c(28 * 28)) %>%
+  layer_dense(units = 512, activation = _____, input_shape = ncol(train_images)) %>%
   layer_dense(units = 10, activation = _____)
 
 network %>% compile(

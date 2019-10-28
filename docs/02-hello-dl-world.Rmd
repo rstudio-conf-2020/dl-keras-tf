@@ -148,52 +148,6 @@ last
 ```
 
 
----
-# zeallot `r anicon::faa("box-open", animate = FALSE)`
-
-Object unpacking mimicks tuple unpacking in Python
-
-A data frame
-
-```{r}
-head(mtcars)
-```
-
-
-.pull-left[
-
-Traditional assignment unpacking
-
-```{r}
-# data frames
-mpg <- mtcars$mpg
-cyl <- mtcars$cyl
-disp <- mtcars $disp
-hp <- mtcars$hp
-```
-
-]
-
-.pull-right[
-
-Object unpacking
-
-```{r}
-# data frames
-c(mpg, cyl, disp, hp) %<-% mtcars[, 1:4]
-```
-
-]
-
-Both result in:
-
-```{r}
-mpg
-cyl
-disp
-hp
-```
-
 
 ---
 # zeallot `r anicon::faa("box-open", animate = FALSE)`
@@ -540,7 +494,7 @@ knitr::include_graphics("images/basic_mlp.png")
 
 ```{r, eval=FALSE}
 network <- keras_model_sequential() %>%
-  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %>% #<<
+  layer_dense(units = 512, activation = 'relu', input_shape = ncol(train_images)) %>% #<<
   layer_dense(units = 10, activation = 'softmax') #<<
 ```
 
@@ -563,8 +517,7 @@ network <- keras_model_sequential() %>%
   layer_dense() # output layer #<<
 ```
 
-* .font100[Each `layer_dense()` represents a the number of hidden layers along 
-with the final output layer]
+* .font100[Each `layer_dense()` represents a hidden layer or the final output layer]
 
 ]
 
@@ -612,7 +565,7 @@ knitr::include_graphics("images/basic_feedforward.png")
 
 ```{r, eval=FALSE}
 network <- keras_model_sequential() %>%
-  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) # hidden layer #<<
+  layer_dense(units = 512, activation = 'relu', input_shape = ncol(train_images)) # hidden layer #<<
 ```
 
 --
@@ -621,7 +574,7 @@ network <- keras_model_sequential() %>%
 
 * `units = 512`: number of nodes in the given layer
 
-* `input_shape = c(28 * 28)`
+* `input_shape = ncol(train_images)`
    - tells the first hidden layer how many input features there are
    - only required for the first `layer_dense`
 
@@ -638,14 +591,14 @@ knitr::include_graphics("images/hidden_layer.png")
 
 ```{r, eval=FALSE}
 network <- keras_model_sequential() %>%
-  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) # hidden layer #<<
+  layer_dense(units = 512, activation = 'relu', input_shape = ncol(train_images)) # hidden layer #<<
 ```
 
 .pull-left[
 
 * `units = 512`: number of nodes in the given layer
 
-* `input_shape = c(28 * 28)`
+* `input_shape = ncol(train_images)`
    - tells the first hidden layer how many input features there are
    - only required for the first `layer_dense`
 
@@ -663,7 +616,7 @@ knitr::include_graphics("images/perceptron_zoom.png")
 
 .font100.pull-left[
 
-* There is a two-step computation process when data go forward through a node
+* There is a two-step computation process when data goes through a node
 
 ]
 
@@ -678,7 +631,7 @@ knitr::include_graphics("images/perceptron1.png")
 
 .font100.pull-left[
 
-* There is a two-step computation process when data go forward through a node
+* There is a two-step computation process when data goes through a node
 
 * Step 1: _linear transformation_
    - $z = w_0b_0 + w_1x_1 + w_2x_2 + \cdots + w_nx_n$
@@ -697,12 +650,12 @@ knitr::include_graphics("images/perceptron2.png")
 
 .pull-left[
 
-* There is a two-step computation process when data go forward through a node
+* There is a two-step computation process when data goes through a node
 
 * .opacity20[Step 1: linear transformation]
 
 * Step 2: _activation function_
-   - in hidden layers, the most common activation function is the $\text{ReLU} = max(0, x)$
+   - in hidden layers, the most common activation function is the $\text{ReLU} = max(0, z)$
    - You will be introduced to other activation functions but ReLU should nearly
    always be your default for hidden layers
    
@@ -777,7 +730,7 @@ knitr::include_graphics("images/demoui.gif")
 
 ```{r, eval=FALSE}
 network <- keras_model_sequential() %>%
-  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %>%
+  layer_dense(units = 512, activation = 'relu', input_shape = ncol(train_images)) %>%
   layer_dense(units = 10, activation = 'softmax') #<<
 ```
 
@@ -786,7 +739,7 @@ network <- keras_model_sequential() %>%
 
 ```{r, eval=FALSE}
 network <- keras_model_sequential() %>%
-  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %>%
+  layer_dense(units = 512, activation = 'relu', input_shape = ncol(train_images)) %>%
   layer_dense(units = 10, activation = 'softmax')
 ```
 
@@ -812,7 +765,7 @@ knitr::include_graphics("images/output_layer_continuous.png")
 
 ```{r, eval=FALSE}
 network <- keras_model_sequential() %>%
-  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %>%
+  layer_dense(units = 512, activation = 'relu', input_shape = ncol(train_images)) %>%
   layer_dense(units = 10, activation = 'softmax')
 ```
 
@@ -821,7 +774,7 @@ Two primary arguments of concern for the final output layer:
 
 1. number of units
    - regression: `units = 1`:
-   - binary classification: `units = 2`
+   - binary classification: `units = 1`
 
 ]
 
@@ -839,7 +792,7 @@ knitr::include_graphics("images/output_layer_binary.png")
 
 ```{r, eval=FALSE}
 network <- keras_model_sequential() %>%
-  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %>%
+  layer_dense(units = 512, activation = 'relu', input_shape = ncol(train_images)) %>%
   layer_dense(units = 10, activation = 'softmax') #<<
 ```
 
@@ -866,7 +819,7 @@ knitr::include_graphics("images/output_layer_multi.png")
 
 ```{r, eval=FALSE}
 network <- keras_model_sequential() %>%
-  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %>%
+  layer_dense(units = 512, activation = 'relu', input_shape = ncol(train_images)) %>%
   layer_dense(units = 10, activation = 'softmax')
 ```
 
@@ -894,7 +847,7 @@ $y = w_0b_0 + w_1h^1_1 + w_2h^1_2 + \cdots + w_nh^1_n$
 
 ```{r, eval=FALSE}
 network <- keras_model_sequential() %>%
-  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %>%
+  layer_dense(units = 512, activation = 'relu', input_shape = ncol(train_images)) %>%
   layer_dense(units = 10, activation = 'softmax') 
 ```
 
@@ -930,7 +883,7 @@ $f(y) = \frac{1}{1 + e^{-y}}$
 
 ```{r, eval=FALSE}
 network <- keras_model_sequential() %>%
-  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %>%
+  layer_dense(units = 512, activation = 'relu', input_shape = ncol(train_images)) %>%
   layer_dense(units = 10, activation = 'softmax') #<<
 ```
 
@@ -960,7 +913,7 @@ $f(y) = \frac{e^{y_i}}{\sum_je^{y_j}}$
 
 ```{r, eval=FALSE}
 network <- keras_model_sequential() %>%
-  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %>%
+  layer_dense(units = 512, activation = 'relu', input_shape = ncol(train_images)) %>%
   layer_dense(units = 10, activation = 'softmax') #<<
 ```
 
