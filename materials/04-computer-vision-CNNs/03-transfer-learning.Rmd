@@ -49,7 +49,7 @@ conv_base
 
 # Extracting features using the pretrained convolutional base
 
-```{r image-generator-feature-extraction}
+```{r image-generator-feature-extraction, include=FALSE}
 
 datagen <- image_data_generator(rescale = 1/255)
 batch_size <- 20
@@ -65,12 +65,12 @@ extract_features <- function(directory, sample_count) {
     class_mode = "binary"
   )
   i <- 0
-  while(TRUE) {
+  while (TRUE) {
     batch <- generator_next(generator)
     inputs_batch <- batch[[1]]
     labels_batch <- batch[[2]]
     features_batch <- conv_base %>% predict(inputs_batch)
-    index_range <- ((i * batch_size)+1):((i + 1) * batch_size)
+    index_range <- ((i * batch_size) + 1):((i + 1) * batch_size)
     features[index_range,,,] <- features_batch
     labels[index_range] <- labels_batch
     i <- i + 1
@@ -115,7 +115,7 @@ model
 
 Compile and train:
 
-```{r train-model}
+```{r train-model, include=FALSE}
 
 model %>% compile(
   optimizer = optimizer_rmsprop(lr = 2e-5),

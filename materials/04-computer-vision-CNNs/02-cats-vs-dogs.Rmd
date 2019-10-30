@@ -28,6 +28,7 @@ We are going to use the Dogs vs. Cats Kaggle competition data set
 limitations, we are going to only use a subset of the data.  We have already 
 set up the directories which look like:
 
+
 ```
 - data
    └── dogs-vs-cats
@@ -203,7 +204,7 @@ validation data.  Plus, we need to specify:
   
 **Without a GPU this will take approximately 20 minutes to train**  
 
-```{r cnn-train}
+```{r cnn-train, include=FALSE}
 history <- model %>% fit_generator(
   train_generator,
   steps_per_epoch = 100,
@@ -318,7 +319,9 @@ the inputs remain the same; however, we use larger batch size (32) and we do not
 need to worry about `batch_size` x `steps_per_epoch` equaling the number of 
 training images since we are doing image augmentation.
 
-```{r augment-and-train}
+**Without a GPU this will take approximately XX minutes to train**
+
+```{r augment-and-train, include=FALSE}
 # only augment training data
 train_datagen <- image_data_generator(
   rescale = 1/255,

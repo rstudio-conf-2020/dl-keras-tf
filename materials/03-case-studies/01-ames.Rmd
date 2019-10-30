@@ -8,6 +8,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Initialize package
 # install.packages(keras)
+
 library(keras)     # for deep learning
 library(tidyverse) # for dplyr, ggplot2, etc.
 library(rsample)   # for data splitting
@@ -101,27 +102,19 @@ dim(ames_test)
 
 # Preparing the data
 
-slides:
-  - vectorization
-  - feature engineering
-  - one-hot encoding
-  - importance of data being small, typically btwn 0-1 or standardized
-  - illustrate what the final tensor looks like
-
 All inputs and response values in a neural network must be tensors of either 
 floating-point or integer data. Moreover, our feature values should not be
 relatively large compared to the randomized initial weights _and_ all our 
-features should take values in roughtly the same range.
+features should take values in roughly the same range.
 
-Consequently, we need to _vectorize_ our data into a format conducive to neural 
+Consequently, we need to ___vectorize___ our data into a format conducive to neural 
 networks. For this data set, we'll transform our data by:
 
-- removing any zero-variance features
+- removing any zero-variance (or near zero-variance) features
 - condensing unique levels of categorical features to "other"
 - ordinal encoding the quality features
 - normalize numeric feature distributions
 - standardizing numeric features to mean = 0, std dev = 1
-- feature eng. steps with rsample
 - one-hot encoding remaining categorical features
 
 ```{r}
@@ -207,7 +200,7 @@ network %>% compile(
 summary(network)
 ```  
 
-```{r train}
+```{r train, include=FALSE}
 history <- network %>% fit(
   x_train,
   y_train,
@@ -231,9 +224,9 @@ Remember, batch sizes are typically powers of 2 (i.e. 16, 32, 64, 128, 256, 512)
 
 ```{r your-turn-1}
 network <- keras_model_sequential() %>% 
-  layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
+  layer_dense(units = 128, activation = "relu", input_shape = ____) %>% 
   layer_dense(units = 128, activation = "relu") %>%
-  layer_dense(units = 1) %>%
+  layer_dense(units = ____) %>%
   compile(
     optimizer = "rmsprop",
     loss = "msle",
@@ -279,7 +272,7 @@ history <- network %>% fit(
   epochs = 250,
   batch_size = 32,
   validation_split = 0.2,
-  callbacks = callback_early_stopping(patience = 10)
+  callbacks = callback_early_stopping(patience = 10, restore_best_weights = FALSE)
 )
 ```
 
@@ -304,7 +297,7 @@ network <- keras_model_sequential() %>%
   layer_dense(units = 128, activation = "relu") %>%
   layer_dense(units = 1) %>%
   compile(
-    optimizer = optimizer_rmsprop(lr = 0.03),
+    optimizer = optimizer_rmsprop(lr = 0.01),
     loss = "msle",
     metrics = c("mae")
   )
@@ -316,7 +309,7 @@ history <- network %>% fit(
   batch_size = 32,
   validation_split = 0.2,
   callbacks = list(
-        callback_early_stopping(patience = 10),
+        callback_early_stopping(patience = 10, restore_best_weights = FALSE),
         callback_reduce_lr_on_plateau(factor = 0.2, patience = 5)
     )
 )
@@ -345,9 +338,9 @@ rate reduction factor.  Here are a couple of things to keep in mind:
 
 ```{r your-turn-2}
 network <- keras_model_sequential() %>% 
-  layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
-  layer_dense(units = 128, activation = "relu") %>%
-  layer_dense(units = 1) %>%
+  layer_dense(units = 128, activation = ____, input_shape = ____) %>% 
+  layer_dense(units = 128, activation = ____) %>%
+  layer_dense(units = ____) %>%
   compile(
     optimizer = optimizer_rmsprop(lr = ____),
     loss = "msle",
@@ -407,7 +400,7 @@ network <- keras_model_sequential() %>%
   layer_dense(units = 128, activation = "relu") %>%
   layer_dense(units = 1) %>%
   compile(
-    optimizer = optimizer_rmsprop(lr = 0.03),
+    optimizer = optimizer_rmsprop(lr = 0.01),
     loss = "msle",
     metrics = c("mae")
   )
@@ -415,11 +408,11 @@ network <- keras_model_sequential() %>%
 history <- network %>% fit(
   x_train_sub,                           # supply our new training features data
   y_train_sub,                           # supply our new training labels data
-  epochs = 25,
+  epochs = 50,
   batch_size = 32,
   validation_data = list(x_val, y_val),  # supply our validation data
   callbacks = list(
-        callback_early_stopping(patience = 10),
+        callback_early_stopping(patience = 10, restore_best_weights = FALSE),
         callback_reduce_lr_on_plateau(factor = 0.2, patience = 5)
     )
 )
@@ -431,7 +424,7 @@ history
 
 You probably noticed that the loss score from this last model differs from the 
 loss of the model previous to that one. Although all hyperparameter settings are 
-the same, there will always be some variance in our loss score based on 
+the same, there will always be some ___variance in our loss score___ based on 
 randomization in the model and the fact that we have different observations in 
 our validation set. 
 
@@ -458,7 +451,7 @@ str(folds)
 Now we can apply a `for` loop to iterate through the training data and perform 
 k-fold cross validation:
 
-```{r perform-kfold-cv}
+```{r perform-kfold-cv, include=FALSE}
 # create a data frame to store results
 results <- data.frame()
 
@@ -482,7 +475,7 @@ for (i in seq_len(k)) {
     layer_dense(units = 128, activation = "relu") %>%
     layer_dense(units = 1) %>%
     compile(
-      optimizer = optimizer_rmsprop(lr = 0.03),
+      optimizer = optimizer_rmsprop(lr = 0.01),
       loss = "msle",
       metrics = c("mae")
     )
@@ -491,7 +484,7 @@ for (i in seq_len(k)) {
   history <- network %>% fit(
     x_train_sub,                          
     y_train_sub,                           
-    epochs = 25,
+    epochs = 50,
     batch_size = 32,
     validation_data = list(x_val, y_val),
     verbose = FALSE,
@@ -553,7 +546,7 @@ network <- keras_model_sequential() %>%
   layer_dense(units = 128, activation = "relu") %>%
   layer_dense(units = 1) %>%
   compile(
-    optimizer = optimizer_rmsprop(lr = 0.03),
+    optimizer = optimizer_rmsprop(lr = 0.01),
     loss = "msle",
     metrics = c("mae")
   )
@@ -566,16 +559,9 @@ history <- network %>% fit(
   validation_split = 0.2,
   callbacks = callback_reduce_lr_on_plateau(factor = 0.2, patience = 5)
   )
+```
 
+```{r}
 network %>% evaluate(x_test, y_test)
 ```
 
-# Predictions
-
-We can predict the probability that reviews in the test set will be positive or 
-negative.
-
-```{r predictions}
-predictions <- final_model %>% predict(test_data_vec)
-head(predictions)
-```

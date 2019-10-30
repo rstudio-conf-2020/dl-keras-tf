@@ -3,6 +3,20 @@ title: "The 'Hello World' of Deep Learning"
 output: html_notebook
 ---
 
+# Welcome to your first deep learning module!
+
+This module is designed to provide you an introduction to deep learning and 
+some of the key components that make DL algorithms run. Throughout this case 
+study you will learn:
+
+* What tensors are
+* What makes up a basic feedforward neural network architecture
+* What forward and backward passes are
+* How a neural network learns via backpropagation and batch processing
+
+In doing so you will run your first neural network with one of the most famous 
+benchmark data sets --> MNIST.
+
 # Installation
 
 Install and load the `keras` package.
