@@ -19,7 +19,7 @@ Learning objectives:
 - Why is translation invariant & spatial hierarchy important
 - What the general structure of CNN models looks like
 - What is the convolution operation
-- What are Feature maps
+- What are feature maps
 - How pooling helps by downsampling
 
 
@@ -104,7 +104,7 @@ that our model performance is much superior to our earlier module:
 - MLP: loss (~ 0.09) & accuracy (~ 0.975)
 - CNN: loss (~ 0.04) & accuracy (~ 0.99) 
 
-```{r train-model}
+```{r train-model, include=FALSE}
 history <- model %>% fit(
   train_images, train_labels,
   epochs = 5, 

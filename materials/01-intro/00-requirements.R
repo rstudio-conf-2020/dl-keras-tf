@@ -6,6 +6,7 @@ pkgs <- c(
   "jpeg",
   "keras",
   "recipes",
+  "ROCR",
   "rsample",
   "tidyverse"
 )

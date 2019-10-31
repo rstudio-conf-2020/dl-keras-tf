@@ -10,10 +10,23 @@ knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 library(keras)
 ```
 
+This project is designed to test your current knowledge on applying a CNN to the 
+[natural images](https://www.kaggle.com/prasunroy/natural-images) dataset on Kaggle. 
+This dataset contains 6,899 images from 8 distinct classes to include airplane, 
+car, cat, dog, flower, fruit, motorbike and person.
+
+Your goal is to develop a CNN model to accurately classify new images. Using only 
+the knowledge you've gained thus far, and repurposing code from previous modules, 
+you should be able to obtain an accuracy of approximately 90% or higher.
+
+___Good luck!___
+
 # Part 1: Data Preparation
 
 ## Image location
 
+We have already downloaded and organized the images into  train, validation, and 
+test directories.
 
 ```{r image-file-paths}
 # define the directories:
@@ -23,8 +36,8 @@ valid_dir <- file.path(image_dir, "validation")
 test_dir <- file.path(image_dir, "test")
 ```
 
-There are 8 total classes, each with fairly proportional number of train, 
-validation, and test images:
+As previously mentioned, there are 8 total classes, each with fairly proportional 
+number of train, validation, and test images:
 
 ```{r}
 classes <- list.files(train_dir)
@@ -66,6 +79,13 @@ for (class in classes) {
        
 par(op)
 ```
+
+There are two approaches you could take to model this data:
+
+1. End-to-end trained CNN with your own custom convolutional layer (reference 
+   the 04-computer-vision-CNNs/02-cats-vs-dogs.Rmd file).
+2. Apply a pre-trained model (reference the 04-computer-vision-CNNs/03-transfer-
+   learning.Rmd file). 
 
 # Part 2: End-to-End Trained CNN
 

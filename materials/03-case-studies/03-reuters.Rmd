@@ -124,7 +124,7 @@ y_train[1:10, 1:10]
 
 # prepare test labels
 y_test <- to_categorical(test_labels)
-cat('Test labels\n')
+cat('\nTest labels\n')
 y_test[1:10, 1:10]
 ```
 
@@ -146,8 +146,8 @@ y_train <- y_train[index,]
 ```
 
 Since we are performing multi-class classification, our output activation function 
-will be the _softmax activation function_ and our loss function will be 
-_categorical crossentropy_.
+will be the ___softmax activation function___ and our loss function will be 
+___categorical crossentropy___.
 
 ```{r initial-model, include=FALSE}
 network <- keras_model_sequential() %>% 
@@ -232,7 +232,7 @@ Often, our models overfit and we can see this by the difference between the
 training and validation losses. Sometimes mitigating overfitting can help to 
 create models that generalize to new, unseen data better. A common approach to 
 do so is by constraining the weights to be only small values, which makes the 
-distribution of weight values more _regular_. This is call _weight regularization_ 
+distribution of weight values more _regular_. This is call ___weight regularization___ 
 and there are three common types:
 
 - L1 regularization
@@ -266,7 +266,7 @@ history <- network %>% fit(
 as.data.frame(history) %>%
   spread(data, value) %>%
   filter(metric == "loss") %>%
-  filter(validation == min(validation)) %>%
+  filter(validation == min(validation, na.rm = TRUE)) %>%
   mutate(diff = validation - training)
 ```
 
@@ -325,7 +325,7 @@ history <- network %>% fit(
   epochs = 50,
   batch_size = 512,
   validation_split = 0.2,
-  callbacks = callback_early_stopping(patience = 5)
+  callbacks = callback_early_stopping(patience = 10)
 )
 ```
 

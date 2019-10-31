@@ -68,8 +68,9 @@ word_index <- dataset_imdb_word_index() %>%
 
 # The indices are offset by 3 since 0, 1, and 2 are reserved for "padding", 
 # "start of sequence", and "unknown"
-train_data[[i]] <- train_data[[i]] %>% 
-  map_chr(~ ifelse(.x >= 3, word_index[.x - 3], "?"))
+train_data[[1]] %>% 
+  map_chr(~ ifelse(.x >= 3, word_index[.x - 3], "?")) %>%
+  cat()
 ```
 
 Our response variable is just a vector of 1s (positive reviews) and 0s (negative
@@ -391,7 +392,6 @@ dl_model <- function(nlayers = 2, powerto = 6) {
   
   # Add final output layer
   network %>% layer_dense(units = 1, activation = "sigmoid")
-  
   
   # Add compile step
   network %>% compile(

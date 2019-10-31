@@ -319,7 +319,7 @@ the inputs remain the same; however, we use larger batch size (32) and we do not
 need to worry about `batch_size` x `steps_per_epoch` equaling the number of 
 training images since we are doing image augmentation.
 
-**Without a GPU this will take approximately XX minutes to train**
+**Without a GPU this will take approximately 60 minutes to train**
 
 ```{r augment-and-train, include=FALSE}
 # only augment training data

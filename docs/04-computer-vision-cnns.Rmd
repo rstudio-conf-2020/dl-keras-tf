@@ -1214,12 +1214,29 @@ par(op)
 
 ---
 class: clear, center, middle
+background-image: url(images/transfer_learning_icon.png)
+background-size: cover
 
-.font300.bold[Transfer Learning]
-
-```{r, echo=FALSE, out.height="85%", out.width="85%"}
-knitr::include_graphics("images/transfer-sign.jpg")
-```
 
 ---
-# TBD
+# Two main approaches
+
+.pull-left[
+
+1. Use the convolutional base to do feature engineering on our images and then 
+feed into a new densely connected classifier.
+
+2. Build a full sequential model with the convolutional base and a new 
+densely connected classifier and train the entire model with some or all of the 
+convolutional base layers _frozen_.
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+knitr::include_graphics("https://s3.amazonaws.com/book.keras.io/img/ch5/swapping_fc_classifier.png")
+```
+
+
+]

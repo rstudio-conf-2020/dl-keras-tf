@@ -353,4 +353,3 @@ for (i in missed[1:16]) {
   title(main = paste("Predicted:", predictions[i]))
 }
 ```
-

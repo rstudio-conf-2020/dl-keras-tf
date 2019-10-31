@@ -927,13 +927,30 @@ datagen &lt;- image_data_generator(
 
 ---
 class: clear, center, middle
+background-image: url(images/transfer_learning_icon.png)
+background-size: cover
 
-.font300.bold[Transfer Learning]
-
-&lt;img src="images/transfer-sign.jpg" width="85%" height="85%" style="display: block; margin: auto;" /&gt;
 
 ---
-# TBD
+# Two main approaches
+
+.pull-left[
+
+1. Use the convolutional base to do feature engineering on our images and then 
+feed into a new densely connected classifier.
+
+2. Build a full sequential model with the convolutional base and a new 
+densely connected classifier and train the entire model with some or all of the 
+convolutional base layers _frozen_.
+
+]
+
+.pull-right[
+
+&lt;img src="https://s3.amazonaws.com/book.keras.io/img/ch5/swapping_fc_classifier.png" style="display: block; margin: auto;" /&gt;
+
+
+]
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="libs/remark-latest.min.js"></script>
