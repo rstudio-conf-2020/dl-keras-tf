@@ -82,6 +82,32 @@ knitr::include_graphics("images/name-tag.png")
 ]
 
 ---
+# On the shoulder of giants
+
+.pull-left[
+
+.center[Francois Chollet]
+```{r, echo=FALSE, out.height="40%", out.width="40%"}
+knitr::include_graphics("images/francois_challet.jpeg")
+```
+
+.center[J.J. Allaire]
+```{r, echo=FALSE, out.height="40%", out.width="40%"}
+knitr::include_graphics("images/jjallaire.jpg")
+```
+
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE, out.height="75%", out.width="75%"}
+knitr::include_graphics("images/dlwithR.jpeg")
+```
+
+]
+
+---
 # Course objectives
 
 <br>
@@ -101,15 +127,15 @@ knitr::include_graphics("images/name-tag.png")
 
 <br>
 .font120[
-* No prior knowledge of deep learning
+1. Are you new to the field of deep learning and neural networks but eager to learn?
 
-* Minimal math
+2. Are you an experienced R user comfortable with the tidyverse, creating functions, and applying control (i.e. if, ifelse) and iteration (i.e. for, while) statements?
 
-* Some experience with R
+3. Are you familiar with the machine learning process such as data splitting, feature engineering, resampling procedures (i.e. k-fold cross validation), hyperparameter tuning, and model validation?
+
 ]
 
-<br><br><br><br>
-
+<br>
 .center.bold[_Nearly any data scientist should be able to follow along and benefit from this course!_]
 
 ---
@@ -147,9 +173,9 @@ knitr::include_graphics("images/name-tag.png")
 | Time          | Activity                 |
 | :------------ | :----------------------- |
 | 09:00 - 09:15 | Recap                    |
-| 09:15 - 10:30 | Sequence data & LSTMs    |
+| 09:15 - 10:30 | NLP, RNNs & LSTMs        |
 | 10:30 - 11:00 | *Coffee break*           |
-| 11:00 - 12:30 | Anomaly detection        |
+| 11:00 - 12:30 | Time series with LSTMs   |
 | 12:30 - 13:30 | *Lunch break*            |
 | 13:30 - 15:00 | TBD                      |
 | 15:00 - 15:30 | *Coffee break*           |
@@ -165,8 +191,10 @@ class: inverse, center, middle
 
 ---
 # Model gears
-<br>
+
 .font130[
+
+.pull-left[
 * Tensors
 
 * Forward & backward propagation
@@ -174,26 +202,66 @@ class: inverse, center, middle
 * Activation
 
 * Derivatives & gradient descent
+
+* Batches & epochs
+
+* Learning rate
+
+]
+
+.pull-right[
+
+* Functional vs sequential models
+
+* Convolutions
+
+* Embeddings
+
+* Recurrent connections
+
+* and more!
+
+]
+
 ]
 
 ---
 # Workflow procedures
-<br>
+
 .font130[
+
+.pull-left[
 * Data preprocessing
+
+* Data augmentation
+
+* Network architecture
+
+* Model compiling
 
 * Regularization
 
 * Hyperparameter tuning
 
-* Batches & epochs
+]
+
+.pull-right[
+* Callbacks procedures
 
 * Model validation
+
+* Transfer learning
+
+* Model interpretation
+
+* and more!
+
+]
 ]
 
 ---
 # Modeling purposes
-<br>
+
 .font130[
 * Regression
 
@@ -201,17 +269,32 @@ class: inverse, center, middle
 
 * Computer vision
 
-* Sequence data
+* Natural language processing
+
+* Time series analysis
 
 * Anomaly detection
-
-* Word embeddings
 ]
 
 ---
 # Model architectures
-<br>
+
 .font130[
+.pull-left.opacity20[
+* Regression
+
+* Classification
+
+* Computer vision
+
+* Natural language processing
+
+* Time series analysis
+
+* Anomaly detection
+]
+
+.pull-right[
 * Multilayer perceptron (MLP)
 
 * Convolutional neural networks (CNNs)
@@ -221,6 +304,7 @@ class: inverse, center, middle
 * Long-short term memory neural networks (LSTMs)
 
 * Autoencoders
+]
 ]
 
 ---
@@ -279,18 +363,19 @@ knitr::include_graphics("https://media1.tenor.com/images/82ed88212e7752741e898cd
 
 .pull-left[
 
-```{r ta1, echo=FALSE}
-knitr::include_graphics("images/TA-image.png")
+.center[Rick Scavetta]
+```{r ta1, echo=FALSE, out.height="83%", out.width="83%"}
+knitr::include_graphics("images/rick_scavetta.jpeg")
 ```
 
 ]
 
---
 
 .pull-right[
 
+.center[Omayma Said]
 ```{r ta2, echo=FALSE}
-knitr::include_graphics("images/TA-image.png")
+knitr::include_graphics("images/omayma_said.jpg")
 ```
 
 ]
