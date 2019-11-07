@@ -48,13 +48,7 @@ class: title-slide
 # .font120[Using Keras with Tensorflow backend]
 
 ### Brad Boehmke
-### January 27-28, 2020
-
----
-class: clear, center, middle
-
-background-image: url(images/Welcome.jpg)
-background-size: cover
+### `rstudio::conf(2020)`
 
 ---
 
@@ -70,124 +64,138 @@ knitr::include_graphics("images/name-tag.png")
 
 ]
 
+--
+
+.pull-right[
+
+```{r, echo=FALSE, out.height=400}
+knitr::include_graphics("https://images-na.ssl-images-amazon.com/images/I/41ttvv4UJ%2BL._SX331_BO1,204,203,200_.jpghttps://images.tandf.co.uk/common/jackets/amazon/978113849/9781138495685.jpg")
+```
+
+]
+
+---
+# About me  <img src="images/about_me_bitmoji.png" height="60" width="60", align="right">
+
+<br>
+
+.pull-left[
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/name-tag.png")
+```
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE, out.height=400}
+knitr::include_graphics("https://images.tandf.co.uk/common/jackets/amazon/978113849/9781138495685.jpg")
+```
+
+]
+
+---
+# About me  <img src="images/about_me_bitmoji.png" height="60" width="60", align="right">
+
+<br>
+
+.pull-left[
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/name-tag.png")
+```
+
+]
+
+.pull-right[
+
+<br><br>
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/r-contributions.png")
+```
+
+]
+
+---
+
+# About me  <img src="images/about_me_bitmoji.png" height="60" width="60", align="right">
+
+<br>
+
+.pull-left[
+
+```{r echo=FALSE}
+knitr::include_graphics("images/name-tag.png")
+```
+
+]
+
 
 .font120.pull-right[
 <br><br>
 [`r fontawesome::fa("globe", fill = "steelblue")`](http://bradleyboehmke.github.io/) bradleyboehmke.github.io  <br>
 [`r fontawesome::fa("github", fill = "steelblue")`](https://github.com/bradleyboehmke/) @bradleyboehmke  <br>
 [`r fontawesome::fa("twitter", fill = "steelblue")`](https://twitter.com/bradleyboehmke) @bradleyboehmke  <br>
-[`r fontawesome::fa("linkedin", fill = "steelblue")`](https://www.linkedin.com/in/brad-boehmke-ph-d-9b0a257/) @bradleyboehmke  <br>
 [`r fontawesome::fa("envelope", fill = "steelblue")`](mailto:bradleyboehmke@gmail.com) bradleyboehmke@gmail.com  
 
-]
-
----
-# On the shoulder of giants
-
-.pull-left[
-
-.center[Francois Chollet]
-```{r, echo=FALSE, out.height="40%", out.width="40%"}
-knitr::include_graphics("images/francois_challet.jpeg")
-```
-
-.center[J.J. Allaire]
-```{r, echo=FALSE, out.height="40%", out.width="40%"}
-knitr::include_graphics("images/jjallaire.jpg")
-```
-
-
-]
-
-.pull-right[
-
-```{r, echo=FALSE, out.height="75%", out.width="75%"}
-knitr::include_graphics("images/dlwithR.jpeg")
-```
-
-]
-
----
-# Course objectives
-
-<br>
-.font120[
-* Establish a mental model of deep learning
-
-* Provide an intuitive understanding of the engines and architectures that drive deep learning
-
-* Apply a variety of deep learning algorithms
-]
-<br><br>
-
-.center.bold[_You should have a firm grasp of deep learning and be able to implement a systematic approach for producing high quality modeling results!_]
-
----
-# Assumptions
-
-<br>
-.font120[
-1. Are you new to the field of deep learning and neural networks but eager to learn?
-
-2. Are you an experienced R user comfortable with the tidyverse, creating functions, and applying control (i.e. if, ifelse) and iteration (i.e. for, while) statements?
-
-3. Are you familiar with the machine learning process such as data splitting, feature engineering, resampling procedures (i.e. k-fold cross validation), hyperparameter tuning, and model validation?
-
-]
-
-<br>
-.center.bold[_Nearly any data scientist should be able to follow along and benefit from this course!_]
-
----
-# Course overview
-
-
-.font90[
-
-.pull-left[
-
-.center[.bold[Day 1]]
-
-| Time          | Activity                 |
-| :------------ | :----------------------- |
-| 09:00 - 09:30 | Introduction             |
-| 09:30 - 10:30 | The deep learning engine |
-| 10:30 - 11:00 | *Coffee break*           |
-| 11:00 - 12:30 | 3 case studies           |
-| 12:30 - 13:30 | *Lunch break*            |
-| 13:30 - 15:00 | Computer vision & CNNs   |
-| 15:00 - 15:30 | *Coffee break*           |
-| 15:30 - 17:00 | Project                  |
-
-]
-]
-
---
-
-.font90[
-
-.pull-right[
-
-.center[.bold[Day 2]]
- 
-| Time          | Activity                 |
-| :------------ | :----------------------- |
-| 09:00 - 09:15 | Recap                    |
-| 09:15 - 10:30 | NLP, RNNs & LSTMs        |
-| 10:30 - 11:00 | *Coffee break*           |
-| 11:00 - 12:30 | Time series with LSTMs   |
-| 12:30 - 13:30 | *Lunch break*            |
-| 13:30 - 15:00 | TBD                      |
-| 15:00 - 15:30 | *Coffee break*           |
-| 15:30 - 17:00 | Project                  |
-
-]
 ]
 
 ---
 class: inverse, center, middle
 
 # What are we going to cover?
+
+---
+# Modeling purposes
+
+.font130[
+.pull-left[
+* Regression
+
+* Classification
+
+* Computer vision
+
+* Natural language processing
+
+* Time series analysis
+
+* Anomaly detection
+]
+]
+
+---
+# Model architectures
+
+.font130[
+.pull-left.opacity20[
+* Regression
+
+* Classification
+
+* Computer vision
+
+* Natural language processing
+
+* Time series analysis
+
+* Anomaly detection
+]
+
+.pull-right[
+* Multilayer perceptron (MLP)
+
+* Convolutional neural networks (CNNs)
+
+* Recurrent neural networks (RNNs)
+
+* Long-short term memory neural networks (LSTMs)
+
+* Autoencoders
+]
+]
 
 ---
 # Model gears
@@ -197,21 +205,21 @@ class: inverse, center, middle
 .pull-left[
 * Tensors
 
-* Forward & backward propagation
+* Sequential vs functional models
 
-* Activation
+* Activation functions
 
 * Derivatives & gradient descent
 
-* Batches & epochs
+* Backward propagation
 
-* Learning rate
+* Batches & epochs
 
 ]
 
 .pull-right[
 
-* Functional vs sequential models
+* Learning rate
 
 * Convolutions
 
@@ -260,52 +268,139 @@ class: inverse, center, middle
 ]
 
 ---
-# Modeling purposes
+class: inverse
 
-.font130[
-* Regression
+# My objective is to...
 
-* Classification
+<br><br>
+.font130.white[
 
-* Computer vision
+* Provide an intuitive understanding of the engines and architectures that drive deep learning.<br><br>
 
-* Natural language processing
+* Apply a variety of deep learning algorithms.<br><br>
 
-* Time series analysis
-
-* Anomaly detection
+* Establish a mental model of deep learning.
 ]
 
 ---
-# Model architectures
+# `r anicon::faa("exclamation-circle", colour="red", animate = FALSE)` I assume you are...
 
-.font130[
-.pull-left.opacity20[
-* Regression
+<br>
 
-* Classification
 
-* Computer vision
+.font130[New to the field of deep learning and neural networks but eager to learn.]<br><br>
 
-* Natural language processing
+--
 
-* Time series analysis
+.font130[An experienced R user comfortable with the tidyverse, creating functions, and applying control (i.e. if, ifelse) and iteration (i.e. for, while) statements.]<br><br>
 
-* Anomaly detection
+--
+
+.font130[Familiar with machine learning concepts such as data splitting, feature engineering, resampling procedures (i.e. k-fold cross validation), hyperparameter tuning, and model validation.]
+
+
+---
+class: inverse, center, middle
+
+# How are we going to learn?
+
+---
+# Hands-on notebooks
+
+.pull-left[
+
+.center[Active learning]
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/notebook-preview.gif")
+```
+
+]
+
+--
+
+.pull-right[
+
+https://github.com/rstudio-conf-2020/dl-keras-tf
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/material-location.png")
+```
+
+]
+
+---
+# On the shoulder of giants
+
+.pull-left[
+
+.center[Francois Chollet]
+```{r, echo=FALSE, out.height="40%", out.width="40%"}
+knitr::include_graphics("images/francois_challet.jpeg")
+```
+
+.center[J.J. Allaire]
+```{r, echo=FALSE, out.height="40%", out.width="40%"}
+knitr::include_graphics("images/jjallaire.jpg")
+```
+
+
 ]
 
 .pull-right[
-* Multilayer perceptron (MLP)
 
-* Convolutional neural networks (CNNs)
+```{r, echo=FALSE, out.height="75%", out.width="75%"}
+knitr::include_graphics("images/dlwithR.jpeg")
+```
 
-* Recurrent neural networks (RNNs)
+]
 
-* Long-short term memory neural networks (LSTMs)
+---
+# Course overview
 
-* Autoencoders
+
+.font90[
+
+.pull-left[
+
+.center[.bold[Day 1]]
+
+| Time          | Activity                 |
+| :------------ | :----------------------- |
+| 09:00 - 09:30 | Introduction             |
+| 09:30 - 10:30 | The deep learning engine |
+| 10:30 - 11:00 | *Coffee break*           |
+| 11:00 - 12:30 | 3 case studies           |
+| 12:30 - 13:30 | *Lunch break*            |
+| 13:30 - 15:00 | Computer vision & CNNs   |
+| 15:00 - 15:30 | *Coffee break*           |
+| 15:30 - 17:00 | Project                  |
+
 ]
 ]
+
+--
+
+.font90[
+
+.pull-right[
+
+.center[.bold[Day 2]]
+ 
+| Time          | Activity                 |
+| :------------ | :----------------------- |
+| 09:00 - 09:15 | Recap                    |
+| 09:15 - 10:30 | NLP, RNNs & LSTMs        |
+| 10:30 - 11:00 | *Coffee break*           |
+| 11:00 - 12:30 | Time series with LSTMs   |
+| 12:30 - 13:30 | *Lunch break*            |
+| 13:30 - 15:00 | TBD                      |
+| 15:00 - 15:30 | *Coffee break*           |
+| 15:30 - 17:00 | Project                  |
+
+]
+]
+
 
 ---
 # That's a lot of material!
@@ -359,11 +454,24 @@ knitr::include_graphics("https://media1.tenor.com/images/82ed88212e7752741e898cd
 ```
 
 ---
+# Help outside of the classroom
+<br><r>
+.font130[
+* https://tensorflow.rstudio.com/
+
+* https://keras.rstudio.com/
+
+* https://community.rstudio.com/
+
+* [Deep Learning with R in Motion](https://www.manning.com/livevideo/deep-learning-with-r-in-motion)
+]
+
+---
 # Meet your friendly TAs
 
 .pull-left[
 
-.center[Rick Scavetta]
+.center[[Rick Scavetta](https://github.com/Scavetta)]
 ```{r ta1, echo=FALSE, out.height="83%", out.width="83%"}
 knitr::include_graphics("images/rick_scavetta.jpeg")
 ```
@@ -373,7 +481,7 @@ knitr::include_graphics("images/rick_scavetta.jpeg")
 
 .pull-right[
 
-.center[Omayma Said]
+.center[[Omayma Said](https://www.onceupondata.com/)]
 ```{r ta2, echo=FALSE}
 knitr::include_graphics("images/omayma_said.jpg")
 ```
@@ -447,9 +555,9 @@ knitr::include_graphics("images/01-ai-ml-dl-landscape.010.jpeg")
 ---
 class: inverse, center, middle
 
-# Bored?
+# Ready?
 
-.center.white[_Let’s start creating a mental model by coding!_]
+.center.white[_Let’s start get started!_]
 
 ---
 # Back home
@@ -458,3 +566,4 @@ class: inverse, center, middle
 [.center[`r anicon::faa("home", size = 10, animate = FALSE)`]](https://github.com/rstudio-conf-2020/dl-keras-tf)
 
 .center[https://github.com/rstudio-conf-2020/dl-keras-tf]
+
