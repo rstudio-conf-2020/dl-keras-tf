@@ -1,0 +1,247 @@
+---
+title: "NLP: Word embeddings"
+output: html_notebook
+---
+
+```{r setup, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+
+# Initialize package
+library(keras)
+library(fs)
+library(tidyverse)
+library(glue)
+```
+
+You can obtain the data files via `http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz`...
+
+```{r, echo=FALSE}
+imdb_dir <- here::here("docs", "data", "imdb")
+fs::dir_tree(imdb_dir, type = "directory")
+```
+
+```{r}
+training_files <- file.path(imdb_dir, "train") %>%
+  dir_ls() %>%
+  map(dir_ls) %>%
+  set_names(basename) %>%
+  plyr::ldply(data_frame) %>%
+  set_names(c("label", "path"))
+
+training_files
+```
+
+```{r}
+count(training_files, label)
+```
+
+
+```{r}
+obs <- nrow(training_files)
+labels <- vector(mode = "integer", length = obs)
+texts <- vector(mode = "character", length = obs)
+
+for (file in seq_len(obs)) {
+  label <- training_files[[file, "label"]]
+  path <- training_files[[file, "path"]]
+  
+  labels[file] <- ifelse(label == "neg", 0, 1)
+  texts[file] <- readChar(path, nchars = file.size(path)) 
+  
+}
+```
+
+```{r}
+table(labels)
+
+cat("\n")
+
+texts[1]
+```
+
+```{r, fig.height=3.5}
+text_df <- texts %>%
+  tibble(.name_repair = ~ "text") %>%
+  mutate(text_length = nchar(text))
+
+unique_words <- text_df %>%
+  tidytext::unnest_tokens(word, text) %>%
+  pull(word) %>%
+  n_distinct()
+
+avg_review_length <- median(text_df$text_length, na.rm = TRUE)
+  
+ggplot(text_df, aes(text_length)) +
+  geom_histogram(bins = 100, fill = "grey70", color = "grey40") +
+  geom_vline(xintercept = avg_review_length, color = "red", lty = "dashed") +
+  scale_x_log10() +
+  ggtitle(glue("Median review length is {avg_review_length}"),
+          subtitle = glue("Total number of unique words is {unique_words}"))
+```
+
+
+# Prepare data
+
+```{r}
+labels <- as.array(labels)
+```
+
+```{r}
+top_n_words <- 10000
+
+tokenizer <- text_tokenizer(num_words = top_n_words) %>% 
+  fit_text_tokenizer(texts)
+
+names(tokenizer)
+```
+
+We have now tokenized the text, the first step in our process:
+
+```{r}
+word_index <- tokenizer$word_index
+head(tokenizer$word_index)
+```
+
+Number of unique tokens:
+
+```{r}
+length(tokenizer$word_index)
+```
+
+`sequences` contains the vectorized values as a list.
+
+```{r}
+sequences <- texts_to_sequences(tokenizer, texts)
+```
+
+```{r}
+# The vectorized first instance:
+sequences[[1]]
+```
+
+What the text has become:
+
+```{r} 
+cat(crayon::blue("Original text:\n"))
+texts[[1]]
+
+cat(crayon::blue("\nRevised text:\n"))
+paste(unlist(tokenizer$index_word)[sequences[[1]]] , collapse = " ")
+```
+
+
+Like before, we'll limit ourselves to the first 100 words.
+
+```{r}
+max_len <- 150
+features <- pad_sequences(sequences, maxlen = max_len)
+```
+
+```{r}
+features[1,]
+```
+
+```{r}
+paste(unlist(tokenizer$index_word)[features[1,]], collapse = " ")
+```
+
+Shape of data tensor: `r dim(data)`, Shape of label tensor: `r dim(labels)`.
+
+```{r}
+dim(features)
+dim(labels)
+```
+
+
+
+
+```{r}
+set.seed(123)
+index <- sample(1:nrow(features))
+
+x_train <- features[index, ]
+y_train <- labels[index]
+```
+
+```{r}
+# Specify the maximum input length to the embedding layer so you can later flatten the embedded inputs.
+model <- keras_model_sequential() %>%
+  layer_embedding(input_dim = top_n_words, 
+                  output_dim = 16,
+                  input_length = max_len) %>%  # 100 length of each review.
+  layer_flatten() %>% 
+  layer_dense(units = 64, activation = "relu") %>%
+  layer_dense(units = 64, activation = "relu") %>%
+  layer_dense(units = 1, activation = "sigmoid")
+
+summary(model)
+```
+
+Compile the model
+
+```{r}
+model %>% compile(
+  optimizer = optimizer_rmsprop(lr = 0.0001),
+  loss = "binary_crossentropy",
+  metrics = c("acc")
+)
+```
+
+```{r}
+history <- model %>% fit(
+  x_train, y_train,
+  epochs = 10,
+  batch_size = 32,
+  validation_split = 0.2
+)
+```
+
+```{r}
+wts <- get_weights(model)
+embedding_wts <- wts[[1]]
+```
+
+```{r}
+words <- tibble(
+  word = names(tokenizer$word_index), 
+  id = as.integer(unlist(tokenizer$word_index))
+)
+
+words <- words %>%
+  filter(id <= tokenizer$num_words) %>%
+  arrange(id)
+
+row.names(embedding_wts) <- words$word
+```
+
+```{r, message=FALSE}
+library(text2vec)
+
+find_similar_words <- function(word, embedding_wts, n = 6) {
+  similarities <- embedding_wts[word, , drop = FALSE] %>%
+    sim2(embedding_wts, y = ., method = "cosine")
+  
+  similarities[,1] %>% sort(decreasing = TRUE) %>% head(n)
+}
+```
+ 
+```{r}
+find_similar_words("disappointing", embedding_wts, n = 10)
+```
+ 
+```{r}
+library(Rtsne)
+library(plotly)
+
+tsne <- Rtsne(embedding_wts[1:500,], perplexity = 50, pca = FALSE)
+
+p <- tsne$Y %>%
+  as.data.frame() %>%
+  mutate(word = row.names(embedding_wts)[1:500]) %>%
+  ggplot(aes(x = V1, y = V2, label = word)) + 
+  geom_text(size = 3)
+
+ggplotly(p)
+```
+ 
+ 
