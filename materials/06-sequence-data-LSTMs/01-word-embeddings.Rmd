@@ -11,6 +11,9 @@ library(keras)
 library(fs)
 library(tidyverse)
 library(glue)
+
+# helper functions we'll use to explore word embeddings
+source("helper_functions.R")
 ```
 
 You can obtain the data files via `http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz`...
@@ -77,6 +80,20 @@ ggplot(text_df, aes(text_length)) +
   scale_x_log10() +
   ggtitle(glue("Median review length is {avg_review_length}"),
           subtitle = glue("Total number of unique words is {unique_words}"))
+```
+
+
+# Explore Glove Embeddings
+
+```{r}
+word_embeddings <- get_embeddings(texts)
+
+# find words with similar embeddings
+get_similar_words("exciting", word_embeddings)
+
+get_similar_words("boring", word_embeddings)
+
+get_similar_words("horror", word_embeddings)
 ```
 
 

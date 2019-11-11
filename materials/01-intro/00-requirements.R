@@ -8,5 +8,6 @@ pkgs <- c(
   "recipes",
   "ROCR",
   "rsample",
+  "text2vec",
   "tidyverse"
 )
