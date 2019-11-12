@@ -11,7 +11,7 @@ get_embeddings <- function(text) {
   vocab <- text2vec::prune_vocabulary(vocab, term_count_min = 5L)
   
   # Use our filtered vocabulary
-  vectorizer <- vocab_vectorizer(vocab)
+  vectorizer <- text2vec::vocab_vectorizer(vocab)
   
   # Use window of 5 for context words
   message("Creating term-co-occurence matrix...")
@@ -29,14 +29,14 @@ get_embeddings <- function(text) {
   wv_main + t(wv_context)
 }
 
-get_similar_words <- function(reference_word, word_embeddings) {
+get_similar_words <- function(reference_word, word_embeddings, n_words = 5) {
   
   # Find closest aligned word embeddings based on cosine similarity
   tryCatch({
     word <- word_embeddings[reference_word, , drop = FALSE]
   },
     error = function(e) {
-      stop("The supplied word (", word, ") is not part of the created vocabulary.")
+      stop("The supplied word ('", reference_word, "') is not part of the created vocabulary.")
     }
   )
   
@@ -47,7 +47,13 @@ get_similar_words <- function(reference_word, word_embeddings) {
     norm = "l2"
     )
   
-  head(sort(cos_sim[,1], decreasing = TRUE), 5)
+  head(sort(cos_sim[,1], decreasing = TRUE), n_words)
   
 }
 
+similar_classification_words <- function(word, word_embeddings, n = 6) {
+  similarities <- word_embeddings[word, , drop = FALSE] %>%
+    text2vec::sim2(embedding_wts, y = ., method = "cosine")
+  
+  similarities[,1] %>% sort(decreasing = TRUE) %>% head(n)
+}

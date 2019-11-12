@@ -14,6 +14,9 @@ knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 library(keras)
 library(tidyverse)
 library(glue)
+
+# helper functions we'll use to explore word embeddings
+source("helper_functions.R")
 ```
 
 
@@ -136,6 +139,18 @@ ggplot(text_df, aes(text_length)) +
           subtitle = glue("Total number of unique words is {unique_words}"))
 ```
 
+# Explore Glove Embeddings
+
+```{r}
+word_embeddings <- get_embeddings(text)
+
+# find words with similar embeddings
+get_similar_words("dog", word_embeddings)
+
+get_similar_words("2", word_embeddings)
+
+get_similar_words("delicious", word_embeddings)
+```
 
 # Prepare data
 

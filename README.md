@@ -72,11 +72,11 @@ RSTUDIO.CLOUD ACCOUNT, ETC.\]
 | Time          | Activity                      |
 | :------------ | :---------------------------- |
 | 09:00 - 09:15 | Recap                         |
-| 09:15 - 10:30 | Text, word embeddings & RNNs  |
+| 09:15 - 10:30 | Word embeddings               |
 | 10:30 - 11:00 | *Coffee break*                |
-| 11:00 - 12:30 | Time series, RNNs & LSTMs     |
+| 11:00 - 12:30 | NLP, RNNs & LSTMs             |
 | 12:30 - 13:30 | *Lunch break*                 |
-| 13:30 - 15:00 | Autoencoders & GANs           |
+| 13:30 - 15:00 | Time series & LSTMs           |
 | 15:00 - 15:30 | *Coffee break*                |
 | 15:30 - 17:00 | Project                       |
 

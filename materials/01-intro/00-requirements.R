@@ -2,6 +2,8 @@ pkgs <- c(
   "AmesHousing",
   "caret",
   "crayon",
+  "fs",
+  "glue",
   "here",
   "jpeg",
   "keras",
