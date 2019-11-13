@@ -192,9 +192,9 @@ total_word_index <- tokenizer$word_index
 num_words_used <- tokenizer$num_words
 
 glue("We have now tokenized our reviews. ", "We are considering {num_words_used} ",
-     "of {length(total_word_index)} total unique words. The top 10 most common ",
-     "words include:")
-head(word_index, 10)
+     "of {length(total_word_index)} total unique words. The most common words ",
+     "include:")
+head(total_word_index)
 ```
 
 
@@ -296,7 +296,7 @@ model <- keras_model_sequential() %>%
   layer_embedding(
     input_dim = top_n_words,  # number of words we are considering
     input_length = max_len,   # length that we have set each review to
-    output_dim = 8            # length of our word embeddings
+    output_dim = 32            # length of our word embeddings
     ) %>%  
   layer_flatten() %>% 
   layer_dense(units = 1, activation = "sigmoid")

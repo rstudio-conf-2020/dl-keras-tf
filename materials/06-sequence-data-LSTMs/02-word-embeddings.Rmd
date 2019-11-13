@@ -1,5 +1,3 @@
-
-
 ---
 title: "NLP: Word embeddings"
 output: html_notebook
@@ -105,7 +103,7 @@ text <- text[ratio_index]
 
 glue("We have {sum(ratio_index)} total obs.")
 glue("Positive: {sum(labels == 1)}, ({round(mean(labels == 1) * 100, 1)}%)")
-glue("Positive: {sum(labels == 0)}, ({round(mean(labels == 0) * 100, 1)}%)")
+glue("Negative: {sum(labels == 0)}, ({round(mean(labels == 0) * 100, 1)}%)")
 ```
 
 
@@ -122,7 +120,7 @@ text[first_pos]
 ```{r}
 text_df <- text %>%
   tibble(.name_repair = ~ "text") %>%
-  mutate(text_length = nchar(str_trim(text)))
+  mutate(text_length = str_trim(text) %>% str_count("\\w+"))
 
 unique_words <- text_df %>%
   tidytext::unnest_tokens(word, text) %>%
@@ -142,14 +140,19 @@ ggplot(text_df, aes(text_length)) +
 # Explore Glove Embeddings
 
 ```{r}
-word_embeddings <- get_embeddings(text)
+# clean up text and compute word embeddings
+clean_text <- tolower(text) %>%
+  str_replace_all(pattern = "[[:punct:] ]+", replacement = " ") %>%
+  str_trim()
 
+word_embeddings <- get_embeddings(clean_text)
+```
+
+Explore your own words!
+
+```{r}
 # find words with similar embeddings
-get_similar_words("dog", word_embeddings)
-
-get_similar_words("2", word_embeddings)
-
-get_similar_words("delicious", word_embeddings)
+get_similar_words("ugly", word_embeddings)
 ```
 
 # Prepare data
@@ -236,13 +239,9 @@ y_train <- labels[index]
 # Specify the maximum input length to the embedding layer so you can later flatten the embedded inputs.
 model <- keras_model_sequential() %>%
   layer_embedding(input_dim = top_n_words, 
-                  output_dim = 64,
+                  output_dim = 32,
                   input_length = max_len) %>%  # 100 length of each review.
-  layer_flatten() %>% 
-  layer_dense(units = 64, activation = "relu") %>%
-  layer_dropout(rate = 0.2) %>%
-  layer_dense(units = 64, activation = "relu") %>%
-  layer_dropout(rate = 0.2) %>%
+  layer_flatten() %>%
   layer_dense(units = 1, activation = "sigmoid")
 
 summary(model)
