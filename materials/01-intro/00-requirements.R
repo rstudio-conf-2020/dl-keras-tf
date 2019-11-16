@@ -13,6 +13,7 @@ pkgs <- c(
   "ROCR",
   "Rtsne",
   "rsample",
+  "testthat",
   "text2vec",
   "tidyverse"
 )

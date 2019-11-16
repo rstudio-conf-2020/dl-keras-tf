@@ -1,0 +1,13 @@
+---
+title: "NLP: Transfer learning for non-IMDB movie review word embeddings"
+output: html_notebook
+---
+
+```{r setup, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = FALSE)
+
+# Initialize package
+library(keras)
+library(tidyverse)
+library(glue)
+```

@@ -1,0 +1,243 @@
+---
+title: "NLP: Transfer learning with GloVe word embeddings"
+output: html_notebook
+---
+
+```{r setup, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE, collapse = TRUE)
+
+# Initialize package
+library(keras)
+library(tidyverse)
+library(progress)
+```
+
+# add code here to preprocess IMDB data
+
+```{r}
+source("prepare_imdb.R")
+```
+
+```{r}
+ls()
+```
+
+
+# Prepare GloVe pre-trained weights
+
+```{r, message=FALSE, warning=FALSE}
+path <- here::here("docs", "data", "pretrained", "glove", "glove.6B.100d.txt")
+glove_wts <- data.table::fread(path, quote = "", data.table = FALSE) %>% 
+  as_tibble()
+
+dim(glove_wts)
+```
+
+```{r}
+head(glove_wts)
+```
+
+Unfortunately, pretrained models do not always capture all words in our dataset
+
+```{r}
+applicable_index <- total_word_index[total_word_index <=top_n_words]
+applicable_words <- names(applicable_index)
+
+glove_wts %>%
+  filter(V1 %in% applicable_words) %>% 
+  dim()
+```
+
+Create our embeddings matrix with all applicable words. Words not in the
+pretrained model will have embeddings equal to zero.
+
+```{r}
+num_words_used <- length(applicable_words)
+embedding_dim <- ncol(glove_wts) - 1
+
+# create empty matrix
+embedding_matrix <- matrix(0, nrow = num_words_used, ncol = embedding_dim)
+row.names(embedding_matrix) <- applicable_words
+
+cat("First 10 rows & columns of our empty matrix\n\n")
+embedding_matrix[1:10, 1:10]
+```
+
+Loop through GloVe weights and get the embeddings. Add to embedding matrix so 
+that they align with the word index order.  If the word does not exist then make
+embedding values 0.
+
+**Note: this takes a little less than 2 minutes to process.**
+
+```{r}
+# this just allows us to track progress of our loop
+pb <- progress_bar$new(total = num_words_used)
+
+for (word in applicable_words) {
+  # track progress
+  pb$tick()
+  
+  # get embeddings for a given word
+  embeddings <- glove_wts %>%
+    filter(V1 == word) %>%
+    select(-V1) %>% 
+    as.numeric()
+  
+  # if embeddings don't exist create a vector of all zeros
+  if (all(is.na(embeddings))) {
+    embeddings <- vector("numeric", embedding_dim)
+  }
+  
+  # add embeddings to appropriate location in matrix
+  embedding_matrix[word, ] <- embeddings
+}
+
+embedding_matrix[1:10, 1:8]
+```
+
+### Define a model
+
+We will be using the same model architecture as before:
+
+```{r}
+model <- keras_model_sequential() %>% 
+  layer_embedding(input_dim = top_n_words, 
+                  output_dim = embedding_dim, 
+                  input_length = max_len) %>% 
+  layer_flatten() %>% 
+  layer_dense(units = 1, activation = "sigmoid")
+
+summary(model)
+```
+
+### Load the GloVe embeddings in the model
+
+The embedding layer has a single weight matrix: a 2D float matrix where each entry _i_ is the word vector meant to be associated with index _i_. Simple enough. Load the GloVe matrix you prepared into the embedding layer, the first layer in the model.
+
+```{r}
+get_layer(model, index = 1) %>% 
+  set_weights(list(embedding_matrix)) %>% 
+  freeze_weights()
+```
+
+Additionally, you'll freeze the weights of the embedding layer, following the same rationale you're already familiar with in the context of pretrained convnet features: when parts of a model are pretrained (like your embedding layer) and parts are randomly initialized (like your classifier), the pretrained parts shouldn't be updated during training, to avoid forgetting  what they already know. The large gradient updates triggered by the randomly initialized layers would be disruptive to the already-learned features.
+
+### Train and evaluate
+
+Let's compile our model and train it:
+
+```{r, echo=TRUE, results='hide'}
+model %>% compile(
+  optimizer = "rmsprop",
+  loss = "binary_crossentropy",
+  metrics = c("acc")
+)
+
+history <- model %>% fit(
+  features, labels,
+  epochs = 10,
+  batch_size = 32,
+  validation_split = 0.2,
+  callbacks = list(callback_early_stopping(patience = 2))
+)
+```
+
+Best performance:
+
+```{r}
+best_epoch <- which(history$metrics$val_loss == min(history$metrics$val_loss))
+loss <- history$metrics$val_loss[best_epoch] %>% round(3)
+acc <- history$metrics$val_acc[best_epoch] %>% round(3)
+
+glue::glue("The best epoch had a loss of {loss} and accuracy of {acc}")
+```
+
+
+# Use pretrained Amazon embeddings
+
+```{r, message=FALSE, warning=FALSE}
+path <- here::here("docs", "data", "pretrained", "amazon-reviews", "embeddings.csv")
+amazon_wts <- read_csv(path)
+
+dim(amazon_wts)
+```
+
+```{r}
+head(amazon_wts)
+```
+
+Create our embeddings matrix with all applicable words. Words not in the
+pretrained model will have embeddings equal to zero.
+
+```{r}
+embedding_dim <- ncol(amazon_wts) - 1
+
+# create empty matrix
+embedding_matrix <- matrix(0, nrow = num_words_used, ncol = embedding_dim)
+row.names(embedding_matrix) <- applicable_words
+
+# this just allows us to track progress of our loop
+pb <- progress_bar$new(total = num_words_used)
+
+for (ind_word in applicable_words) {
+  # track progress
+  pb$tick()
+  
+  # get embeddings for a given word
+  embeddings <- amazon_wts %>%
+    filter(word == ind_word) %>%
+    select(-word) %>% 
+    as.numeric()
+  
+  # if embeddings don't exist create a vector of all zeros
+  if (all(is.na(embeddings))) {
+    embeddings <- vector("numeric", embedding_dim)
+  }
+  
+  # add embeddings to appropriate location in matrix
+  embedding_matrix[ind_word, ] <- embeddings
+}
+
+embedding_matrix[1:10, 1:8]
+```
+
+### Define a model
+
+We will be using the same model architecture as before:
+
+```{r}
+model <- keras_model_sequential() %>% 
+  layer_embedding(input_dim = top_n_words, 
+                  output_dim = embedding_dim, 
+                  input_length = max_len) %>% 
+  layer_flatten() %>% 
+  layer_dense(units = 1, activation = "sigmoid")
+
+get_layer(model, index = 1) %>% 
+  set_weights(list(embedding_matrix)) %>% 
+  freeze_weights()
+
+model %>% compile(
+  optimizer = "rmsprop",
+  loss = "binary_crossentropy",
+  metrics = c("acc")
+)
+
+history <- model %>% fit(
+  features, labels,
+  epochs = 10,
+  batch_size = 32,
+  validation_split = 0.2,
+  callbacks = list(callback_early_stopping(patience = 2))
+)
+```
+
+Best performance:
+
+```{r}
+best_epoch <- which(history$metrics$val_loss == min(history$metrics$val_loss))
+loss <- history$metrics$val_loss[best_epoch] %>% round(3)
+acc <- history$metrics$val_acc[best_epoch] %>% round(3)
+
+glue::glue("The best epoch had a loss of {loss} and accuracy of {acc}")
+```
