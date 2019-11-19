@@ -3,6 +3,10 @@ title: "The 'Hello World' of Deep Learning"
 output: html_notebook
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
 # Welcome to your first deep learning module!
 
 This module is designed to provide you an introduction to deep learning and 
@@ -19,26 +23,26 @@ benchmark data sets --> MNIST.
 
 # Installation
 
-Install and load the `keras` package.
+Normally, you will be starting out from scratch and need to install and set up
+keras on your own laptop. First, you need to install keras from CRAN. Once the
+package is installed, you need to install the Keras and TensorFlow Python
+packages, which is what the R Keras and TensorFlow packages communicate
+with. keras simplifies this with `install_keras()` which allows for:
 
-```{r setup}
-knitr::opts_chunk$set(echo = TRUE)
+* both GPU & CPU options setups
+* installation in a virtual or conda environment
+* setup for Theano & CNTK backends rather than TensorFlow
 
-# Install package from CRAN if necessary
-# install.packages('keras')
+```{r install, eval = FALSE}
+# install keras
+# install.packages("keras")
 
-library(keras)     # for deep learning
-library(dplyr)     # for minor data wrangling
-library(ggplot2)   # for plotting
+# default CPU-based installations of Keras and TensorFlow
+# install_keras()
+
+# for GPU capabilities
+# install_keras(tensorflow = "gpu")
 ```
-
-Once the package is installed, you need to install the Keras and TensorFlow 
-Python packages, which is what the R Keras and TensorFlow packages communicate
-with. 
-
-* both GPU & CPU options are available
-* can install in a virtual or conda environment
-* can setup for Theano & CNTK backends rather than TensorFlow
 
 This installation can be quite simple, and it can get quite complex depending on
 your current system setup and needs. 
@@ -47,12 +51,12 @@ For this workshop we will be using a cloud environment to ensure we are all
 operating in common environment and Keras and TensorFlow have already been 
 installed.
 
-```{r install, eval = FALSE}
-# default CPU-based installations of Keras and TensorFlow
-# install_keras()
+Let's load the `keras` package along with a couple other packages we'll use.
 
-# for GPU capabilities
-# install_keras(tensorflow = "gpu")
+```{r}
+library(keras)     # for deep learning
+library(dplyr)     # for minor data wrangling
+library(ggplot2)   # for plotting
 ```
 
 
@@ -63,8 +67,8 @@ installed.
 `keras` has many built in data sets (or functions to automatically install data
 sets). Check out what data is available with `dataset_` + tab.
 
-We're going to use the ___MNIST___ data set which is the "hello world" for learning
-deep learning!
+We're going to use the ___MNIST___ data set which is the "hello world" for 
+learning deep learning!
 
 ```{r data}
 mnist <- dataset_mnist()

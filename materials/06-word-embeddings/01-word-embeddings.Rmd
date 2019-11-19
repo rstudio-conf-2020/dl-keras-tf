@@ -3,17 +3,8 @@ title: "NLP: Word embeddings"
 output: html_notebook
 ---
 
-```{r setup, message=FALSE}
-knitr::opts_chunk$set(echo = TRUE, collapse = TRUE)
-
-# Initialize package
-library(keras)
-library(fs)
-library(tidyverse)
-library(glue)
-
-# helper functions we'll use to explore word embeddings
-source("helper_functions.R")
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
 ```
 
 In this example, we are going to learn an about an alternative method to encode 
@@ -27,6 +18,20 @@ Learning objectives:
 - The two main contexts that word embeddings are trained.
 - When we should use word embeddings.
 - How to train word embeddings for classification purposes.
+
+# Requirements
+
+```{r, message=FALSE}
+# Initialize package
+library(keras)
+library(fs)
+library(tidyverse)
+library(glue)
+library(progress)
+
+# helper functions we'll use to explore word embeddings
+source("helper_functions.R")
+```
 
 # The "real" IMBD dataset
 
