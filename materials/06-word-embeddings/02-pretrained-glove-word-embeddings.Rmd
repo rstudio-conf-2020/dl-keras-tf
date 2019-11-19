@@ -241,3 +241,66 @@ acc <- history$metrics$val_acc[best_epoch] %>% round(3)
 
 glue::glue("The best epoch had a loss of {loss} and accuracy of {acc}")
 ```
+
+
+# Use pretrained Movie embeddings
+
+```{r}
+pretrained_embeddings <- embedding_wts_lstm
+embedding_dim <- ncol(pretrained_embeddings) - 1
+
+# create empty matrix
+embedding_matrix <- matrix(0, nrow = num_words_used, ncol = embedding_dim)
+row.names(embedding_matrix) <- applicable_words
+
+# this just allows us to track progress of our loop
+pb <- progress_bar$new(total = num_words_used)
+
+for (ind_word in applicable_words) {
+  # track progress
+  pb$tick()
+  
+  # get embeddings for a given word
+  embeddings <- pretrained_embeddings %>%
+    filter(word == ind_word) %>%
+    select(-word) %>% 
+    as.numeric()
+  
+  # if embeddings don't exist create a vector of all zeros
+  if (all(is.na(embeddings))) {
+    embeddings <- vector("numeric", embedding_dim)
+  }
+  
+  # add embeddings to appropriate location in matrix
+  embedding_matrix[ind_word, ] <- embeddings
+}
+
+embedding_matrix[1:10, 1:8]
+```
+
+```{r}
+model <- keras_model_sequential() %>% 
+  layer_embedding(input_dim = top_n_words, 
+                  output_dim = embedding_dim, 
+                  input_length = max_len) %>% 
+  layer_flatten() %>% 
+  layer_dense(units = 1, activation = "sigmoid")
+
+get_layer(model, index = 1) %>% 
+  set_weights(list(embedding_matrix)) %>% 
+  freeze_weights()
+
+model %>% compile(
+  optimizer = "rmsprop",
+  loss = "binary_crossentropy",
+  metrics = c("acc")
+)
+
+history <- model %>% fit(
+  features, labels,
+  epochs = 25,
+  batch_size = 32,
+  validation_split = 0.2,
+  callbacks = list(callback_early_stopping(patience = 2))
+)
+```

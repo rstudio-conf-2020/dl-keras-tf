@@ -9,5 +9,184 @@ knitr::opts_chunk$set(echo = TRUE, cache = FALSE)
 # Initialize package
 library(keras)
 library(tidyverse)
-library(glue)
+library(fs)
 ```
+
+```{r}
+movie_dir <- here::here("docs", "data", "non-imdb-movie-reviews")
+```
+
+```{r}
+training_files <- movie_dir %>%
+  dir_ls() %>%
+  map(dir_ls) %>%
+  set_names(basename) %>%
+  plyr::ldply(data_frame) %>%
+  set_names(c("label", "path"))
+
+training_files
+```
+
+```{r}
+count(training_files, label)
+```
+
+```{r}
+obs <- nrow(training_files)
+labels <- vector(mode = "integer", length = obs)
+texts <- vector(mode = "character", length = obs)
+
+for (file in seq_len(obs)) {
+  label <- training_files[[file, "label"]]
+  path <- training_files[[file, "path"]]
+  
+  labels[file] <- ifelse(label == "neg", 0, 1)
+  texts[file] <- readChar(path, nchars = file.size(path)) 
+  
+}
+```
+
+```{r}
+labels <- as.array(labels)
+```
+
+```{r}
+top_n_words <- 10000
+
+tokenizer <- text_tokenizer(num_words = top_n_words) %>% 
+  fit_text_tokenizer(texts)
+
+names(tokenizer)
+```
+
+```{r}
+total_word_index <- tokenizer$word_index
+num_words_used <- tokenizer$num_words
+
+glue("We have now tokenized our reviews. ", "We are considering {num_words_used} ",
+     "of {length(total_word_index)} total unique words. The most common words ",
+     "include:")
+head(total_word_index)
+```
+
+
+```{r}
+sequences <- texts_to_sequences(tokenizer, texts)
+
+# The vectorized first instance:
+sequences[[1]]
+```
+
+We can see how our tokenizer converted our original text to a cleaned up 
+version:
+
+```{r} 
+cat(crayon::blue("Original text:\n"))
+texts[[1]]
+
+cat(crayon::blue("\nRevised text:\n"))
+paste(unlist(tokenizer$index_word)[sequences[[1]]] , collapse = " ")
+```
+
+Next, since each review is a different length, we need to limit ourselves to a
+certain number of words so that all our features (reviews) are the same length. 
+
+Note (`?pad_sequences`):
+* Any reviews that are shorter than this length will be padded.
+* Any reviews that are longer than this length will be truncated.
+
+```{r}
+max_len <- 500
+features <- pad_sequences(sequences, maxlen = max_len)
+```
+
+```{r}
+features[1,]
+```
+
+```{r}
+paste(unlist(tokenizer$index_word)[features[1,]], collapse = " ")
+```
+
+```{r}
+set.seed(123)
+index <- sample(1:nrow(features))
+
+x_train <- features[index, ]
+y_train <- labels[index]
+```
+
+```{r}
+model_basic <- keras_model_sequential() %>%
+  layer_embedding(
+    input_dim = top_n_words,  # number of words we are considering
+    input_length = max_len,   # length that we have set each review to
+    output_dim = 16            # length of our word embeddings
+    ) %>%  
+  layer_flatten() %>%
+  layer_dense(units = 1, activation = "sigmoid") %>% compile(
+  optimizer = "rmsprop",
+  loss = "binary_crossentropy",
+  metrics = c("acc")
+)
+
+history_basic <- model_basic %>% fit(
+  x_train, y_train,
+  epochs = 20,
+  batch_size = 32,
+  validation_split = 0.3,
+  callbacks = list(
+    callback_early_stopping(patience = 3, restore_best_weights = TRUE)
+    )
+)
+```
+
+```{r}
+model_lstm <- keras_model_sequential() %>%
+  layer_embedding(
+    input_dim = top_n_words,  # number of words we are considering
+    input_length = max_len,   # length that we have set each review to
+    output_dim = 16            # length of our word embeddings
+    ) %>%  
+  layer_lstm(units = 32) %>%
+  layer_dense(units = 1, activation = "sigmoid") %>% compile(
+  optimizer = "rmsprop",
+  loss = "binary_crossentropy",
+  metrics = c("acc")
+)
+
+history_lstm <- model_lstm %>% fit(
+  x_train, y_train,
+  epochs = 20,
+  batch_size = 32,
+  validation_split = 0.3,
+  callbacks = list(
+    callback_early_stopping(patience = 3, restore_best_weights = TRUE)
+    )
+)
+```
+
+```{r}
+wts <- get_weights(model_basic)
+embedding_wts_basic <- wts[[1]]
+
+embedding_wts_basic <- embedding_wts_basic %>% 
+  as_tibble(.name_repair = "unique") %>%
+  mutate(word = tokenizer$index_word[1:tokenizer$num_words] %>% unlist()) %>%
+  select(word, everything())
+
+embedding_wts_basic
+```
+
+```{r}
+wts <- get_weights(model_lstm)
+embedding_wts_lstm <- wts[[1]]
+
+embedding_wts_lstm <- embedding_wts_lstm %>% 
+  as_tibble(.name_repair = "unique") %>%
+  mutate(word = tokenizer$index_word[1:tokenizer$num_words] %>% unlist()) %>%
+  select(word, everything())
+
+embedding_wts_lstm
+```
+

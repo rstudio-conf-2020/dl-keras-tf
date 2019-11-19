@@ -152,7 +152,7 @@ Explore your own words!
 
 ```{r}
 # find words with similar embeddings
-get_similar_words("ugly", word_embeddings)
+get_similar_words("two", word_embeddings)
 ```
 
 # Prepare data

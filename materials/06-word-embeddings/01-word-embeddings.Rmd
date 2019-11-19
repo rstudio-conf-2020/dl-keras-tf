@@ -4,7 +4,7 @@ output: html_notebook
 ---
 
 ```{r setup, message=FALSE}
-knitr::opts_chunk$set(echo = TRUE, cache = FALSE, collapse = TRUE)
+knitr::opts_chunk$set(echo = TRUE, collapse = TRUE)
 
 # Initialize package
 library(keras)
@@ -76,7 +76,12 @@ obs <- nrow(training_files)
 labels <- vector(mode = "integer", length = obs)
 texts <- vector(mode = "character", length = obs)
 
+# this just allows us to track progress of our loop
+pb <- progress_bar$new(total = obs, width = 60)
+
 for (file in seq_len(obs)) {
+  pb$tick()
+  
   label <- training_files[[file, "label"]]
   path <- training_files[[file, "path"]]
   
