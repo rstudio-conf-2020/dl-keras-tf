@@ -1,0 +1,360 @@
+---
+title: "NLP: Transfer learning for Amazon review word embeddings"
+output: html_notebook
+---
+
+```{r setup, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = FALSE)
+```
+
+This project is designed to test your current knowledge on applying word
+embeddings to the [Amazon Fine Foods reviews](https://snap.stanford.edu/data/web-FineFoods.html) 
+dataset available through Stanford. This dataset contains 568,454 reviews on
+74,258 products.
+
+Your goal is to develop a word embedding model to accurately predict how 
+__helpful__ a review will be. I supply code to help you get the data
+imported and prepped so that you can focus on the modeling aspect.
+
+___Good luck!___
+
+# Requirements
+
+```{r, message=FALSE, warning=FALSE}
+library(keras)     # provides deep learning procedures
+library(tidyverse) # provides basic data wrangling and visualization
+library(glue)      # provides efficient print statements
+library(testthat)  # provides unit testing
+```
+
+# Data importing
+
+The [finefoods.txt.gz](https://snap.stanford.edu/data/finefoods.txt.gz) file has
+already been downloaded and unzipped for you. All reviews are contained in a
+single .txt file.
+
+```{r}
+amazon_reviews <- here::here("docs", "data", "amazon-food", "finefoods.txt")
+reviews <- read_lines(amazon_reviews)
+```
+
+Each review consists of 8 items and each item is on its own line. The following
+shows all information collected for the first review.
+
+```{r}
+head(reviews, 8)
+```
+
+# Verify we properly imported
+
+Based on the data's [website](https://snap.stanford.edu/data/web-FineFoods.html),
+we should have the following:
+
+- Number of reviews: 568,454
+- Number of products: 74,258
+- Number of users: 256,059
+
+```{r}
+review_text <- reviews[str_detect(reviews, "review/text:")]
+products <- reviews[str_detect(reviews, "product/productId:")]
+users <- reviews[str_detect(reviews, "review/userId:")]
+
+n_reviews <- length(review_text)
+n_products <- n_distinct(products)
+n_users <- n_distinct(users)
+
+# Verify our imported data aligns with data codebook
+expect_equal(n_reviews, 568454)
+expect_equal(n_products, 74258)
+expect_equal(n_users, 256059)
+```
+
+
+# Extracting key parts of the data
+
+There are two main parts of these reviews that we need for our modeling purpose:
+
+1. The review text
+2. The fraction of users who found the review helpful
+
+
+## Getting our text
+
+Let's extract the text
+
+```{r}
+text <- review_text %>%
+  str_replace("review/text:", "") %>%
+  iconv(to = "UTF-8") %>%
+  str_trim()
+
+expect_equal(length(text), n_reviews)
+
+text[1]
+```
+
+
+## Getting our labels
+
+Now let's extract our helpfulness information. This represents the fraction of
+users who found the review helpful for a given product.
+
+```{r}
+helpfulness_info <- reviews[str_detect(reviews, "review/helpfulness:")] %>%
+  str_extract("\\d.*")
+
+expect_equal(length(helpfulness_info), n_reviews)
+
+head(helpfulness_info)
+```
+
+Let's separeate this information into the number of reviews (denominator) and
+the number of user who found the review helpful (numerator).
+
+```{r}
+num_reviews <- str_replace(helpfulness_info, "^.*\\/", "") %>% as.integer()
+helpfulness <- str_replace(helpfulness_info, "\\/.*$", "") %>% as.integer()
+```
+
+And we're only going to care about those products with 10+ reviews to try
+minimize some of the noise.
+
+```{r}
+num_index <- num_reviews >= 10
+num_reviews <- num_reviews[num_index]
+helpfulness <- helpfulness[num_index]
+text <- text[num_index]
+
+# verify that the number of observations in each vector is equal
+expect_equal(
+  map_int(list(num_reviews, helpfulness, text), length) %>% n_distinct(),
+  1
+)
+
+glue("There are {sum(num_index)} reviews that fall in products with 10 or more reviews.")
+```
+
+Our labels is going to be the fraction provided by helpfulness converted to a
+percentage.
+
+```{r}
+labels <- helpfulness / num_reviews
+
+expect_equal(length(labels), length(text))
+
+range(labels)
+```
+
+
+```{r}
+cat("First unhelpful review:\n")
+first_neg <- first(which(labels == 0))
+text[first_neg]
+
+cat("\nFirst very helpful review:\n")
+first_pos <- first(which(labels == 1))
+text[first_pos]
+```
+
+Let's get a quick assessment of word usage across the reviews:
+
+```{r}
+text_df <- text %>%
+  tibble(.name_repair = ~ "text") %>%
+  mutate(text_length = str_trim(text) %>% str_count("\\w+"))
+
+unique_words <- text_df %>%
+  tidytext::unnest_tokens(word, text) %>%
+  pull(word) %>%
+  n_distinct()
+
+avg_review_length <- median(text_df$text_length, na.rm = TRUE)
+  
+ggplot(text_df, aes(text_length)) +
+  geom_histogram(bins = 100, fill = "grey70", color = "grey40") +
+  geom_vline(xintercept = avg_review_length, color = "red", lty = "dashed") +
+  scale_x_log10() +
+  ggtitle(glue("Median review length is {avg_review_length}"),
+          subtitle = glue("Total number of unique words is {unique_words}"))
+```
+
+
+# Explore Glove Embeddings
+
+We can explore word embeddings that give us some context of the review language.
+
+```{r}
+# helper functions we'll use to explore word embeddings
+source("helper_functions.R")
+
+# clean up text and compute word embeddings
+clean_text <- tolower(text) %>%
+  str_replace_all(pattern = "[[:punct:] ]+", replacement = " ") %>%
+  str_trim()
+
+word_embeddings <- get_embeddings(clean_text)
+```
+
+Explore your own words!
+
+```{r}
+# find words with similar embeddings
+get_similar_words("oil", word_embeddings)
+```
+
+
+# Prepare data
+
+First, you need to convert the labels to an array.
+
+```{r}
+labels <- as.array(labels)
+```
+
+Next, you need to create your tokenizer. Go ahead and start by using the top
+20,000 most frequently used words.
+
+```{r}
+top_n_words <- 20000
+
+tokenizer <- text_tokenizer(num_words = top_n_words) %>% 
+  fit_text_tokenizer(text)
+
+names(tokenizer)
+```
+
+Next, convert your text to a numerically encoded sequence.
+
+```{r}
+sequences <- texts_to_sequences(tokenizer, text)
+```
+
+```{r}
+# The vectorized first instance:
+sequences[[1]]
+```
+
+Run this code chunk to see how your text has been converted:
+
+```{r} 
+cat(crayon::blue("Original text:\n"))
+text[[1]]
+
+cat(crayon::blue("\nRevised text:\n"))
+paste(unlist(tokenizer$index_word)[sequences[[1]]] , collapse = " ")
+```
+
+Go ahead and limit the sequences to only use the first 200 words.
+
+```{r}
+max_len <- 200
+features <- pad_sequences(sequences, maxlen = max_len)
+
+expect_equal(ncol(features), 200)
+```
+
+Make sure that the number of observations in your features and labels are equal:
+
+```{r}
+expect_equal(nrow(features), length(labels))
+```
+
+
+## Model training
+
+Before we train our model, let's go ahead and randomize our review data so that
+our training and validation data properly represent a mixture of products and
+users.
+
+```{r}
+set.seed(123)
+index <- sample(1:nrow(features))
+split_point <- floor(length(index) * .3)
+train_index <- index[1:split_point]
+valid_index <- index[(split_point + 1):length(index)]
+
+expect_equal(length(train_index) + length(valid_index), length(index))
+
+x_train <- features[train_index, ]
+y_train <- labels[train_index]
+
+x_valid <- features[valid_index, ]
+y_valid <- labels[valid_index]
+```
+
+Ok, so before we train our model, let's get an understanding of a baseline
+loss score that we want to beat. The easiest baseline is to just predict the
+average of the training label for future observations.
+
+```{r}
+avg <- mean(y_train)
+baseline_mse <- mean((y_valid - avg)^2)
+
+cat("Simply predicting the average helpfulness score of", round(avg, 2),
+    "for every review would give us a loss score of", round(baseline_mse, 3))
+```
+
+Ok, time to build your model architecture and compile it:
+
+```{r}
+# Specify the maximum input length to the embedding layer so you can later flatten the embedded inputs.
+model <- keras_model_sequential() %>%
+  layer_embedding(input_dim = top_n_words, 
+                  output_dim = 32,
+                  input_length = max_len) %>%  # 100 length of each review.
+  layer_flatten() %>%
+  layer_dense(units = 1)
+
+# create metric using backend tensor functions
+metric_clipped_mse <- custom_metric("metric_capped_msle", function(y_true, y_pred) {
+  y_pred <- k_clip(y_pred, 0, 1)
+  k_mean(k_square(y_pred - y_true))
+})
+
+model %>% compile(
+  optimizer = optimizer_rmsprop(lr = 0.0005),
+  loss = metric_clipped_mse,
+  metrics = c("mse", "mae")
+)
+
+summary(model)
+```
+
+```{r}
+history <- model %>% fit(
+  x_train, y_train,
+  epochs = 20,
+  batch_size = 128,
+  validation_data = list(x_valid, y_valid),
+  callbacks = list(
+    callback_reduce_lr_on_plateau(patience = 2),
+    callback_early_stopping(patience = 4, restore_best_weights = TRUE)
+    )
+)
+```
+
+```{r}
+opt_mse <- min(history$metrics$val_loss)
+glue("Baseline loss score: {round(baseline_mse, 3)}")
+glue("Model loss score: {round(opt_mse, 3)}")
+```
+
+```{r}
+tibble(
+  actual = y_valid,
+  pred = model %>% predict(x_valid) %>% as.vector()
+  ) %>%
+  mutate(pred = case_when(
+    pred < 0 ~ 0,
+    pred > 1 ~ 1,
+    TRUE ~ pred
+  )) %>%
+  arrange(pred) %>%
+  mutate(id = row_number()) %>%
+  ggplot(aes(x = id)) +
+  geom_point(aes(y = actual), size = 1, alpha = 0.2) +
+  geom_line(aes(y = pred), color = "red", size = 1) +
+  geom_hline(yintercept = avg, lty = "dashed")
+```
+
+

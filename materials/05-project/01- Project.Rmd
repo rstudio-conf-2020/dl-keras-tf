@@ -4,7 +4,7 @@ output: html_notebook
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+knitr::opts_chunk$set(echo = TRUE)
 
 # Initialize package
 library(keras)
@@ -25,7 +25,7 @@ ___Good luck!___
 
 ## Image location
 
-We have already downloaded and organized the images into  train, validation, and 
+We have already downloaded and organized the images into train, validation, and 
 test directories.
 
 ```{r image-file-paths}

@@ -2172,7 +2172,7 @@ features &lt;- pad_sequences(sequences, maxlen = max_len)</code></pre>
 <!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
-<p>Shape of data tensor: , Shape of label tensor: 23359.</p>
+<p>Shape of data tensor: , Shape of label tensor: .</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
 <!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGltKGZlYXR1cmVzKVxuYGBgIn0= -->
@@ -2723,6 +2723,7 @@ Epoch 10/10
 <!-- rnb-chunk-begin -->
 <!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxud3RzIDwtIGdldF93ZWlnaHRzKG1vZGVsKVxuZW1iZWRkaW5nX3d0cyA8LSB3dHNbWzFdXVxuYGBgXG5gYGAifQ== -->
 <p><code>r</code>r wts &lt;- get_weights(model) embedding_wts &lt;- wts[[1]]</p>
+<pre><code></code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
@@ -2732,6 +2733,7 @@ Epoch 10/10
 <p><code>r</code>r words &lt;- tibble( word = names(tokenizer<span class="math inline">\(word_index),  id = as.integer(unlist(tokenizer\)</span>word_index)) )</p>
 <p>words &lt;- words %&gt;% filter(id &lt;= tokenizer$num_words) %&gt;% arrange(id)</p>
 <p>row.names(embedding_wts) &lt;- words$word</p>
+<pre><code></code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
@@ -2741,6 +2743,7 @@ Epoch 10/10
 <p><code>r</code>r library(text2vec)</p>
 <p>find_similar_words &lt;- function(word, embedding_wts, n = 6) { similarities &lt;- embedding_wts[word, , drop = FALSE] %&gt;% sim2(embedding_wts, y = ., method = )</p>
 <p>similarities[,1] %&gt;% sort(decreasing = TRUE) %&gt;% head(n) }</p>
+<pre><code></code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
@@ -2748,6 +2751,7 @@ Epoch 10/10
 <!-- rnb-chunk-begin -->
 <!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuZmluZF9zaW1pbGFyX3dvcmRzKFxcZGVsaWNpb3VzXFwsIGVtYmVkZGluZ193dHMsIG4gPSAxMClcbmBgYFxuYGBgIn0= -->
 <p><code>r</code>r find_similar_words(, embedding_wts, n = 10)</p>
+<pre><code></code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 </div>
