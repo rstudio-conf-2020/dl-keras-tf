@@ -26,8 +26,8 @@ Throughout this case study you will learn a few new concepts:
 * How the MSE/MSLE loss function works
 * Best practices for batch size & epochs
 * What callbacks are and how to start applying them
-* Variability in model performance will always exist
-* How to apply different validation procedures
+* Variability in model performance will always exist (__time permitting__)
+* How to apply different validation procedures (__time permitting__)
 
 
 # The Ames housing dataset
@@ -63,7 +63,7 @@ ames %>%
   gather(feature, value) %>%
   ggplot(aes(feature, value)) +
   geom_boxplot() +
-  scale_y_log10()
+  scale_y_log10(labels = scales::comma)
 ```
 
 There are categorical features that could be ordered:
@@ -204,8 +204,8 @@ summary(network)
 history <- network %>% fit(
   x_train,
   y_train,
-  epochs = 20,
   batch_size = 32,
+  epochs = 20,
   validation_split = 0.2
 )
 ```
@@ -217,7 +217,7 @@ has stopped improving or not.
 plot(history) + scale_y_log10()
 ```
 
-# YOUR TURN!
+# YOUR TURN! (3 min)
 
 Try different batch sizes and epochs and see how model performance changes. 
 Remember, batch sizes are typically powers of 2 (i.e. 16, 32, 64, 128, 256, 512).
@@ -263,7 +263,7 @@ network <- keras_model_sequential() %>%
   compile(
     optimizer = "rmsprop",
     loss = "msle",
-    metrics = c("mae")
+    metrics = "mae"
   )
 
 history <- network %>% fit(
@@ -272,7 +272,7 @@ history <- network %>% fit(
   epochs = 250,
   batch_size = 32,
   validation_split = 0.2,
-  callbacks = callback_early_stopping(patience = 10, restore_best_weights = FALSE)
+  callbacks = callback_early_stopping(patience = 10, restore_best_weights = TRUE)
 )
 ```
 
@@ -288,8 +288,8 @@ first 15-20 epochs and then the model slowly chips away at the loss for the next
 
 1. customize our optimizer with a larger learning rate to try speed up the 
    downhill traversal of the gradient descent
-2. add a callback that slowly reduces the learning rate by a factor of 0.1 if 
-   we don't experience improvement in our loss for `patience` number of epochs.
+2. add a callback that slowly reduces the learning rate by 20% if we don't
+   experience improvement in our loss for `patience` number of epochs.
 
 ```{r initial-model-adj-lr, include=FALSE}
 network <- keras_model_sequential() %>% 
@@ -309,8 +309,8 @@ history <- network %>% fit(
   batch_size = 32,
   validation_split = 0.2,
   callbacks = list(
-        callback_early_stopping(patience = 10, restore_best_weights = FALSE),
-        callback_reduce_lr_on_plateau(factor = 0.2, patience = 5)
+        callback_early_stopping(patience = 10, restore_best_weights = TRUE),
+        callback_reduce_lr_on_plateau(factor = 0.2, patience = 4)
     )
 )
 ```
@@ -324,7 +324,7 @@ history
 plot(history) + scale_y_log10()
 ```
 
-# YOUR TURN!
+# YOUR TURN! (5 min)
 
 Try different variations of learning rate, patience parameters, and learning 
 rate reduction factor.  Here are a couple of things to keep in mind:
@@ -361,7 +361,7 @@ history <- network %>% fit(
 ```
 
 
-# Validation procedures
+# Validation procedures (time permitting)
 
 - discuss importance of holding out the test
 - show how you can also supply a validation set

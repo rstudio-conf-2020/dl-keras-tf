@@ -35,8 +35,8 @@ which is another well known benchmarking dataset.
 reuters <- dataset_reuters(num_words = 10000)
 c(c(train_data, train_labels), c(test_data, test_labels)) %<-% reuters
 
-length(train_data)   # 25K reviews in our training data
-length(test_data)    # 25K reviews in our test data
+length(train_data)   # ~9K reviews in our training data
+length(test_data)    # ~2K reviews in our test data
 ```
 
 # Understanding our data
