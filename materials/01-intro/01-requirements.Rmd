@@ -1,7 +1,10 @@
 ---
 title: "Installing Requirements"
-output: html_notebook
+output: github_document
 ---
+
+This notebook will help you install all the required packages and data sets used
+throughout this workshop.
 
 # Packages
 
@@ -47,7 +50,7 @@ of these packages that you had installed previously need to be updated to more
 recent versions. You can run the following to make necessary updates.
 
 ```{r}
-update.packages(oldPkgs = pkgs, ask = FALSE)
+update.packages(oldPkgs = pkgs, ask = FALSE, repos = "https://cran.rstudio.com/")
 ```
 
 # Datasets
