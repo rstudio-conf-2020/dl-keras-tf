@@ -723,6 +723,9 @@ create very complex patterns.
 ```{r, echo=FALSE}
 knitr::include_graphics("images/demoui.gif")
 ```
+
+.right.font50[[http://apps.amandaghassaei.com/OrigamiSimulator/](http://apps.amandaghassaei.com/OrigamiSimulator/)]
+
 ]
 
 ---
@@ -1455,12 +1458,12 @@ elevation.df <- data.frame(x = 50 * elevation$coords[,"x"],
   y = 50 * elevation$coords[,"y"], z = 10 * elevation$data)
 elevation.loess <- loess(z ~ x*y, data = elevation.df,
   degree = 2, span = 0.25)
-elevation.fit = expand.grid(list(x = seq(10, 300, 1), y = seq(10, 300, 1)))
+elevation.fit = expand.grid(list(x = seq(10, 300, 10), y = seq(10, 300, 10)))
 z <- predict(elevation.loess, newdata = elevation.fit)
 
-persp(z = z, phi = 45, theta = -145,
+persp(z = z, phi = 15, theta = -145,
       xlab = "Change in hot handle", ylab = "Change in cold handle",
-      zlab = "Error", shade = 0.1)
+      zlab = "Error", shade = 0.1, col = "springgreen")
 ```
 
 ]
@@ -1488,19 +1491,9 @@ $$= \frac{\partial \text{ temperature}}{\partial \text{ shower handle position}}
 .pull-right[
 
 ```{r, echo=FALSE}
-library(geoR)
-data(elevation)
-
-elevation.df <- data.frame(x = 50 * elevation$coords[,"x"],
-  y = 50 * elevation$coords[,"y"], z = 10 * elevation$data)
-elevation.loess <- loess(z ~ x*y, data = elevation.df,
-  degree = 2, span = 0.25)
-elevation.fit = expand.grid(list(x = seq(10, 300, 1), y = seq(10, 300, 1)))
-z <- predict(elevation.loess, newdata = elevation.fit)
-
-persp(z = z, phi = 45, theta = -145, 
+persp(z = z, phi = 15, theta = -145,
       xlab = "Change in hot handle", ylab = "Change in cold handle",
-      zlab = "Error")
+      zlab = "Error", shade = 0.1, col = "springgreen")
 ```
 
 ]
@@ -1702,6 +1695,8 @@ knitr::include_graphics("images/multi-layer-shower.png")
 ```{r, echo=FALSE}
 knitr::include_graphics("images/saddle_point_evaluation_optimizers.gif")
 ```
+
+.right.font50[[Sebastian Ruder (2016)](https://ruder.io/optimizing-gradient-descent/)]
 
 ]
 
@@ -2084,8 +2079,15 @@ knitr::include_graphics("images/training_gif.gif")
 
 .pull-right[
 
-```{r, echo=FALSE}
-knitr::include_graphics("images/example_learning_curve.png")
+```{r, echo=FALSE, fig.height=5}
+history <- read_csv("data/example_history.csv")
+
+history %>%
+   filter(data == "training", metric == "loss") %>%
+   ggplot(aes(epoch, value)) +
+   geom_point() +
+   geom_line() +
+   ggtitle("Learning curve")
 ```
 
 ]
@@ -2105,8 +2107,7 @@ knitr::include_graphics("images/example_learning_curve.png")
 
 .pull-right[
 
-```{r, echo=FALSE, fig.height=7}
-history <- read_csv("data/example_history.csv")
+```{r, echo=FALSE, fig.height=5}
 final_error <- history %>%
    filter(data == "training", metric == "loss", epoch == 20)
 
@@ -2119,7 +2120,8 @@ history %>%
    annotate("text", x = 20, y = 0.02, hjust = 1, vjust = 0, 
             label = "Training loss is basically 0", color = "red") +
    xlab("Epoch") +
-   ylab("Loss")
+   ylab("Loss") +
+   ggtitle("Learning curve")
 ```
 
 
@@ -2145,7 +2147,7 @@ history %>%
 
 .pull-right[
 
-```{r, echo=FALSE, fig.height=7}
+```{r, echo=FALSE, fig.height=5.55}
 best_error <- history %>%
    filter(data == "validation", metric == "loss") %>%
    filter(value == min(value))
@@ -2163,7 +2165,9 @@ history %>%
    annotate("text", x = 7, y = 0.12, hjust = 0, vjust = 0, 
             label = "Generalizes the best to 'unseen' \nvalidation data", color = "blue") +
    xlab("Epoch") +
-   ylab("Loss")
+   ylab("Loss") +
+   ggtitle("Learning curve") + 
+   theme(legend.position = 'bottom')
 ```
 
 ]
@@ -2215,8 +2219,6 @@ history <- network %>%
 
 ]
 
---
-
 .pull-right[
 
 ```{r, echo=FALSE}
@@ -2226,33 +2228,9 @@ knitr::include_graphics("https://media1.tenor.com/images/8e0b403d6b9f899f5a25cb3
 ]
 
 ---
-# Now you know!
+# Back home
 
-.pull-left[
+<br><br><br><br>
+[.center[`r anicon::faa("home", size = 10, animate = FALSE)`]](https://github.com/rstudio-conf-2020/dl-keras-tf)
 
-```{r, eval=FALSE}
-network <- keras_model_sequential() %>%
-  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %>%
-  layer_dense(units = 10, activation = 'softmax')
-
-network %>% compile(
-  loss = "categorical_crossentropy",
-  optimizer = "rmsprop",
-  metrics = c("accuracy")
-)
-
-history <- network %>% 
-  fit(train_images, train_labels, 
-      batch_size = 128, epochs = 20, 
-      validation_split = 0.2)
-```
-
-]
-
-.pull-right[
-
-```{r, echo=FALSE}
-knitr::include_graphics("https://media2.giphy.com/media/pzuye8RSBJFgk/source.gif")
-```
-
-]
+.center[https://github.com/rstudio-conf-2020/dl-keras-tf]

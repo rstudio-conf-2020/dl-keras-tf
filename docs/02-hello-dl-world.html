@@ -656,6 +656,9 @@ create very complex patterns.
 
 .pull-right[
 &lt;img src="images/demoui.gif" style="display: block; margin: auto;" /&gt;
+
+.right.font50[[http://apps.amandaghassaei.com/OrigamiSimulator/](http://apps.amandaghassaei.com/OrigamiSimulator/)]
+
 ]
 
 ---
@@ -1410,6 +1413,8 @@ layer as `\(\partial \text{layer}_2 \times \partial \text{layer}_1 \Rightarrow \
 
 &lt;img src="images/saddle_point_evaluation_optimizers.gif" style="display: block; margin: auto;" /&gt;
 
+.right.font50[[Sebastian Ruder (2016)](https://ruder.io/optimizing-gradient-descent/)]
+
 ]
 
 ---
@@ -1717,7 +1722,7 @@ history &lt;- network %&gt;%
 
 .pull-right[
 
-&lt;img src="images/example_learning_curve.png" width="1471" style="display: block; margin: auto;" /&gt;
+&lt;img src="02-hello-dl-world_files/figure-html/unnamed-chunk-88-1.png" style="display: block; margin: auto;" /&gt;
 
 ]
 
@@ -1811,8 +1816,6 @@ history &lt;- network %&gt;%
 
 ]
 
---
-
 .pull-right[
 
 &lt;img src="https://media1.tenor.com/images/8e0b403d6b9f899f5a25cb39b476c308/tenor.gif?itemid=10118626" style="display: block; margin: auto;" /&gt;
@@ -1820,35 +1823,12 @@ history &lt;- network %&gt;%
 ]
 
 ---
-# Now you know!
+# Back home
 
-.pull-left[
+&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;
+[.center[<span>&lt;i class="fas  fa-home fa-10x faa-FALSE animated "&gt;&lt;/i&gt;</span>]](https://github.com/rstudio-conf-2020/dl-keras-tf)
 
-
-```r
-network &lt;- keras_model_sequential() %&gt;%
-  layer_dense(units = 512, activation = 'relu', input_shape = c(28 * 28)) %&gt;%
-  layer_dense(units = 10, activation = 'softmax')
-
-network %&gt;% compile(
-  loss = "categorical_crossentropy",
-  optimizer = "rmsprop",
-  metrics = c("accuracy")
-)
-
-history &lt;- network %&gt;% 
-  fit(train_images, train_labels, 
-      batch_size = 128, epochs = 20, 
-      validation_split = 0.2)
-```
-
-]
-
-.pull-right[
-
-&lt;img src="https://media2.giphy.com/media/pzuye8RSBJFgk/source.gif" style="display: block; margin: auto;" /&gt;
-
-]
+.center[https://github.com/rstudio-conf-2020/dl-keras-tf]
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="libs/remark-latest.min.js"></script>

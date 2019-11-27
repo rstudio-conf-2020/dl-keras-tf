@@ -5,14 +5,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-
-# Initialize package
-# install.packages(keras)
-
-library(keras)     # for deep learning
-library(tidyverse) # for dplyr, ggplot2, etc.
-library(rsample)   # for data splitting
-library(recipes)   # for feature engineering
+ggplot2::theme_set(ggplot2::theme_minimal())
 ```
 
 In this case study, our objective is to predict the sales price of a home. This 
@@ -29,13 +22,23 @@ Throughout this case study you will learn a few new concepts:
 * Variability in model performance will always exist (__time permitting__)
 * How to apply different validation procedures (__time permitting__)
 
+# Package requirements
+
+```{r load-pkgs, warning=FALSE, message=FALSE}
+library(keras)     # for deep learning
+library(tidyverse) # for dplyr, ggplot2, etc.
+library(rsample)   # for data splitting
+library(recipes)   # for feature engineering
+library(testthat)  # unit testing
+```
+
 
 # The Ames housing dataset
 
 For this case study we will use the [Ames housing dataset](http://jse.amstat.org/v19n3/decock.pdf) 
 provided by the __AmesHousing__ package.
 
-```{r get-data, warning = FALSE}
+```{r get-data, warning=FALSE}
 ames <- AmesHousing::make_ames()
 dim(ames)
 ```
@@ -145,6 +148,10 @@ We can now vectorize our training and test data.
 baked_train <- bake(prepare, new_data = ames_train)
 baked_test <- bake(prepare, new_data = ames_test)
 
+# unit testing to ensure all columns are numeric
+expect_equal(map_lgl(baked_train, ~ !is.numeric(.)) %>% sum(), 0)
+expect_equal(map_lgl(baked_test, ~ !is.numeric(.)) %>% sum(), 0)
+
 baked_train
 ```
 
@@ -160,9 +167,13 @@ y_train <- baked_train %>% pull(Sale_Price)
 
 x_test <- select(baked_test, -Sale_Price) %>% as.matrix()
 y_test <- baked_test %>% pull(Sale_Price)
+
+# unit testing to x & y tensors have same number of observations
+expect_equal(nrow(x_train), length(y_train))
+expect_equal(nrow(x_test), length(y_test))
 ```
 
-Our final feature set now has 155 input variables:
+Our final feature set now has 188 input variables:
 
 ```{r}
 dim(x_train)
@@ -330,7 +341,7 @@ Try different variations of learning rate, patience parameters, and learning
 rate reduction factor.  Here are a couple of things to keep in mind:
 
 - _optimizer learning rate_ ranges worth exploring differ depending on the 
-  optimizer but for RMSProp common ranges include 0.1-0.001.
+  optimizer but for RMSProp common ranges include 0.1-0.0001.
 - _learning rate reduction factor_ typically range from 0.5-0.1.  
 - the patience value for _early stopping_ should not be shorter than the 
   patience value for _learning rate reduction_, otherwise the learning rate will 

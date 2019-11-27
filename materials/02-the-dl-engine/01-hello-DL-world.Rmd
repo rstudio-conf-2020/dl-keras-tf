@@ -21,7 +21,7 @@ study you will learn:
 In doing so you will run your first neural network with one of the most famous 
 benchmark data sets --> MNIST.
 
-# Installation
+# Package Requirements
 
 Normally, you will be starting out from scratch and need to install and set up
 keras on your own laptop. First, you need to install keras from CRAN. Once the
@@ -34,13 +34,13 @@ with. keras simplifies this with `install_keras()` which allows for:
 * setup for Theano & CNTK backends rather than TensorFlow
 
 ```{r install, eval = FALSE}
-# install keras
+# install keras if necessary
 # install.packages("keras")
 
 # default CPU-based installations of Keras and TensorFlow
 # install_keras()
 
-# for GPU capabilities
+# for GPU installation
 # install_keras(tensorflow = "gpu")
 ```
 
@@ -53,7 +53,7 @@ installed.
 
 Let's load the `keras` package along with a couple other packages we'll use.
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(keras)     # for deep learning
 library(dplyr)     # for minor data wrangling
 library(ggplot2)   # for plotting
@@ -67,8 +67,8 @@ library(ggplot2)   # for plotting
 `keras` has many built in data sets (or functions to automatically install data
 sets). Check out what data is available with `dataset_` + tab.
 
-We're going to use the ___MNIST___ data set which is the "hello world" for 
-learning deep learning!
+We're going to use the __MNIST__ data set which is the "hello world" for 
+learning deep learning! [ℹ️](http://bit.ly/dl-01#2)
 
 ```{r data}
 mnist <- dataset_mnist()
@@ -79,7 +79,7 @@ When we work with keras:
 
 * training and test sets need to be independent
 * features and labels (aka target, response) need to be independent
-* use `%<-%` for ___object unpacking___ (see `?zeallot::%<-%`)
+* use `%<-%` for ___object unpacking___ (see `?zeallot::%<-%` or [ℹ️](http://bit.ly/dl-01#5))
 
 ```{r extract-train-test}
 c(c(train_images, train_labels), c(test_images, test_labels)) %<-% mnist
@@ -121,14 +121,25 @@ for (i in 1:100) {
 
 ## Reshape data:
 
-Our current data structure is incompatible for modeling a basic neural network
+Our current data structure is incompatible for modeling the basic neural network
+that we are going to start with.
 
 ```{r current-structure-features}
 str(train_images)
 str(test_images)
 ```
 
-We need to reshape these into a 2D ___tensor___
+We need to reshape these into a 2D ___tensor___ [ℹ️](http://bit.ly/dl-01#11).
+Similar to how we can reshape a single matrix into a vector:
+
+```{r}
+m <- matrix(1:9, ncol = 3)
+m
+
+as.vector(m)
+```
+
+We can reshape a 3D array to a 2D array:
 
 ```{r reshape-to-2D-tensor}
 train_images <- array_reshape(train_images, c(60000, 28 * 28))
@@ -179,8 +190,10 @@ Nearly all DL models have a very similar training process:
 2. Define network compilation
 3. Execute training loop
 
+Let's run the next 4 code chunks first, then we'll come back and explain what
+each line of code is doing.
 
-## 1. Define the network architecture
+## 1. Define the network architecture [ℹ️](http://bit.ly/dl-01#24)
 
 ```{r architecture}
 network <- keras_model_sequential() %>%
@@ -194,7 +207,7 @@ You can view a summary of the network
 summary(network)
 ```
 
-## 2. Define network compilation
+## 2. Define network compilation [ℹ️](http://bit.ly/dl-01#49)
 
 ```{r compile}
 network %>% compile(
@@ -204,9 +217,9 @@ network %>% compile(
 )
 ```
 
-## 3. Execute training loop
+## 3. Execute training loop [ℹ️](http://bit.ly/dl-01#79)
 
-```{r train, include=FALSE}
+```{r train, message=FALSE}
 history <- network %>% 
   fit(train_images, train_labels, 
       batch_size = 128, epochs = 20, 
@@ -220,7 +233,7 @@ You can also `plot` this trained model object, which just uses `ggplot2` and
 can be modified like any other `ggplot2` plot (as long as `ggplot2` is loaded.
 
 ```{r plotTraining}
-plot(history) + ggtitle("My first deep learning model")
+plot(history) + ggtitle("My first deep learning model!")
 ```
 
 # YOUR TURN!
@@ -249,18 +262,14 @@ history <- network %>%
 
 # Part 3: Evaluate results
 
+Now that we've found a pretty good model, let's go ahead and evaluate our
+results on the test data.
+
 ## Metrics
 
 ```{r metrics}
-metrics <- network %>% evaluate(test_images, test_labels)
+metrics <- network %>% evaluate(test_images, test_labels, verbose = FALSE)
 metrics
-
-# Test set accuracy rate
-metrics$acc
-
-# Test set error rate
-1 - metrics$acc
-
 ```
 
 ## Predictions
@@ -294,7 +303,8 @@ missed_predictions <- sum(predictions != actual)
 missed_predictions
 ```
 
-We can see what digits our model confuses the most:
+We can see which digits our model confuses the most by analyzing the confusion
+matrix.
 
 * 9s are often confused with 4s
 * 8s are often confused with 2s & 3s
@@ -336,7 +346,7 @@ data.frame(target = mnist$test$y,
 
 Lastly, lets check out those mis-predicted digits.
 
-```{r, mis-predicted-digits}
+```{r mis-predicted-digits}
 missed <- which(predictions != actual)
 plot_dim <- ceiling(sqrt(length(missed)))
 

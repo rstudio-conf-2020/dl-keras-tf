@@ -5,9 +5,7 @@ output: html_notebook
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-
-library(keras)      # for deep learning
-library(tidyverse)  # for dplyr, ggplot2, purrr
+ggplot2::theme_set(ggplot2::theme_minimal())
 ```
 
 In this case study, our objective is to classify movie reviews as positive or
@@ -23,6 +21,13 @@ Throughout this case study you will learn a few new concepts:
 * Best practices for model capacity and dynamically assessing the impact of more 
   or less layers and nodes.
 
+# Package requirements
+
+```{r load-pkgs, warning=FALSE, message=FALSE}
+library(keras)     # for deep learning
+library(tidyverse) # for dplyr, ggplot2, etc.
+library(testthat)  # unit testing
+```
 
 # The IMDB dataset
 
@@ -122,6 +127,11 @@ vectorize_sequences <- function(sequences, dimension = n_features) {
 # apply to training and test data
 train_data_vec <- vectorize_sequences(train_data)
 test_data_vec <- vectorize_sequences(test_data)
+
+# unit testing to make sure
+expect_equal(ncol(train_data_vec), n_features)
+expect_equal(nrow(train_data_vec), length(train_data))
+expect_equal(nrow(test_data_vec), length(test_data))
 ```
 
 
