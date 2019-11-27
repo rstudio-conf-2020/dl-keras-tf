@@ -7,13 +7,6 @@ by Bradley Boehmke
 
 -----
 
-INSTRUCTIONS FOR INSTRUCTORS: Please insert information about your
-workshop below. Then, add workshop content in the materials folder and
-link to each session’s materials from the schedule below. You are
-welcomed to add more rows to the schedule. We just ask that you take
-breaks at the specified times. Once you are done adding information, you
-can remove these instructions from the README.
-
 -----
 
 :spiral_calendar: January 27 and 28, 2020  
@@ -25,13 +18,7 @@ can remove these instructions from the README.
 
 ## Overview
 
-This two-day workshop introduces the essential concepts of building deep learning models with TensorFlow and Keras via R. First, we’ll establish a mental model of where deep learning fits in the spectrum of machine learning, highlight its benefits and limitations, and discuss how the TensorFlow - Keras - R toolchain work together. We’ll then build an understanding of deep learning through first principles and practical applications covering a variety of tasks such as computer vision, natural language processing, anomaly detection, and more.
-
-Throughout the workshop you will gain an intuitive understanding of the architectures and engines that make up deep learning models, apply a variety of deep learning algorithms (i.e. MLPs, CNNs, RNNs, LSTMs, autoencoders), understand when and how to tune the various hyperparameters, and be able to interpret model results. Leaving this workshop, you should have a firm grasp of deep learning and be able to implement a systematic approach for producing high quality modeling results.
-
-## Learning objectives
-
-ADD LEARNING OBJECTIVE(S)
+This two-day workshop introduces the essential concepts of building deep learning models with TensorFlow and Keras via R. Throughout this workshop you will gain an intuitive understanding of the architectures and engines that make up deep learning models, apply a variety of deep learning algorithms (i.e. MLPs, CNNs, RNNs, LSTMs, collaborative filtering), understand when and how to tune the various hyperparameters, and be able to interpret model results. You will have the opportunity to apply practical applications covering a variety of tasks such as computer vision, natural language processing, product recommendation and more. Leaving this workshop, you should have a firm grasp of deep learning and be able to implement a systematic approach for producing high quality modeling results.
 
 ## Is this course for me?
 
@@ -47,38 +34,53 @@ This workshop will provide some review of these topics but coming in with some e
 
 ## Prework
 
-\[ADD INFORMATION YOU WANT LEARNERS TO HAVE / STEPS THEY WANT THEM TO
-COMPLETE PRIOR TO THE WORKSHOP. THIS COULD BE A LINK TO A THREAD ON
-RSTUDIO COMMUNITY, PACKAGE INSTALL INSTRUCTIONS, HOW TO GET AN
-RSTUDIO.CLOUD ACCOUNT, ETC.\]
+I make a few assumptions of your established knowledge regarding your programming skills and machine learning familiarity (items #2-3 in the previous section). Below are my assumptions and some resources to read through to make sure you are properly prepared.
+
+| Assumptions                       | Resource      
+| --------------------------------- | ------------- |
+| You should be familiar with the Tidyverse, control flow, and writing functions | [R for Data Science](https://r4ds.had.co.nz/) | 
+| You should be familiar with the basic concept of machine learning | [Ch. 1 HOMLR](https://bradleyboehmke.github.io/HOML/intro.html) | 
+| You should be familiar with the machine learning modeling process | [Ch. 2 HOMLR](https://bradleyboehmke.github.io/HOML/process.html) | 
+| You should be familiar with the feature engineering process | [Ch. 3 HOMLR](https://bradleyboehmke.github.io/HOML/engineering.html) |
+
+
+You will require several packages and datasets throughout this workshop. If you are attending the workshop these will be preinstalled for you so you do not need to worry about your OS differing from my. However, after you leave the workshop, the first notebook below will allow you to reproduce the work you did in the workshop. Also, at the conference workshop, we will all use the RStudio Cloud platform. The second notebook below will get you set up so that we can hit the ground running on day 1!
+
+| Description                       | Notebook      | Source Code
+| --------------------------------- | ------------- | ------------- |
+| Pre-installing necessary packages and datasets | [Github Doc](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/01-intro/01-requirements.md) | [R Markdown](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/01-intro/01-requirements.Rmd) |
+| Setting up RStudio Cloud environment | TBD | TBD |
 
 ## Schedule
 
+
+
 ### Day 1
 
-| Time          | Activity                      |
-| :------------ | :---------------------------- |
-| 09:00 - 09:30 | Introduction                  |
-| 09:30 - 10:30 | The deep learning engine      |
-| 10:30 - 11:00 | *Coffee break*                |
-| 11:00 - 12:30 | 3 case studies                |
-| 12:30 - 13:30 | *Lunch break*                 |
-| 13:30 - 15:00 | Computer vision & CNNs        |
-| 15:00 - 15:30 | *Coffee break*                |
-| 15:30 - 17:00 | Project                       |
+| Time          | Activity                      | Notebook | Source Code | Slides |
+| :------------ | :---------------------------- | -------- | ----------- | ------ |
+| 09:00 - 09:30 | Introduction                  |   |   |   |
+| 09:30 - 10:30 | Hello [Deep Learning] World!  |   |   |   |
+| 10:30 - 11:00 | *Coffee break*                |   |   |   |
+| 11:00 - 12:30 | 2 case studies                |   |   |   |
+| 12:30 - 13:30 | *Lunch break*                 |   |   |   |
+| 13:30 - 15:00 | Computer vision & CNNs        |   |   |   |
+| 15:00 - 15:30 | *Coffee break*                |   |   |   |
+| 15:30 - 17:00 | Project                       |   |   |   |
 
 ### Day 2
 
-| Time          | Activity                      |
-| :------------ | :---------------------------- |
-| 09:00 - 09:15 | Recap                         |
-| 09:15 - 10:30 | Word embeddings               |
-| 10:30 - 11:00 | *Coffee break*                |
-| 11:00 - 12:30 | NLP, RNNs & LSTMs             |
-| 12:30 - 13:30 | *Lunch break*                 |
-| 13:30 - 15:00 | Time series & LSTMs           |
-| 15:00 - 15:30 | *Coffee break*                |
-| 15:30 - 17:00 | Project                       |
+| Time          | Activity                      | Notebook | Source Code | Slides |
+| :------------ | :---------------------------- | -------- | ----------- | ------ |
+| 09:00 - 09:15 | Recap                         |   |   |   |
+| 09:15 - 10:30 | Word embeddings               |   |   |   |
+| 10:30 - 11:00 | *Coffee break*                |   |   |   |
+| 11:00 - 12:30 | Collaborative filtering       |   |   |   |
+| 12:30 - 13:30 | *Lunch break*                 |   |   |   |
+| 13:30 - 15:00 | NLP, RNNs & LSTMs             |   |   |   |
+| 15:00 - 15:30 | *Coffee break*                |   |   |   |
+| 15:30 - 17:00 | Project                       |   |   |   |
+
 
 ## Instructor
 
