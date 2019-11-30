@@ -7,8 +7,6 @@ by Bradley Boehmke
 
 -----
 
------
-
 :spiral_calendar: January 27 and 28, 2020  
 :alarm_clock:     09:00 - 17:00  
 :hotel:           \[ADD ROOM\]  
@@ -44,7 +42,7 @@ I make a few assumptions of your established knowledge regarding your programmin
 | You should be familiar with the feature engineering process | [Ch. 3 HOMLR](https://bradleyboehmke.github.io/HOML/engineering.html) |
 
 
-You will require several packages and datasets throughout this workshop. If you are attending the workshop these will be preinstalled for you so you do not need to worry about your OS differing from my. However, after you leave the workshop, the first notebook below will allow you to reproduce the work you did in the workshop. Also, at the conference workshop, we will all use the RStudio Cloud platform. The second notebook below will get you set up so that we can hit the ground running on day 1!
+You will require several packages and datasets throughout this workshop. If you are attending the workshop these will be preinstalled for you so you do not need to worry about your OS differing from mine. However, after you leave the workshop, the first notebook below will allow you to reproduce the work you did in the workshop. Also, at the conference workshop, we will all use the RStudio Cloud platform. The second notebook below will get you set up so that we can hit the ground running on day 1!
 
 | Description                       | Notebook      | Source Code
 | --------------------------------- | ------------- | ------------- |
@@ -59,8 +57,8 @@ You will require several packages and datasets throughout this workshop. If you 
 
 | Time          | Activity                      | Notebook | Source Code | Slides |
 | :------------ | :---------------------------- | -------- | ----------- | ------ |
-| 09:00 - 09:30 | Introduction                  |   |   |   |
-| 09:30 - 10:30 | Hello [Deep Learning] World!  |   |   |   |
+| 09:00 - 09:30 | Introduction                  | NA       | NA          | [HTML](https://rstudio-conf-2020.github.io/dl-keras-tf/01-intro.html#1) |
+| 09:30 - 10:30 | Hello [Deep Learning] World!  | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-hello-DL-world.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/02-the-dl-engine/01-hello-DL-world.Rmd) | [HTML](http://bit.ly/dl-01) |
 | 10:30 - 11:00 | *Coffee break*                |   |   |   |
 | 11:00 - 12:30 | 2 case studies                |   |   |   |
 | 12:30 - 13:30 | *Lunch break*                 |   |   |   |
