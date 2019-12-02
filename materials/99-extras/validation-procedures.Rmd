@@ -43,7 +43,7 @@ rsample package.
 
 ```{r}
 set.seed(123)
-ames_split <- initial_split(ames, prop = 0.8)
+ames_split <- initial_split(ames, prop = 0.7)
 ames_train <- analysis(ames_split)
 ames_test <- assessment(ames_split)
 
@@ -117,8 +117,8 @@ training attributes:
 ```{r}
 # First model
 model1_results <- keras_model_sequential() %>% 
-  layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
-  layer_dense(units = 128, activation = "relu") %>%
+  layer_dense(units = 1024, activation = "relu", input_shape = ncol(x_train)) %>% 
+  layer_dense(units = 512, activation = "relu") %>%
   layer_dense(units = 1) %>% 
   compile(
     optimizer = optimizer_rmsprop(lr = 0.01),
@@ -131,14 +131,16 @@ model1_results <- keras_model_sequential() %>%
     batch_size = 32,
     epochs = 50,
     validation_split = 0.2,  # supply our validation data
-    callbacks = callback_reduce_lr_on_plateau(factor = 0.2, patience = 5),
-    verbose = FALSE
+    callbacks = list(
+          callback_early_stopping(patience = 10, restore_best_weights = TRUE),
+          callback_reduce_lr_on_plateau(factor = 0.2, patience = 4)
+      )
 )
 
 # Second model
 model2_results <- keras_model_sequential() %>% 
-  layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
-  layer_dense(units = 128, activation = "relu") %>%
+  layer_dense(units = 1024, activation = "relu", input_shape = ncol(x_train)) %>% 
+  layer_dense(units = 512, activation = "relu") %>%
   layer_dense(units = 1) %>% 
   compile(
     optimizer = optimizer_rmsprop(lr = 0.01),
@@ -151,8 +153,10 @@ model2_results <- keras_model_sequential() %>%
     batch_size = 32,
     epochs = 50,
     validation_split = 0.2,  # supply our validation data
-    callbacks = callback_reduce_lr_on_plateau(factor = 0.2, patience = 5),
-    verbose = FALSE
+    callbacks = list(
+          callback_early_stopping(patience = 10, restore_best_weights = TRUE),
+          callback_reduce_lr_on_plateau(factor = 0.2, patience = 4)
+      )
 )
 ```
 
@@ -160,10 +164,10 @@ You will notice that our results slightly differ. This is because we have
 variability within our model. 
 
 ```{r}
-cat("Model 1 results:\n")
+# Model 1 results
 model1_results
 
-cat("\n\nModel 1 results:\n")
+# Model 2 results
 model2_results
 ```
 
@@ -205,10 +209,10 @@ length(y_val)
 Now, we can supply our validation data to `validation_data`. Note how we supply
 our validation features and labels datasets as a list to `validation_data`.
 
-```{r train-with-validation, include=FALSE}
+```{r train-with-validation}
 network <- keras_model_sequential() %>% 
-  layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
-  layer_dense(units = 128, activation = "relu") %>%
+  layer_dense(units = 1024, activation = "relu", input_shape = ncol(x_train)) %>% 
+  layer_dense(units = 512, activation = "relu") %>%
   layer_dense(units = 1) %>%
   compile(
     optimizer = optimizer_rmsprop(lr = 0.01),
@@ -279,7 +283,7 @@ training set,
 As this code executes, the minimum validation loss score will be printing out
 for each fold and you will see the variability across the folds.
 
-```{r perform-kfold-cv, include=FALSE}
+```{r perform-kfold-cv}
 # create a data frame to store results
 results <- data.frame()
 
@@ -299,8 +303,8 @@ for (i in seq_len(k)) {
   
   # Create our model blueprint
   network <- keras_model_sequential() %>% 
-    layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
-    layer_dense(units = 128, activation = "relu") %>%
+    layer_dense(units = 1024, activation = "relu", input_shape = ncol(x_train)) %>% 
+    layer_dense(units = 512, activation = "relu") %>%
     layer_dense(units = 1) %>%
     compile(
       optimizer = optimizer_rmsprop(lr = 0.01),
@@ -356,7 +360,7 @@ that our validation loss is about...
 
 ```{r, message=FALSE}
 # which epic has lowest avg loss
-best_epoch<- results %>%
+best_epoch <- results %>%
   group_by(epoch) %>%
   filter(metric == 'loss', data == 'validation') %>%
   summarise(avg_loss = mean(value), 
@@ -371,8 +375,8 @@ within reason when scoring on new data:
 
 ```{r train-evaluate}
 network <- keras_model_sequential() %>%
-  layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
-  layer_dense(units = 128, activation = "relu") %>%
+  layer_dense(units = 1024, activation = "relu", input_shape = ncol(x_train)) %>% 
+  layer_dense(units = 512, activation = "relu") %>%
   layer_dense(units = 1) %>%
   compile(
     optimizer = optimizer_rmsprop(lr = 0.01),
