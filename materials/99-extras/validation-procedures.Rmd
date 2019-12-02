@@ -1,0 +1,396 @@
+---
+title: "Different validation procedures"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+ggplot2::theme_set(ggplot2::theme_minimal())
+```
+
+In this notebook, we are going to continue using our Ames Housing regression
+data focused on predicting home sales prices. However, our focus in this
+notebook is to illustrate:
+
+* Variability in model performance will exists for two reasons
+* How to apply different validation procedures 
+
+# Package requirements
+
+```{r load-pkgs, message=FALSE, warning=FALSE}
+library(keras)     # for deep learning
+library(testthat)  # unit testing
+library(tidyverse) # for dplyr, ggplot2, etc.
+library(rsample)   # for data splitting
+library(recipes)   # for feature engineering
+```
+
+
+# The Ames housing dataset
+
+For this case study we will use the [Ames housing dataset](http://jse.amstat.org/v19n3/decock.pdf) 
+provided by the __AmesHousing__ package.
+
+```{r get-data, warning=FALSE}
+ames <- AmesHousing::make_ames()
+dim(ames)
+```
+
+# Create train & test splits
+
+Let's create our own training and testing samples, which we can do with the 
+rsample package.
+
+```{r}
+set.seed(123)
+ames_split <- initial_split(ames, prop = 0.8)
+ames_train <- analysis(ames_split)
+ames_test <- assessment(ames_split)
+
+dim(ames_train)
+dim(ames_test)
+```
+
+
+# Preparing the data
+
+The first thing we need to do is prepare our data by:
+
+- removing any zero-variance (or near zero-variance) features
+- condensing unique levels of categorical features to "other"
+- ordinal encoding the quality features
+- normalize numeric feature distributions
+- standardizing numeric features to mean = 0, std dev = 1
+- one-hot encoding remaining categorical features
+
+This is the same procedure we used in the [first case study](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-ames.nb.html).
+
+```{r}
+blueprint <- recipe(Sale_Price ~ ., data = ames_train) %>%
+  step_nzv(all_nominal()) %>%
+  step_other(all_nominal(), threshold = .01, other = "other") %>%
+  step_integer(matches("(Qual|Cond|QC|Qu)$")) %>%
+  step_YeoJohnson(all_numeric(), -all_outcomes()) %>%
+  step_center(all_numeric(), -all_outcomes()) %>%
+  step_scale(all_numeric(), -all_outcomes()) %>%
+  step_dummy(all_nominal(), -all_outcomes(), one_hot = TRUE)
+
+prepare <- prep(blueprint, training = ames_train)
+
+baked_train <- bake(prepare, new_data = ames_train)
+baked_test <- bake(prepare, new_data = ames_test)
+
+# unit testing to ensure all columns are numeric
+expect_equal(map_lgl(baked_train, ~ !is.numeric(.)) %>% sum(), 0)
+expect_equal(map_lgl(baked_test, ~ !is.numeric(.)) %>% sum(), 0)
+
+baked_train
+```
+
+Next, we create our features and labels dataset for training and testing
+purposes.
+
+```{r}
+x_train <- select(baked_train, -Sale_Price) %>% as.matrix()
+y_train <- baked_train %>% pull(Sale_Price)
+
+x_test <- select(baked_test, -Sale_Price) %>% as.matrix()
+y_test <- baked_test %>% pull(Sale_Price)
+
+# unit testing to x & y tensors have same number of observations
+expect_equal(nrow(x_train), length(y_train))
+expect_equal(nrow(x_test), length(y_test))
+```
+
+Our final feature set now has 188 input variables:
+
+```{r}
+dim(x_train)
+dim(x_test)
+```
+
+# Two identical models
+
+Let's create two models that have the exact same architecture, compilation, and
+training attributes:
+
+```{r}
+# First model
+model1_results <- keras_model_sequential() %>% 
+  layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
+  layer_dense(units = 128, activation = "relu") %>%
+  layer_dense(units = 1) %>% 
+  compile(
+    optimizer = optimizer_rmsprop(lr = 0.01),
+    loss = "msle",
+    metrics = c("mae")
+  ) %>% 
+  fit(
+    x_train,
+    y_train,
+    batch_size = 32,
+    epochs = 50,
+    validation_split = 0.2,  # supply our validation data
+    callbacks = callback_reduce_lr_on_plateau(factor = 0.2, patience = 5),
+    verbose = FALSE
+)
+
+# Second model
+model2_results <- keras_model_sequential() %>% 
+  layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
+  layer_dense(units = 128, activation = "relu") %>%
+  layer_dense(units = 1) %>% 
+  compile(
+    optimizer = optimizer_rmsprop(lr = 0.01),
+    loss = "msle",
+    metrics = c("mae")
+  ) %>% 
+  fit(
+    x_train,
+    y_train,
+    batch_size = 32,
+    epochs = 50,
+    validation_split = 0.2,  # supply our validation data
+    callbacks = callback_reduce_lr_on_plateau(factor = 0.2, patience = 5),
+    verbose = FALSE
+)
+```
+
+You will notice that our results slightly differ. This is because we have 
+variability within our model. 
+
+```{r}
+cat("Model 1 results:\n")
+model1_results
+
+cat("\n\nModel 1 results:\n")
+model2_results
+```
+
+This variability is a result of our model weights being randomly initialized. 
+And since the weights in our two models have different starting points, the 
+gradient descent process will result in the final weights differing as well. For
+larger datasets, the variability in your final results will often be negligible.
+
+However, for smaller datasets, this variability can be greater and can also lead
+to skewed inferences. Typically, for tabular datasets less than 10,000 observations,
+I will often perform k-fold cross validation to have a more robust understanding 
+of variability in the loss score. [ℹ️](https://bradleyboehmke.github.io/HOML/process.html#resampling).
+
+# Validation procedures
+
+To demonstrate how to perform k-fold cross validation, let's first discuss 
+another way to perform validation within the `keras::fit()` function. So far we 
+have performed model validation by using `validation_split`. Sometimes this may 
+not be appropriate. `validation_split` selects the last XX% samples in the x and 
+y data provided. So, if our data is ordered than this could skew our results.  
+
+An alternative is to create our own validation data and supply it via 
+`validation_data`. First we extract our own train vs. validation data sets:
+
+```{r create-validation}
+set.seed(123)
+index <- sample(1:nrow(x_train), size = floor(nrow(x_train) * 0.8))
+
+x_train_sub <- x_train[index,]
+y_train_sub <- y_train[index]
+
+x_val <- x_train[-index,]
+y_val <- y_train[-index]
+
+length(y_train_sub)
+length(y_val)
+```
+
+Now, we can supply our validation data to `validation_data`. Note how we supply
+our validation features and labels datasets as a list to `validation_data`.
+
+```{r train-with-validation, include=FALSE}
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
+  layer_dense(units = 128, activation = "relu") %>%
+  layer_dense(units = 1) %>%
+  compile(
+    optimizer = optimizer_rmsprop(lr = 0.01),
+    loss = "msle",
+    metrics = c("mae")
+  )
+
+history <- network %>% fit(
+  x_train_sub,                           # supply our new training features data
+  y_train_sub,                           # supply our new training labels data
+  epochs = 50,
+  batch_size = 32,
+  validation_data = list(x_val, y_val),  # supply our validation data
+  callbacks = list(
+        callback_early_stopping(patience = 10, restore_best_weights = FALSE),
+        callback_reduce_lr_on_plateau(factor = 0.2, patience = 5)
+    )
+)
+```
+
+```{r validation-model-performance}
+history
+```
+
+
+# k-fold cross validation
+
+As the number of observations in our data increases, variance in our loss score 
+will decrease. However, we do not always have the option to just go out and get 
+more data. So, if we want to gain a more accurate understanding of the loss score 
+and its variance we can perform _k-fold cross validation_. 
+
+First, we need to create k folds. This example creates 10 folds by dividing the
+randomly sampled index into 10 approximately equal "cuts". Consequently, `folds`
+in this example is simply a vector that is equal length to our training
+observations; stating that observation 1 is assigned to the 10th fold, observation
+2 is assigned to the 3rd fold, observation 3 is assigned to the 1st fold, etc.
+
+```{r create-folds}
+# number of folds
+k <- 10
+
+# randomize data before making folds
+set.seed(123)
+indices <- sample(1:nrow(x_train))
+
+# divide the ordered indices into k intervals, labeled 1:k.
+folds <- cut(indices, breaks = k, labels = FALSE)
+str(folds)
+```
+
+If we look at all the folds, we'll see that we have nearly equal number of
+observations across all folds:
+
+```{r}
+table(folds)
+```
+
+Now we can apply a `for` loop to iterate through the training data and perform 
+k-fold cross validation. This works by:
+
+1. Assigning fold `i` to the validation set and the remaining folds to the
+training set,
+2. Training our model using `validation_data` to supply our validation set,
+3. Save our results for that iteration,
+4. Repeat for all 10 folds.
+
+As this code executes, the minimum validation loss score will be printing out
+for each fold and you will see the variability across the folds.
+
+```{r perform-kfold-cv, include=FALSE}
+# create a data frame to store results
+results <- data.frame()
+
+for (i in seq_len(k)) {
+  cat("processing fold", paste0(i, ": "))
+  
+  # Prepare the training and validation data for each fold
+  val_indices <- which(folds == i, arr.ind = TRUE) 
+  
+  # validation set: the ith partition
+  x_val <- x_train[val_indices,]
+  y_val <- y_train[val_indices]
+  
+  # Training set: all other partitions
+  x_train_sub <- x_train[-val_indices,]
+  y_train_sub <- y_train[-val_indices]
+  
+  # Create our model blueprint
+  network <- keras_model_sequential() %>% 
+    layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
+    layer_dense(units = 128, activation = "relu") %>%
+    layer_dense(units = 1) %>%
+    compile(
+      optimizer = optimizer_rmsprop(lr = 0.01),
+      loss = "msle",
+      metrics = c("mae")
+    )
+
+  # Train our model with and supply train / validation data
+  history <- network %>% fit(
+    x_train_sub,                          
+    y_train_sub,                           
+    epochs = 50,
+    batch_size = 32,
+    validation_data = list(x_val, y_val),
+    verbose = FALSE,
+    callbacks = callback_reduce_lr_on_plateau(factor = 0.2, patience = 5)
+    )
+   
+  # Extract the performance data            
+  model_performance <- as.data.frame(history) %>% mutate(fold = i)
+  results <- rbind(results, model_performance)
+  
+  # append loop message with min loss for ith fold
+  min_loss <- round(min(history$metrics$val_loss), 4)
+  cat(min_loss, "\n", append = TRUE)
+} 
+```
+
+We can plot the results; however, the difference between each folds validation
+loss score is not obvious.
+
+```{r plot-kfold-results, message=FALSE}
+ggplot(results, aes(epoch, value, color = data)) +
+  geom_point(alpha = 0.5) + 
+  geom_smooth() +
+  facet_wrap(~ metric, ncol = 1, scales = "free_y")
+```
+
+But if we zoom in on the validation loss we can see the variance that exists:
+
+```{r plot-kfold-val-results, message=FALSE}
+results %>%
+  filter(data == 'validation', metric == 'loss') %>%
+  ggplot(aes(epoch, value)) +
+  geom_point(alpha = 0.5) +
+  stat_summary(fun.data = "mean_cl_boot", colour = "red") +
+  geom_smooth() +
+  scale_y_log10()
+```
+
+If we pick the epoch with the lowest ___average___ validation loss, we can see 
+that our validation loss is about... 
+
+```{r, message=FALSE}
+# which epic has lowest avg loss
+best_epoch<- results %>%
+  group_by(epoch) %>%
+  filter(metric == 'loss', data == 'validation') %>%
+  summarise(avg_loss = mean(value), 
+            std_loss = sd(value)) %>%
+  top_n(-1, wt = avg_loss)
+
+best_epoch
+```
+
+If we re-train our model and use the best epoch, we should see similar results 
+within reason when scoring on new data:
+
+```{r train-evaluate}
+network <- keras_model_sequential() %>%
+  layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
+  layer_dense(units = 128, activation = "relu") %>%
+  layer_dense(units = 1) %>%
+  compile(
+    optimizer = optimizer_rmsprop(lr = 0.01),
+    loss = "msle",
+    metrics = c("mae")
+  )
+
+history <- network %>% fit(
+  x_train,                             
+  y_train,                             
+  epochs = best_epoch$epoch,
+  batch_size = 32,
+  validation_split = 0.2,
+  callbacks = callback_reduce_lr_on_plateau(factor = 0.2, patience = 5),
+  verbose = FALSE
+  )
+```
+
+```{r}
+network %>% evaluate(x_test, y_test, verbose = FALSE)
+```

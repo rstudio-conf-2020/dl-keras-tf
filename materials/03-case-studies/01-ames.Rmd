@@ -1,6 +1,6 @@
 ---
 title: "Case Study 1: Ames -- Regression to predict Ames, IA Home Sales Prices"
-output: html_document
+output: html_notebook
 ---
 
 ```{r setup, include=FALSE}
@@ -15,21 +15,21 @@ price, we will use numeric and categorical features of the home.
 
 Throughout this case study you will learn a few new concepts:
 
-* Vectorization and standardization of features
-* How the MSE/MSLE loss function works
-* Best practices for batch size & epochs
+* Vectorization and standardization of tabular features
+* Adjusting batch size & epochs for training performance
 * What callbacks are and how to start applying them
-* Variability in model performance will always exist (__time permitting__)
-* How to apply different validation procedures (__time permitting__)
+   - Early stopping
+   - Controlling the learning rate
+* Knowing when to adjust model capacity
 
 # Package requirements
 
 ```{r load-pkgs, warning=FALSE, message=FALSE}
 library(keras)     # for deep learning
+library(testthat)  # unit testing
 library(tidyverse) # for dplyr, ggplot2, etc.
 library(rsample)   # for data splitting
 library(recipes)   # for feature engineering
-library(testthat)  # unit testing
 ```
 
 
@@ -51,11 +51,11 @@ This data has been partially cleaned up and has no missing data:
 sum(is.na(ames))
 ```
 
-But this tabular data is a combination of numeric and categorical data that we  
+But this tabular data is a combination of numeric and categorical data that we
 need to address.
 
 ```{r ames-structure}
-glimpse(ames)
+str(ames)
 ```
 
 The numeric variables are on different scales. For example:
@@ -74,7 +74,7 @@ There are categorical features that could be ordered:
 ```{r numeric-categories}
 ames %>%
   select(matches("(Qual|Cond|QC|Qu)$")) %>%
-  glimpse()
+  str()
 ```
 
 And some of the categorical features have many levels:
@@ -82,19 +82,22 @@ And some of the categorical features have many levels:
 ```{r}
 ames %>%
   select_if(~ is.factor(.) & length(levels(.)) > 8) %>%
-  glimpse()
+  str()
 ```
 
+Consequently, our first challenge is transforming this dataset into numeric
+tensors that our model can use.
 
 # Create train & test splits
 
-The first thing that you may notice is that we do not have a train and test set 
-similar to how MNIST was already set up for us. So, we need to create our own 
-training and testing samples, which we can do with the __rsample__ package.
+One of the first things we want to do is create a train and test set as you
+probably noticed that we do not have a train and test set similar to how MNIST 
+was already set up for us. We can use the __rsample__ package to create our
+train and test datasets.
 
 ```{r}
 set.seed(123)
-ames_split <- initial_split(ames, prop = 0.8)
+ames_split <- initial_split(ames, prop = 0.7)
 ames_train <- analysis(ames_split)
 ames_test <- assessment(ames_split)
 
@@ -111,7 +114,8 @@ relatively large compared to the randomized initial weights _and_ all our
 features should take values in roughly the same range.
 
 Consequently, we need to ___vectorize___ our data into a format conducive to neural 
-networks. For this data set, we'll transform our data by:
+networks [ℹ️](http://bit.ly/dl-02#3). For this data set, we'll transform our
+data by:
 
 - removing any zero-variance (or near zero-variance) features
 - condensing unique levels of categorical features to "other"
@@ -133,16 +137,18 @@ blueprint <- recipe(Sale_Price ~ ., data = ames_train) %>%
 blueprint
 ```
 
-This step computes any relavent information (mean and std deviation of numeric 
-features, names of one-hot encoded features) on the training data so there is 
-no information leakage from the test data.
+This next step computes any relavent information (mean and std deviation of
+numeric features, names of one-hot encoded features) on the training data so
+there is no information leakage from the test data.
 
 ```{r}
 prepare <- prep(blueprint, training = ames_train)
 prepare
 ```
 
-We can now vectorize our training and test data.
+We can now vectorize our training and test data. If you scroll through the data
+you will notice that all features are now numeric and are either 0/1 (one hot
+encoded features) or have mean 0 and generally range between -3 and 3.
 
 ```{r}
 baked_train <- bake(prepare, new_data = ames_train)
@@ -156,7 +162,7 @@ baked_train
 ```
 
 Lastly, we need to create the final feature and response objects for train and 
-test data. Since __keras__ and __tensorflow__ require our inputs/outputs to be 
+test data. Since __keras__ and __tensorflow__ require our features & labels to be 
 seperate objects we need to separate them. In doing so, our features need to be 
 a 2D tensor which is why we apply `as.matrix` and our response needs to be a 
 vector which is why we apply `pull`.
@@ -182,19 +188,17 @@ dim(x_test)
 
 # Initial model
 
-slides:
-  * How the MSE/MSLE loss function works
-  * Best practices for batch size & epochs
-
 Our initial model looks fairly similar to the MNIST model we applied. However, 
 note the following differences:
 
 * Final output layer has `units = 1` and no activation function since this is a 
   regression problem.
-* We are using a different loss and metric function.
+* We are using a different loss and metric function. The original Kaggle
+  competition had you log the response variable and then use MSE. This is 
+  equivalent to using the MSLE loss function. [ℹ️](http://bit.ly/2R4uh2L)
 * The batch size is much smaller
 
-```{r initial-model, include=FALSE}
+```{r initial-model}
 network <- keras_model_sequential() %>% 
   layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
   layer_dense(units = 128, activation = "relu") %>%
@@ -211,7 +215,7 @@ network %>% compile(
 summary(network)
 ```  
 
-```{r train, include=FALSE}
+```{r train, results='hide'}
 history <- network %>% fit(
   x_train,
   y_train,
@@ -221,12 +225,46 @@ history <- network %>% fit(
 )
 ```
 
-Our results show a quick decrease but it's hard to tell if our validation loss 
-has stopped improving or not. 
+Our results below show two things:
+
+1. Our validation loss score has not reached a minimum.
+2. It appears that we may be underfitting (validation loss is below training loss).
 
 ```{r}
 plot(history) + scale_y_log10()
 ```
+
+# Considerations regarding batch sizes and epochs
+
+First, let's discuss batch sizes and epochs as they can have a significant 
+impact on how quickly we start reaching our minimum loss function.
+
+Differences in performance for differing batch size largely depends on the 
+underlying (and typically unknown) real cost function; however, here are some
+basic guidelines:
+
+- batch sizes commonly take on values of $2^s$ (i.e. 32, 64, 128, 256, 512),
+   - smaller batch sizes...
+      - can have more variability; however, this variabiliy can help us stay out
+        of local minimumns 
+      - can decrease learning time
+   - larger batch sizes...
+      - have less variability but 
+      - can increase learning time
+- optimal batch sizes can be influenced by size of data:
+   - larger _n_ can afford larger batch sizes (128, 256, 512)
+   - smaller _n_ can afford smaller batch sizes (16, 32, 64)
+- Which is best?
+   - I typically start with 32 or 64
+   - Trial and error for your specific problem
+- use enough epochs so that our learning rate reaches a minimum
+
+Here are some good articles discussing the impacts of batch size:
+
+   - [Effect of batch size on training dynamics](http://bit.ly/2rQdO7G)
+   - [On Large-Batch Training for Deep Learning: Generalization Gap and Sharp Minima](https://arxiv.org/abs/1609.04836)
+   - [Deep Learning book, Section 8.1.3](http://www.deeplearningbook.org/contents/optimization.html)
+   - [Impact of Training Set Batch Size on the Performance](http://bit.ly/35VWM7e)
 
 # YOUR TURN! (3 min)
 
@@ -237,8 +275,9 @@ Remember, batch sizes are typically powers of 2 (i.e. 16, 32, 64, 128, 256, 512)
 network <- keras_model_sequential() %>% 
   layer_dense(units = 128, activation = "relu", input_shape = ____) %>% 
   layer_dense(units = 128, activation = "relu") %>%
-  layer_dense(units = ____) %>%
-  compile(
+  layer_dense(units = ____)
+
+network %>% compile(
     optimizer = "rmsprop",
     loss = "msle",
     metrics = c("mae")
@@ -253,24 +292,25 @@ history <- network %>% fit(
 )
 ```
 
+# Early stopping
 
+You likely noticed that a large batch size (i.e. 512) took many more epochs to
+start reaching a minimum versus a smaller batch size (i.e. 16). But regardless
+of batch size, you still had to do a fair amount of trial and error to find the
+right number of epochs to reach a minimum loss score.
 
-# Callbacks
-
-Slides:
-  - what are callbacks
-  - early stopping
-  - reduce lr on plateau
-  
-If we add early stopping, we can now crank up the number of epochs and let the 
+Let's meet our first ___callback___, which can help in this situation [ℹ️](http://bit.ly/dl-02#14). 
+Using early stopping allows us to crank up the number of epochs and let the 
 training automatically stop after we experience no improvement in our loss after
-`patience` number of epochs.
+`patience` number of epochs. 
   
-```{r initial-model-early-stopping, include=FALSE}
+```{r initial-model-early-stopping}
 network <- keras_model_sequential() %>% 
   layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
   layer_dense(units = 128, activation = "relu") %>%
-  layer_dense(units = 1) %>%
+  layer_dense(units = 1) 
+
+network %>%
   compile(
     optimizer = "rmsprop",
     loss = "msle",
@@ -283,15 +323,23 @@ history <- network %>% fit(
   epochs = 250,
   batch_size = 32,
   validation_split = 0.2,
-  callbacks = callback_early_stopping(patience = 10, restore_best_weights = TRUE)
+  callbacks = callback_early_stopping(patience = 5, restore_best_weights = TRUE)
 )
 ```
 
 ```{r early-stopping-model-performance}
 history
 
+cat("\nThe minimum loss score is", min(history$metrics$val_loss) %>% round(4),
+    "which occurred at epoch", which.min(history$metrics$val_loss))
+```
+
+
+```{r early-stopping-plot}
 plot(history) + scale_y_log10()
 ```
+
+# Adjustable learning rate
 
 One thing you may notice is that there is significant learning happening for the
 first 15-20 epochs and then the model slowly chips away at the loss for the next
@@ -301,12 +349,17 @@ first 15-20 epochs and then the model slowly chips away at the loss for the next
    downhill traversal of the gradient descent
 2. add a callback that slowly reduces the learning rate by 20% if we don't
    experience improvement in our loss for `patience` number of epochs.
+   
+Note how we are now using `optimizer = optimizer_rmsprop(lr = 0.01)` instead of
+`optimizer = "rmsprop"` so that we can customize the learning rate.
 
-```{r initial-model-adj-lr, include=FALSE}
+```{r initial-model-adj-lr}
 network <- keras_model_sequential() %>% 
   layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
   layer_dense(units = 128, activation = "relu") %>%
-  layer_dense(units = 1) %>%
+  layer_dense(units = 1) 
+
+network %>%
   compile(
     optimizer = optimizer_rmsprop(lr = 0.01),
     loss = "msle",
@@ -326,16 +379,24 @@ history <- network %>% fit(
 )
 ```
 
-Now we see a much faster process of model training; it only takes ~ 1/10 the 
+Now we see a much faster process of model training; it only takes ~25% the 
 number of epochs and it appears that we actually see an increase in performance!
 
-```{r adj-lr-model-performance}
+```{r adj-learning-rate-performance}
 history
 
-plot(history) + scale_y_log10()
+cat("\nThe minimum loss score is", min(history$metrics$val_loss) %>% round(4),
+    "which occurred at epoch", which.min(history$metrics$val_loss))
 ```
 
-# YOUR TURN! (5 min)
+
+```{r adj-learning-rate-plot, message=FALSE}
+plot(history) + 
+  scale_y_log10() +
+  scale_x_continuous(limits = c(0, length(history$metrics$val_loss)))
+```
+
+# YOUR TURN! (3 min)
 
 Try different variations of learning rate, patience parameters, and learning 
 rate reduction factor.  Here are a couple of things to keep in mind:
@@ -351,7 +412,9 @@ rate reduction factor.  Here are a couple of things to keep in mind:
 network <- keras_model_sequential() %>% 
   layer_dense(units = 128, activation = ____, input_shape = ____) %>% 
   layer_dense(units = 128, activation = ____) %>%
-  layer_dense(units = ____) %>%
+  layer_dense(units = ____) 
+
+network %>%
   compile(
     optimizer = optimizer_rmsprop(lr = ____),
     loss = "msle",
@@ -371,45 +434,31 @@ history <- network %>% fit(
 )
 ```
 
+# Under capacity
 
-# Validation procedures (time permitting)
+Unfortunately, our model is still underfitting when we reach our minimum
+validation loss score. This is a classic sign that we are under-capacity. There
+are two ways to increase model capacity [ℹ️](http://bit.ly/dl-02#17):
 
-- discuss importance of holding out the test
-- show how you can also supply a validation set
-- takeaway
-   - we can supply a validation set two different ways
-   - if data is ordered then should randomize
-   - discuss when cross-validation is required and how to incorporate
+1. Add more units in each hidden layer
+2. Add more hidden layers
 
-So far we have performed model validation by using `validation_split`. Sometimes 
-this may not be appropriate. `validation_split` selects the last XX% samples in 
-the x and y data provided. So, if our data is ordered than this could skew our
-results.  
+In the next module, we'll look at how to dynamically assess these inputs but for
+now, spend the next 3 minutes adjusting the number of units in each hidden layer
+and/or adjusting the number of hidden layers.
 
-An alternative is to create our own validation data and supply it via 
-`validation_data`. First we extract our own train vs. validation data sets:
+## YOUR TURN! (3 min)
 
-```{r create-validation}
-set.seed(123)
-index <- sample(1:nrow(x_train), size = floor(nrow(x_train) * 0.8))
+Try different batch sizes and epochs and see how model performance changes. 
+Remember, batch sizes are typically powers of 2 (i.e. 16, 32, 64, 128, 256, 512).
 
-x_train_sub <- x_train[index,]
-y_train_sub <- y_train[index]
-
-x_val <- x_train[-index,]
-y_val <- y_train[-index]
-
-length(y_train_sub)
-length(y_val)
-```
-
-Now, we can supply our validation data to `validation_data`:
-
-```{r train-with-validation, include=FALSE}
+```{r your-turn-3}
 network <- keras_model_sequential() %>% 
-  layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
-  layer_dense(units = 128, activation = "relu") %>%
-  layer_dense(units = 1) %>%
+  layer_dense(units = ____, activation = "relu", input_shape = ____) %>% 
+  layer_dense(units = ____, activation = "relu") %>%
+  layer_dense(units = ____)
+
+network %>%
   compile(
     optimizer = optimizer_rmsprop(lr = 0.01),
     loss = "msle",
@@ -417,145 +466,38 @@ network <- keras_model_sequential() %>%
   )
 
 history <- network %>% fit(
-  x_train_sub,                           # supply our new training features data
-  y_train_sub,                           # supply our new training labels data
+  x_train,
+  y_train,
   epochs = 50,
   batch_size = 32,
-  validation_data = list(x_val, y_val),  # supply our validation data
+  validation_split = 0.2,
   callbacks = list(
-        callback_early_stopping(patience = 10, restore_best_weights = FALSE),
-        callback_reduce_lr_on_plateau(factor = 0.2, patience = 5)
+        callback_early_stopping(patience = 10, restore_best_weights = TRUE),
+        callback_reduce_lr_on_plateau(factor = 0.2, patience = 4)
     )
 )
 ```
 
-```{r validation-model-performance}
-history
-```
+## What to look for
 
-You probably noticed that the loss score from this last model differs from the 
-loss of the model previous to that one. Although all hyperparameter settings are 
-the same, there will always be some ___variance in our loss score___ based on 
-randomization in the model and the fact that we have different observations in 
-our validation set. 
+Typically, I add units and layers until I see significant overfitting or start
+to see high variability in our loss score or metrics and then constrain the model
+from there. 
 
-As the number of observations in our data increases, variance in our loss score 
-will decrease. However, we do not always have the option to just go out and get 
-more data. So, if we want to gain a more accurate understanding of the loss score 
-and its variance we can perform _k-fold cross validation_. 
+For example, the following model with 3 hidden layers consisting of 1024, 512, 
+and 256 units overfits at the minimum validation loss score (but not much) and
+shows signs of loss and metric variability. From here, I would start to remove
+layers and/or reduce the number of units in each layer until I find a happy
+compromise between model capacity, loss minimization & stability.
 
-First, we need to create k folds:
+```{r overfit-model}
+network <- keras_model_sequential() %>% 
+  layer_dense(units = 1024, activation = "relu", input_shape = ncol(x_train)) %>%
+  layer_dense(units = 512, activation = "relu") %>%
+  layer_dense(units = 256, activation = "relu") %>%
+  layer_dense(units = 1)
 
-```{r create-folds}
-# number of folds
-k <- 10
-
-# randomize data before making folds
-set.seed(123)
-indices <- sample(1:nrow(x_train))
-
-# divide the ordered indices into k intervals, labelled 1:k.
-folds <- cut(indices, breaks = k, labels = FALSE)
-str(folds)
-```
-
-Now we can apply a `for` loop to iterate through the training data and perform 
-k-fold cross validation:
-
-```{r perform-kfold-cv, include=FALSE}
-# create a data frame to store results
-results <- data.frame()
-
-for (i in seq_len(k)) {
-  cat("processing fold #", i, ":")
-  
-  # Prepare the training and validation data for each fold
-  val_indices <- which(folds == i, arr.ind = TRUE) 
-  
-  # validation set: the ith partition
-  x_val <- x_train[val_indices,]
-  y_val <- y_train[val_indices]
-  
-  # Training set: all other partitions
-  x_train_sub <- x_train[-val_indices,]
-  y_train_sub <- y_train[-val_indices]
-  
-  # Create our model blueprint
-  network <- keras_model_sequential() %>% 
-    layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
-    layer_dense(units = 128, activation = "relu") %>%
-    layer_dense(units = 1) %>%
-    compile(
-      optimizer = optimizer_rmsprop(lr = 0.01),
-      loss = "msle",
-      metrics = c("mae")
-    )
-
-  # Train our model with and supply train / validation data
-  history <- network %>% fit(
-    x_train_sub,                          
-    y_train_sub,                           
-    epochs = 50,
-    batch_size = 32,
-    validation_data = list(x_val, y_val),
-    verbose = FALSE,
-    callbacks = callback_reduce_lr_on_plateau(factor = 0.2, patience = 5)
-    )
-   
-  # Extract the performance data            
-  model_performance <- as.data.frame(history) %>% mutate(fold = i)
-  results <- rbind(results, model_performance)
-  
-  # append loop message with min loss for ith fold
-  min_loss <- round(min(history$metrics$val_loss), 4)
-  cat(min_loss, "\n", append = TRUE)
-} 
-```
-
-We can plot the results:
-
-```{r plot-kfold-results, message=FALSE}
-ggplot(results, aes(epoch, value, color = data)) +
-  geom_point(alpha = 0.5) + 
-  geom_smooth() +
-  facet_wrap(~ metric, ncol = 1, scales = "free_y")
-```
-
-But if we zoom in on the validation loss we can see the variance that exists:
-
-```{r plot-kfold-val-results, message=FALSE}
-results %>%
-  filter(data == 'validation', metric == 'loss') %>%
-  ggplot(aes(epoch, value)) +
-  geom_point(alpha = 0.5) +
-  stat_summary(fun.data = "mean_cl_boot", colour = "red") +
-  geom_smooth() +
-  scale_y_log10()
-```
-
-If we pick the epoch with the lowest average validation loss, we can see that 
-our validation loss is about 
-
-```{r, message=FALSE}
-# which epic has lowest avg loss
-best_epoch<- results %>%
-  group_by(epoch) %>%
-  filter(metric == 'loss', data == 'validation') %>%
-  summarise(avg_loss = mean(value), 
-            std_loss = sd(value)) %>%
-  top_n(-1, wt = avg_loss)
-
-best_epoch
-```
-
-If we re-train our model and use the best epoch, we should see similar results 
-within reason when scoring on new data:
-
-```{r train-evaluate, include=FALSE}
-network <- keras_model_sequential() %>%
-  layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
-  layer_dense(units = 128, activation = "relu") %>%
-  layer_dense(units = 1) %>%
+network %>%
   compile(
     optimizer = optimizer_rmsprop(lr = 0.01),
     loss = "msle",
@@ -563,16 +505,65 @@ network <- keras_model_sequential() %>%
   )
 
 history <- network %>% fit(
-  x_train,                             
-  y_train,                             
-  epochs = best_epoch$epoch,
+  x_train,
+  y_train,
+  epochs = 250,
   batch_size = 32,
   validation_split = 0.2,
-  callbacks = callback_reduce_lr_on_plateau(factor = 0.2, patience = 5)
-  )
+  callbacks = list(
+        callback_early_stopping(patience = 10, restore_best_weights = TRUE),
+        callback_reduce_lr_on_plateau(factor = 0.2, patience = 4)
+    )
+)
 ```
 
 ```{r}
-network %>% evaluate(x_test, y_test)
+cat("The minimum loss score is", min(history$metrics$val_loss) %>% round(4),
+    "which occurred at epoch", which.min(history$metrics$val_loss))
 ```
 
+
+```{r, message=FALSE}
+plot(history) + 
+  scale_y_log10() +
+  scale_x_continuous(limits = c(0, length(history$metrics$val_loss)))
+```
+
+
+# Generalizing to small datasets
+
+Note that finding an optimal model that generalizes well based on our validation
+approach will be difficult. This is because our validation data (via
+`validation_split = 0.2`) only consists of 616 samples. Consequently, model
+performance will be highly dependent on these 616 samples.
+
+In general, the fewer observations in our validation set, the greater variance
+in our loss score.  As the number of observations in our validation data 
+increases, variance in our loss score will decrease. However, we do not always 
+have the option to just go out and get more data. So, if we want to gain a more 
+accurate understanding of the loss score and its variance we could perform 
+_k-fold cross validation_. 
+
+See the [validation procedures notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/validation-procedures.nb.html) 
+for an example of performing k-fold cross validation.
+
+# Key takeaways
+
+* Preparing tabular data
+   - We need to vectorize categorical features
+   - We need to standardize and normalize numeric features
+* Batch size & epochs
+   - Smaller batch sizes tend to perform best (speed and loss minimization)
+   - However, this is a hyperparameter you can adjust and evaluate
+   - Make sure you include enough epochs to reach a minimum loss
+* Callbacks
+   - Use early stopping to automate model training and stopping after loss has
+     been minimized
+   - The optimizer learning rate is a hyperparameter you can and should adjust
+   - Use `callback_reduce_lr_on_plateau()` for more control over the learning 
+     rate.
+* Knowing when to adjust model capacity
+   - Your minimum validation loss score should not be less than your training
+     loss
+   - If so, increase model capacity until you've balanced overfitting and
+     minimization of validation loss score and stability

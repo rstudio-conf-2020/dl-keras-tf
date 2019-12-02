@@ -57,10 +57,12 @@ You will require several packages and datasets throughout this workshop. If you 
 
 | Time          | Activity                      | Notebook | Source Code | Slides |
 | :------------ | :---------------------------- | -------- | ----------- | ------ |
-| 09:00 - 09:30 | Introduction                  | NA       | NA          | [HTML](https://rstudio-conf-2020.github.io/dl-keras-tf/01-intro.html#1) |
+| 09:00 - 09:30 | Introduction                  |          |             | [HTML](https://rstudio-conf-2020.github.io/dl-keras-tf/01-intro.html#1) |
 | 09:30 - 10:30 | Hello [Deep Learning] World!  | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-hello-DL-world.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/02-the-dl-engine/01-hello-DL-world.Rmd) | [HTML](http://bit.ly/dl-01) |
 | 10:30 - 11:00 | *Coffee break*                |   |   |   |
-| 11:00 - 12:30 | 2 case studies                |   |   |   |
+| 11:00 - 12:30 | Case studies                  |   |   |   |
+|               | &nbsp;&nbsp;&nbsp;Regression - sales prices | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-ames.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/03-case-studies/01-ames.Rmd) | [HTML](http://bit.ly/dl-02) |
+|               | &nbsp;&nbsp;&nbsp;Binary classification - movie reviews |   |   |   |
 | 12:30 - 13:30 | *Lunch break*                 |   |   |   |
 | 13:30 - 15:00 | Computer vision & CNNs        |   |   |   |
 | 15:00 - 15:30 | *Coffee break*                |   |   |   |
@@ -78,6 +80,12 @@ You will require several packages and datasets throughout this workshop. If you 
 | 13:30 - 15:00 | NLP, RNNs & LSTMs             |   |   |   |
 | 15:00 - 15:30 | *Coffee break*                |   |   |   |
 | 15:30 - 17:00 | Project                       |   |   |   |
+
+### Extras
+
+| Activity                      | Notebook | Source Code |
+| :---------------------------- | -------- | ----------- |
+| k-fold cross validation       | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/validation-procedures.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/99-extras/validation-procedures.Rmd) |
 
 
 ## Instructor
