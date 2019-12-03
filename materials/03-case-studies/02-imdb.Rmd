@@ -65,9 +65,9 @@ the integer "14" represents the $14 - 3 = 11$th most frequent word.
 reviews_train[[1]]
 ```
 
-We can map the integer values back to the original word index. The integer
-number corresponds to the position in the word count list and the name of the
-vector is the actual word. 
+We can map the integer values back to the original word index
+(`dataset_imdb_word_index()`). The integer number corresponds to the position in
+the word count list and the name of the vector is the actual word. 
 
 ```{r map-review-to-words}
 word_index <- dataset_imdb_word_index() %>% 
@@ -161,7 +161,9 @@ str(y_train)
 # Initial model
 
 Since we are performing binary classification, our output activation function 
-will be the _sigmoid activation function_.
+will be the _sigmoid activation function_ [ℹ️](http://bit.ly/dl-01#44). Recall 
+hat the sigmoid activation is used to predict the probability of the output
+being positive. This will constrain our output to be values ranging from 0-100%.
 
 ```{r architecture}
 network <- keras_model_sequential() %>% 
@@ -262,6 +264,8 @@ that your learning rate is too large.
 
 The default learning rate for RMSprop is 0.001 (`?optimizer_rmsprop()`). Reducing
 the learning rate will allow us to traverse the gradient more cautiously.
+Although the learning rate is not traditionally considered a "regularization"
+hyperparameter, it should be the first hyperparameter you start assessing.
 
 Best practice:
 
@@ -510,9 +514,9 @@ distribution of weight values more regular. This is called _weight regularizatio
 and its done by adding to the loss function of the network a cost associated
 with having large weights.
 
-If you a familiar with regularized regression (lasso, ridge, elastic nets 
-[ℹ️](https://bradleyboehmke.github.io/HOML/regularized-regression.html)) then
-weight regularization is essentially the same thing.
+If you a familiar with regularized regression [ℹ️](http://bit.ly/homlr-regularize)
+(lasso, ridge, elastic nets) then weight regularization is essentially the same
+thing. [ℹ️](http://bit.ly/dl-02#23)
 
 Best practice:
 
@@ -575,7 +579,8 @@ _Dropout_ is one of the most effective and commonly used regularization
 techniques for neural networks. Dropout applied to a layer randomly drops out
 (sets to zero) a certain percentage of the output features of that layer. By
 randomly dropping some of a layer's outputs we minimize the chance of fitting
-patterns to noise in the data, a common cause of overfitting.
+patterns to noise in the data, a common cause of overfitting. 
+[ℹ️](http://bit.ly/dl-02#25)
 
 Best practice:
 

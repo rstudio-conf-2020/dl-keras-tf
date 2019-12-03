@@ -1,5 +1,5 @@
 ---
-title: "A Few Case Studies to Get Started"
+title: "A Couple Case Studies to Get Started"
 author: "Brad Boehmke"
 date: "2020-01-27"
 output:
@@ -675,3 +675,11 @@ knitr::include_graphics("images/dropout_illustration.png")
 
 
 ]
+
+---
+# Back home
+
+<br><br><br><br>
+[.center[`r anicon::faa("home", size = 10, animate = FALSE)`]](https://github.com/rstudio-conf-2020/dl-keras-tf)
+
+.center[https://github.com/rstudio-conf-2020/dl-keras-tf]
