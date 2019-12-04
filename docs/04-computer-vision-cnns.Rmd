@@ -165,9 +165,11 @@ Computer vision should be robust to ___image variance___
 
 .pull-right[
 
-```{r, echo=FALSE, out.height="80%", out.width="80%"}
+```{r, echo=FALSE, out.height="75%", out.width="75%"}
 knitr::include_graphics("images/image_variance.png")
 ```
+
+.font50.right[Image: Matt Krause]
 
 ]
 
@@ -275,6 +277,10 @@ knitr::include_graphics("https://upload.wikimedia.org/wikipedia/commons/2/27/Mni
 knitr::include_graphics("images/CNN-structure.jpeg")
 ```
 
+<br>
+.font60.right[Image: [Sumit Saha
+](https://towardsdatascience.com/a-comprehensive-guide-to-convolutional-neural-networks-the-eli5-way-3bd2b1164a53)]
+
 ---
 # What the convolution operation is doing
 
@@ -293,6 +299,10 @@ knitr::include_graphics("images/CNN-structure.jpeg")
 ```{r, echo=FALSE}
 knitr::include_graphics("https://miro.medium.com/max/1026/1*cTEp-IvCCUYPTT0QpE3Gjg@2x.png")
 ```
+
+<br><br><br><br>
+.font60.right[Image: [Sumit Saha
+](https://towardsdatascience.com/a-comprehensive-guide-to-convolutional-neural-networks-the-eli5-way-3bd2b1164a53)]
 
 ]
 
@@ -314,6 +324,10 @@ $$(1 \times 1) + (1 \times 0) + \cdots + (0 \times 0) + (1 \times 1)$$
 ```{r, echo=FALSE}
 knitr::include_graphics("https://miro.medium.com/max/1018/1*ghaknijNGolaA3DpjvDxfQ@2x.png")
 ```
+
+<br><br><br><br>
+.font60.right[Image: [Sumit Saha
+](https://towardsdatascience.com/a-comprehensive-guide-to-convolutional-neural-networks-the-eli5-way-3bd2b1164a53)]
 
 ]
 
@@ -337,6 +351,10 @@ $$(1 \times 1) + (1 \times 0) + \cdots + (0 \times 0) + (1 \times 1)$$
 ```{r, echo=FALSE, out.height="110%", out.width="110%"}
 knitr::include_graphics("https://cdn-media-1.freecodecamp.org/images/Htskzls1pGp98-X2mHmVy9tCj0cYXkiCrQ4t")
 ```
+
+<br><br><br><br>
+.font60.right[Image: [Sumit Saha
+](https://towardsdatascience.com/a-comprehensive-guide-to-convolutional-neural-networks-the-eli5-way-3bd2b1164a53)]
 
 ]
 
@@ -387,6 +405,10 @@ model <- keras_model_sequential() %>%
 knitr::include_graphics("images/multiple-feature-maps.png")
 ```
 
+<br><br><br><br><br>
+.font60.right[Image: [Rick Scavetta
+](http://scavetta.academy/DLwR/Presentation/SCAVETTA%2C%20Rick%20--%20Intro%20to%20Deep%20Learning%20--%20RStudioConf2019.pdf)]
+
 ]
 
 
@@ -408,6 +430,10 @@ knitr::include_graphics("images/multiple-feature-maps.png")
 ```{r, echo=FALSE}
 knitr::include_graphics("images/example-feature-maps.png")
 ```
+
+<br><br><br><br>
+.font60.right[Image: [Rick Scavetta
+](http://scavetta.academy/DLwR/Presentation/SCAVETTA%2C%20Rick%20--%20Intro%20to%20Deep%20Learning%20--%20RStudioConf2019.pdf)]
 
 ]
 
@@ -478,6 +504,10 @@ knitr::include_graphics("https://miro.medium.com/max/790/1*L4T6IXRalWoseBncjRr4w
 knitr::include_graphics("https://miro.medium.com/max/721/1*4wZt9G7W7CchZO-5rVxl5g@2x.gif")
 ```
 
+
+.font60.right[Image: [Sumit Saha
+](https://towardsdatascience.com/a-comprehensive-guide-to-convolutional-neural-networks-the-eli5-way-3bd2b1164a53)]
+
 ]
 
 ---
@@ -498,6 +528,9 @@ knitr::include_graphics("https://miro.medium.com/max/721/1*4wZt9G7W7CchZO-5rVxl5
 knitr::include_graphics("https://miro.medium.com/max/1063/1*W2D564Gkad9lj3_6t9I2PA@2x.gif")
 ```
 
+<br><br><br><br>
+.font60.right[Image: [Sumit Saha
+](https://towardsdatascience.com/a-comprehensive-guide-to-convolutional-neural-networks-the-eli5-way-3bd2b1164a53)]
 ]
 
 ---
@@ -515,6 +548,9 @@ knitr::include_graphics("https://miro.medium.com/max/1063/1*W2D564Gkad9lj3_6t9I2
 knitr::include_graphics("https://miro.medium.com/max/326/1*NsiYxt8tPDQyjyH3C08PVA@2x.png")
 ```
 
+
+.font60.right[Image: [Sumit Saha
+](https://towardsdatascience.com/a-comprehensive-guide-to-convolutional-neural-networks-the-eli5-way-3bd2b1164a53)]
 ]
 
 ---
@@ -535,6 +571,10 @@ knitr::include_graphics("https://miro.medium.com/max/326/1*NsiYxt8tPDQyjyH3C08PV
 ```{r, echo=FALSE}
 knitr::include_graphics("https://miro.medium.com/max/1280/1*ciDgQEjViWLnCbmX-EeSrA.gif")
 ```
+
+<br><br><br><br><br>
+.font60.right[Image: [Sumit Saha
+](https://towardsdatascience.com/a-comprehensive-guide-to-convolutional-neural-networks-the-eli5-way-3bd2b1164a53)]
 
 ]
 
@@ -564,6 +604,9 @@ knitr::include_graphics("https://ujwlkarn.files.wordpress.com/2016/08/screen-sho
 ```
 
 .center[This is why we say the first convolution layer is an _edge_ detector]
+
+<br><br><br>
+.font60.right[Image: [Ujjwal Karn](https://ujjwalkarn.me/)]
 
 ]
 
@@ -596,6 +639,11 @@ model <- keras_model_sequential() %>%
 ```{r, echo=FALSE}
 knitr::include_graphics("https://miro.medium.com/max/596/1*KQIEqhxzICU7thjaQBfPBQ.png")
 ```
+
+<br><br>
+.font60.right[Image: [Sumit Saha
+](https://towardsdatascience.com/a-comprehensive-guide-to-convolutional-neural-networks-the-eli5-way-3bd2b1164a53)]
+]
 
 ]
 
@@ -685,6 +733,8 @@ knitr::include_graphics("https://ujwlkarn.files.wordpress.com/2016/08/screen-sho
 knitr::include_graphics("https://ujwlkarn.files.wordpress.com/2016/08/screen-shot-2016-08-10-at-12-58-30-pm.png?w=242&h=256")
 ```
 
+
+.font60.right[Image: [Ujjwal Karn](https://ujjwalkarn.me/)]
 ]
 
 ---
@@ -693,9 +743,10 @@ knitr::include_graphics("https://ujwlkarn.files.wordpress.com/2016/08/screen-sho
 In reality, early layers will resemble the initial images the most and subsequent layers create abstract images that only make sense mathematically.
 
 ```{r, echo=FALSE, out.height="80%", out.width="80%"}
-knitr::include_graphics("images/2layer-cnn.png")
+knitr::include_graphics("images/2layer-CNN.png")
 ```
 
+.font60.right[Image: [Adam Harley](http://scs.ryerson.ca/~aharley/vis/conv/flat.html)]
 ---
 # Check this out!
 
@@ -757,6 +808,9 @@ Feed into a densely connected MLP for final classification.
 knitr::include_graphics("https://miro.medium.com/max/1025/1*IWUxuBpqn2VuV-7Ubr01ng.png")
 ```
 
+<br><br><br>
+.font60.right[[Jiwon Jeong](https://towardsdatascience.com/the-most-intuitive-and-easiest-guide-for-convolutional-neural-network-3607be47480)]
+
 ]
 
 ---
@@ -801,6 +855,7 @@ class: center
 .bold[Cats vs Dogs Case Study]
 
 [![cats-dogs](images/woof_meow.jpg)]()
+
 
 ---
 class: clear, center, middle
