@@ -51,7 +51,10 @@ You will require several packages and datasets throughout this workshop. If you 
 
 ## Schedule
 
-
+This workshop is notebook-focused. Consequently, most of our time will be spent
+in R notebooks; however, I will also jump to slides to explain certain concepts
+in further detail. Throughout the notebooks, you will see ℹ️ icons that will
+hyperlink to relevant slides (or additional reading).
 
 ### Day 1
 
