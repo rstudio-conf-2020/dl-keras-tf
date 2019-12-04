@@ -645,7 +645,7 @@ more complex models such as CNNs and LSTMs, you often constrained by compute to
 adequately execute a sizable grid search.
 
 To see the performance of a grid search on this data set and the parameters
-discussed here, check out [this notebook]().
+discussed here, check out [this notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/imdb-grid-search.nb.html).
 
 # Key takeaways
 

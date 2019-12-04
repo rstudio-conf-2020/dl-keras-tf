@@ -65,6 +65,8 @@ You will require several packages and datasets throughout this workshop. If you 
 |               | &nbsp;&nbsp;&nbsp;Binary classification - movie reviews | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-imdb.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/03-case-studies/02-imdb.Rmd) | [HTML](http://bit.ly/dl-02#20) |
 | 12:30 - 13:30 | *Lunch break*                 |   |   |   |
 | 13:30 - 15:00 | Computer vision & CNNs        |   |   |   |
+|               | &nbsp;&nbsp;&nbsp;MNIST revisted | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-mnist-revisited.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/04-computer-vision-CNNs/01-mnist-revisited.Rmd) | [HTML](http://bit.ly/dl-03#12) |
+|               | &nbsp;&nbsp;&nbsp;Cats vs dogs |   |  | [HTML](http://bit.ly/dl-03#37) |
 | 15:00 - 15:30 | *Coffee break*                |   |   |   |
 | 15:30 - 17:00 | Project                       |   |   |   |
 
