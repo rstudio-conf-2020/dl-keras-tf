@@ -5,9 +5,7 @@ output: html_notebook
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
-
-# Initialize package
-library(keras)
+ggplot2::theme_set(ggplot2::theme_bw())
 ```
 
 In this example, we are going to apply a CNN to classify dogs vs. cats images. 
@@ -18,6 +16,14 @@ Learning objectives:
 
 - What image generators are, why and how to use them.
 - What image augmentation is, why and how to use them.
+
+# Required packages
+
+```{r, message=FALSE, warning=FALSE}
+library(keras)
+library(glue)
+library(tidyverse)
+```
 
 # Part 1: Data Preparation
 
@@ -51,7 +57,7 @@ set up the directories which look like:
 
 ```{r image-file-paths}
 # define the directories:
-image_dir <- here::here("docs", "data", "dogs-vs-cats")
+image_dir <- here::here("materials", "data", "dogs-vs-cats")
 train_dir <- file.path(image_dir, "train")
 valid_dir <- file.path(image_dir, "validation")
 test_dir <- file.path(image_dir, "test")
@@ -73,15 +79,17 @@ Although there are 25,000 images in this data set, we are going to use a very
 small subset, which includes:
 
 ```{r verify-data}
-cat("Cat images:", "\n")
-cat(" - total training cat images:", length(list.files(train_cats_dir)), "\n")
-cat(" - total validation cat images:", length(list.files(valid_cats_dir)), "\n")
-cat(" - total test cat images:", length(list.files(test_cats_dir)), "\n\n")
-
-cat("Dog images:", "\n")
-cat(" - total training dog images:", length(list.files(train_dogs_dir)), "\n")
-cat(" - total validation dog images:", length(list.files(valid_dogs_dir)), "\n")
-cat(" - total test dog images:", length(list.files(test_dogs_dir)), "\n")
+glue("Cat images:",
+     " - total training cat images: {length(list.files(train_cats_dir))}",
+     " - total training cat images: {length(list.files(train_cats_dir))}",
+     " - total test cat images: {length(list.files(test_cats_dir))}",
+     "\n",
+     "Dog images:",
+     " - total training dog images: {length(list.files(train_dogs_dir))}",
+     " - total validation dog images: {length(list.files(valid_dogs_dir))}",
+     " - total test dog images: {length(list.files(test_dogs_dir))}",
+     .sep = "\n"
+     )
 ```
 
 Let's check out the first 10 cat and dog images:
@@ -135,12 +143,15 @@ Compile the model:
 ```{r cnn-compile}
 model %>% compile(
   loss = "binary_crossentropy",
-  optimizer = optimizer_rmsprop(lr = 1e-4),
+  optimizer = optimizer_rmsprop(lr = 0.0001),
   metrics = "accuracy"
 )
 ```
 
 ## Read images from directories
+
+Next, we need a process that imports our images and transforms them to tensors
+that our model can process. We'll use two functions to perform this process.
 
 `image_data_generator` will:
 
@@ -155,7 +166,7 @@ model %>% compile(
 
 1. Apply `image_data_generator`
 2. To a batch of 20 images at a time
-3. From our training directory (randomly shuffling btwn subdirectories)
+3. From our training directory (randomly shuffling between subdirectories)
 4. Resize these images to be consistent size of 150x150 pixels
 5. Apply binary labels
 
@@ -204,23 +215,39 @@ validation data.  Plus, we need to specify:
   
 **Without a GPU this will take approximately 20 minutes to train**  
 
-```{r cnn-train, include=FALSE}
+```{r cnn-train}
 history <- model %>% fit_generator(
   train_generator,
   steps_per_epoch = 100,
   epochs = 30,
   validation_data = validation_generator,
-  validation_steps = 50
+  validation_steps = 50,
+  callbacks = callback_early_stopping(patience = 5)
 )
 ```
 
-View history
+Our first model's performance is not that bad but definitely has room for
+improvement.
 
-```{r plot-history}
-plot(history)
+```{r initial-model-results}
+best_epoch <- which.min(history$metrics$val_loss)
+best_loss <- history$metrics$val_loss[best_epoch] %>% round(3)
+best_acc <- history$metrics$val_accuracy[best_epoch] %>% round(3)
+
+glue("Our optimal loss is {best_loss} with an accuracy of {best_acc}")
+```
+
+
+```{r plot-history, message=FALSE}
+plot(history) + 
+  scale_x_continuous(limits = c(0, length(history$metrics$val_loss)))
 ```
 
 # Save the model
+
+We can always save our models as h5 files. Let's save this initial model as we
+will use it one of the "extras" notebooks to illustrate how we can visualize
+CNNs.
 
 ```{r save-model}
 model %>% save_model_hdf5("cats_and_dogs_small_1.h5")
@@ -233,7 +260,7 @@ model %>% save_model_hdf5("cats_and_dogs_small_1.h5")
 
 Our model above does ok but definitely has room for improvement. One approach 
 to improve performance is to collect more data. Unfortunately, this is not always 
-an option. An alternative is to use ___data augmentation___.
+an option. An alternative is to use ___image augmentation___. [ℹ️](http://bit.ly/dl-03#38)
 
 ```{r image-augmentation}
 datagen <- image_data_generator(
@@ -288,9 +315,10 @@ dropout regularization method. The following creates a CNN architecture with:
 
 - Four sequential conv and max pooling layers
 - Flatten layer
-- Dropout layer (new)
+- Dropout layer
 - Densly-connected network
-- Single binary output
+
+All of which you are familiary with by now.
 
 ```{r cnn-structure2}
 model <- keras_model_sequential() %>%
@@ -309,7 +337,7 @@ model <- keras_model_sequential() %>%
 
 model %>% compile(
   loss = "binary_crossentropy",
-  optimizer = optimizer_rmsprop(lr = 1e-4),
+  optimizer = optimizer_rmsprop(lr = 0.0001),
   metrics = "accuracy"
 )
 ```
@@ -321,7 +349,7 @@ training images since we are doing image augmentation.
 
 **Without a GPU this will take approximately 60 minutes to train**
 
-```{r augment-and-train, include=FALSE}
+```{r augment-and-train}
 # only augment training data
 train_datagen <- image_data_generator(
   rescale = 1/255,
@@ -361,11 +389,48 @@ history <- model %>%
     steps_per_epoch = 100,
     epochs = 100,
     validation_data = validation_generator,
-    validation_steps = 50
+    validation_steps = 50,
+    callbacks = callback_early_stopping(patience = 10)
   )
+```
+
+As you can see, using image augmentation helps to improve our model's
+performance. In fact, if we had more `patience` with our early stopping we may
+even be able to nudge out a little more loss reduction.
+
+```{r second-model-results}
+best_epoch <- which.min(history$metrics$val_loss)
+best_loss <- history$metrics$val_loss[best_epoch] %>% round(3)
+best_acc <- history$metrics$val_accuracy[best_epoch] %>% round(3)
+
+glue("Our optimal loss is {best_loss} with an accuracy of {best_acc}")
+```
+
+
+```{r second-model-plot, message=FALSE}
+plot(history) + 
+  scale_x_continuous(limits = c(0, length(history$metrics$val_loss)))
 ```
 
 ```{r save-augmented-model}
 model %>% save_model_hdf5("cats_and_dogs_small_2.h5")
 ```
 
+However, we still have room for improvement because we are only using a small
+subset of the available data. We have two options to improve our model:
+
+1. Use more data. We are only using 2,000 of the 25,000 available images.
+   However, this would have a significant impact on compute time.
+2. Use transfer learning. This is much quicker than the first option so in the
+   next module I demonstrate how to use transfer learning for CNNs.
+
+# Takeways
+
+* When using image data we...
+   - use `image_data_generator` to read the images, decode pixel values, convert
+     to a tensor, rescale, and perform image augmentation.
+   - use `flow_images_from_directory` import batches of our images, apply the
+     `image_data_generator`, resize, and infer training labels.
+* Image augmentation such as zooming, flipping, rotating, shearing, etc. helps
+  with image variance, provides free additional data, and generally improves
+  model performance.
