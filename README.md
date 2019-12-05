@@ -70,6 +70,7 @@ hyperlink to relevant slides (or additional reading).
 | 13:30 - 15:00 | Computer vision & CNNs        |   |   |   |
 |               | &nbsp;&nbsp;&nbsp;MNIST revisted | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-mnist-revisited.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/04-computer-vision-CNNs/01-mnist-revisited.Rmd) | [HTML](http://bit.ly/dl-03#12) |
 |               | &nbsp;&nbsp;&nbsp;Cats vs dogs | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-cats-vs-dogs.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/04-computer-vision-CNNs/02-cats-vs-dogs.Rmd) | [HTML](http://bit.ly/dl-03#37) |
+|               | &nbsp;&nbsp;&nbsp;Transfer learning | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/03-transfer-learning.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/04-computer-vision-CNNs/03-transfer-learning.Rmd) | [HTML](http://bit.ly/dl-03#45) |
 | 15:00 - 15:30 | *Coffee break*                |   |   |   |
 | 15:30 - 17:00 | Project                       |   |   |   |
 

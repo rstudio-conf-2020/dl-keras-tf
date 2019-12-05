@@ -5,19 +5,25 @@ output: html_notebook
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
-
-# Initialize package
-library(keras)
+ggplot2::theme_set(ggplot2::theme_bw())
 ```
 
-In this module, we are going to use a pretrained CNN model to perform image 
-classification on our dogs vs. cats images. 
+In this module, we are going to use a ___pretrained___ CNN model to perform
+image classification on our dogs vs. cats images. 
 
 Learning objectives:
 
 - Why using pretrained models can be efficient and effective.
 - How to perform feature extraction with pretrained models.
 - How you can fine tune a pretrained model and run end-to-end.
+
+# Required packages
+
+```{r, message=FALSE, warning=FALSE}
+library(keras)
+library(glue)
+library(ggplot2)
+```
 
 # Part 1: Data Preparation
 
@@ -27,7 +33,7 @@ We are working with the same dogs and cats images as before.
 
 ```{r image-file-paths}
 # define the directories:
-image_dir <- here::here("docs", "data", "dogs-vs-cats")
+image_dir <- here::here("materials", "data", "dogs-vs-cats")
 train_dir <- file.path(image_dir, "train")
 valid_dir <- file.path(image_dir, "validation")
 test_dir <- file.path(image_dir, "test")
@@ -35,10 +41,19 @@ test_dir <- file.path(image_dir, "test")
 
 # Applying a pretrained CNN model
 
-There are ___two main ways___ we can apply a pretrained model to perform a CNN:
+There are _two main_ ways we can apply a pretrained model to perform a CNN
+[ℹ️](http://bit.ly/dl-03#46):
 
 1. Feature extraction
+   - Most efficient
+   - Does not require GPUs
+   - Does not "personalize" feature extraction to the problem at hand
+   - Likely leaves room for improvement
 2. Fine tune a pretrained model and run end-to-end
+   - Computationally demanding
+   - Often requires GPUs
+   - Tweaks pretrained convolution layers to extract problem-specific features
+   - Maximize performance
 
 ##  Option 1: Feature extraction
 
@@ -46,7 +61,16 @@ There are ___two main ways___ we can apply a pretrained model to perform a CNN:
 
 There are several pretrained models available via keras; they all start with 
 `application_`. Here we'll use the VGG16 model; it is intuitive to understand 
-the model structure and it does a good job with this task.
+the model structure, does a good job with this task, and is good for teaching
+purposes.
+
+Best practice for picking pretrained models
+
+- Start with smaller models (i.e. VGG16, VGG19, Resnet34)
+- Check out the data the model was built on and see how it aligns to your data.
+  Most common is [ImageNet](http://image-net.org/about-overview)
+
+Applying pretrained models that are already supplied by keras is simple:
 
 - `weights`: Represents the weights to use. Most pretrained models are built on 
   imagenet and using these weights tends to do well.
@@ -64,7 +88,7 @@ conv_base <- application_vgg16(
 ```
 
 ```{r vgg16-model-structure}
-conv_base
+summary(conv_base)
 ```
 
 ### Extracting features using the pretrained convolutional base
@@ -83,17 +107,17 @@ that will:
    c. add these new features and the labels to our tensor
    d. continue to do this until our number of iterations x batch size equals or 
       exceeds our total number of samples.
-      
-**Without a GPU this will take approximately 5 minutes to execute**        
 
-```{r image-generator-feature-extraction, include=FALSE}
+```{r image-generator-feature-extraction}
 
 datagen <- image_data_generator(rescale = 1/255)
 batch_size <- 20
 
 extract_features <- function(directory, sample_count) {
+  
   features <- array(0, dim = c(sample_count, 4, 4, 512))   # step 1
   labels <- array(0, dim = c(sample_count))                # step 1
+  
   generator <- flow_images_from_directory(                 # step 2
     directory = directory,                                 
     generator = datagen,                                   
@@ -101,9 +125,10 @@ extract_features <- function(directory, sample_count) {
     batch_size = batch_size,
     class_mode = "binary"
   )
+  
   i <- 0
   while (TRUE) {                                           # step 3
-    cat("Processing batch", i + 1, "of", ceiling(sample_count / batch_size), "\n")
+    message("Processing batch ", i + 1, " of ", ceiling(sample_count / batch_size))
     batch <- generator_next(generator)                     # step 3a
     inputs_batch <- batch[[1]]
     labels_batch <- batch[[2]]
@@ -113,13 +138,20 @@ extract_features <- function(directory, sample_count) {
     labels[index_range] <- labels_batch                    # step 3c
     i <- i + 1
     if (i * batch_size >= sample_count) break              # step 3d
-    }
+  }
+  
   list(
     features = features,
     labels = labels
-  ) }
+  ) 
+}
+```
 
-
+ Let's apply this function to our training, validation, and test data
+ 
+ **Without a GPU this will take approximately 5 minutes to execute**
+ 
+```{r execute-feature-extraction}
 train <- extract_features(train_dir, 2000)
 validation <- extract_features(valid_dir, 1000)
 test <- extract_features(test_dir, 1000)
@@ -138,6 +170,7 @@ a densely connected classifier. This results in a 2D tensor of size
 reshape_features <- function(features) {
   array_reshape(features, dim = c(nrow(features), 4 * 4 * 512))
 }
+
 train$features <- reshape_features(train$features)
 validation$features <- reshape_features(validation$features)
 test$features <- reshape_features(test$features)
@@ -147,28 +180,25 @@ dim(train$features)
 
 ### Define densely connected classifier model
 
-Here we only need the densely connected classifier.
+We've extracted and flattened our features from the convolution layers so now
+we only need to build the densely connected classifier portion of our model.
 
 ```{r model-classifier}
-
 model <- keras_model_sequential() %>%
   layer_dense(units = 256, activation = "relu", input_shape = 4 * 4 * 512) %>%
   layer_dropout(rate = 0.5) %>%
   layer_dense(units = 1, activation = "sigmoid")
 
-model
-
+summary(model)
 ```
 
-Compile and train:
+Now we can compile and train our model. This will train quickly, taking
+approximately 1 min when trained on your local CPU. Our validation loss also
+improves over the previous CNN we built.
 
-This will train quickly, taking approximately 1 min when trained on your local 
-CPU. Our validation loss also improves over the previous CNN we built.
-
-```{r train-model, include=FALSE}
-
+```{r train-model}
 model %>% compile(
-  optimizer = optimizer_rmsprop(lr = 2e-5),
+  optimizer = optimizer_rmsprop(lr = 0.0001),
   loss = "binary_crossentropy",
   metrics = c("accuracy")
 )
@@ -177,22 +207,35 @@ history1 <- model %>% fit(
   train$features, train$labels,
   epochs = 30,
   batch_size = 32,
-  validation_data = list(validation$features, validation$labels)
+  validation_data = list(validation$features, validation$labels),
+  callbacks = list(
+    callback_early_stopping(patience = 10),
+    callback_reduce_lr_on_plateau(patience = 2)
+  )
 )
-
-```
-
-# Plot results:
-
-```{r plot-model1-history}
-plot(history1)
 ```
 
 So we acheived a significant decrease in our loss score, increased our accuracy 
 to 90%, and did so in a fraction of the time!
 
+```{r second-model-results}
+best_epoch <- which.min(history1$metrics$val_loss)
+best_loss <- history1$metrics$val_loss[best_epoch] %>% round(3)
+best_acc <- history1$metrics$val_accuracy[best_epoch] %>% round(3)
 
-# ------------------------- ONLY RUN ON GPU!! ----------------------------------
+glue("Our optimal loss is {best_loss} with an accuracy of {best_acc}")
+```
+
+# Plot results:
+
+```{r plot-model1-history, message=FALSE}
+plot(history1) + 
+  scale_x_continuous(limits = c(0, length(history1$metrics$val_loss)))
+```
+
+
+
+# ⚠️⚠️ ONLY RUN ON GPU!! ⚠️⚠️
 
 The above approach performed pretty well. However, we can see that we are still 
 overfitting, which may be reducing model performance. An alternative approach is 
@@ -207,14 +250,12 @@ adjusting the pretrained model because it lets you:
 ##  Option 2a: Run end-to-end with data augmentation
 
 The following approach simply plugs the pretrained convolution base into a 
-sequential model but freezes the convolution base weights.
+sequential model but ___freezes___ the convolution base weights.
 
 ### Combining a densely-connected neural network with the convolutional base
 
 In this case we can literally plug in our `conv_base` within our model 
 architecture. 
-
-**To run the code chunks in this section change `eval=TRUE`**
 
 ```{r CNN-base-and-classifier}
 
@@ -252,9 +293,7 @@ before:
 3. compile our model
 4. train our model
 
-**To run this code chunk change `eval=TRUE`**
-
-```{r train-end-to-end, eval=FALSE}
+```{r train-end-to-end}
 
 train_datagen = image_data_generator(
   rescale = 1/255,
@@ -340,9 +379,7 @@ unfreeze_weights(conv_base, from = "block3_conv1")
 
 ### Jointly  train both these layers and the part you added
 
-**To run this code chunk change `eval=TRUE`**
-
-```{r fine-tune-model, eval=FALSE}
+```{r fine-tune-model}
 model %>% compile(
   loss = "binary_crossentropy",
   optimizer = optimizer_rmsprop(lr = 1e-5),

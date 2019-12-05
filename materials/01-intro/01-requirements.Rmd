@@ -38,7 +38,6 @@ pkgs <- c(
   "tidyverse"
 )
 
-
 missing_pkgs <- pkgs[!(pkgs %in% installed.packages()[, "Package"])]
 
 if (length(missing_pkgs) > 0) {
