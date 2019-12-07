@@ -145,6 +145,82 @@ if (!dir.exists(dogs_cats)) {
 }
 ```
 
+## Natural images
+
+Used for the image classification project for day 1. This dataset was orginally
+created as a benchmark dataset for the work on [_Effects of Degradations on Deep 
+Neural Network Architectures_](https://arxiv.org/abs/1807.10108). The source code
+is publicly available on [GitHub](https://github.com/prasunroy/cnn-on-degraded-images)
+but the data was pulled from [Kaggle](https://www.kaggle.com/prasunroy/natural-images). 
+
+This dataset contains 6,899 images from 8 distinct classes compiled from various
+sources. The classes include airplane, car, cat, dog, flower, fruit, motorbike
+and person.
+
+Similar to the Dogs vs. Cats data, you will need a Kaggle account to download
+and the Kaggle API to download this data.
+
+```{r}
+natural_images <- file.path(data_directory, "natural_images")
+
+if (!dir.exists(natural_images)) {
+  system("kaggle datasets download -d prasunroy/natural-images")
+  fs::file_move("natural-images.zip", data_directory)
+  unzip(file.path(data_directory, "natural-images.zip"), exdir = data_directory)
+  
+  original_dataset_dir <- file.path(data_directory, "natural_images")
+  folders <- list.files(original_dataset_dir)
+  
+  for (new_folder in c("train", "validation", "test", "full")) {
+    dir.create(file.path(original_dataset_dir, new_folder))
+  }
+  
+  for (folder in folders) {
+  
+    # original & new path
+    original_path <- file.path(original_dataset_dir, folder)
+    
+    # get number of images
+    # 60% will go to training, 20% to validation, and the rest to testing
+    n_total_images <- length(list.files(file.path(original_dataset_dir, folder)))
+    n_train_images <- floor(n_total_images * .60)
+    n_valid_images <- floor(n_total_images * .20)
+    
+    # save 60% of images to train
+    first_train_image <- 0
+    last_train_image <- n_train_images - 1
+    train_ext <-  stringr::str_pad(first_train_image:last_train_image, 4, pad = "0")
+    train_images <- paste0(folder, "_", train_ext, ".jpg")
+    train_path <- file.path(original_dataset_dir, "train", folder)
+    dir.create(train_path)
+    invisible(file.copy(from = file.path(original_path, train_images), to = train_path))
+    
+    # save 20% of images to valid
+    first_valid_image <- last_train_image + 1
+    last_valid_image <- first_valid_image + n_valid_images - 1
+    valid_ext <-  stringr::str_pad(first_valid_image:last_valid_image, 4, pad = "0")
+    valid_images <- paste0(folder, "_", valid_ext, ".jpg")
+    valid_path <- file.path(original_dataset_dir, "validation", folder)
+    dir.create(valid_path)
+    invisible(file.copy(from = file.path(original_path, valid_images), to = valid_path))
+    
+    # save 20% of images to test
+    first_test_image <- last_valid_image + 1
+    last_test_image <- n_total_images - 1 
+    test_ext <- stringr::str_pad(first_test_image:last_test_image, 4, pad = "0")
+    test_images <- paste0(folder, "_", test_ext, ".jpg")
+    test_path <- file.path(original_dataset_dir, "test", folder)
+    dir.create(test_path)
+    invisible(file.copy(from = file.path(original_path, test_images), to = test_path))
+    
+    fs::file_move(original_path, file.path(original_dataset_dir, "full"))
+  }
+  
+  # clean up
+  invisible(file.remove(file.path(data_directory, "natural-images.zip")))
+}
+```
+
 
 ## Yelp reviews
 
