@@ -73,7 +73,7 @@ hyperlink to relevant slides (or additional reading).
 |               | &nbsp;&nbsp;&nbsp;Transfer learning | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/03-transfer-learning.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/04-computer-vision-CNNs/03-transfer-learning.Rmd) | [HTML](http://bit.ly/dl-03#45) |
 | 15:00 - 15:30 | *Coffee break*                |   |   |   |
 | 15:30 - 17:00 | Project                       |   |   |   |
-|               | &nbsp;&nbsp;&nbsp;Natural Images  | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01- Project.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/05-project/01- Project.Rmd) | [Solution](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/project1-natural-images.nb.html) |
+|               | &nbsp;&nbsp;&nbsp;Natural Images  | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-Project.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/05-project/01-Project.Rmd) | [Solution](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/project1-natural-images.nb.html) |
 |               | &nbsp;&nbsp;&nbsp;Fire Detector   |   |   |   |
 
 ### Day 2
