@@ -1,0 +1,406 @@
+---
+title: "Project 1: Classifying Natural Images"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This project is designed to test your current knowledge on applying a CNN to the 
+[natural images](https://www.kaggle.com/prasunroy/natural-images) dataset on Kaggle. 
+This dataset contains 6,899 images from 8 distinct classes to include airplane, 
+car, cat, dog, flower, fruit, motorbike and person.
+
+Your goal is to develop a CNN model to accurately classify new images. Using only 
+the knowledge you've gained thus far, and repurposing code from previous modules, 
+you should be able to obtain an accuracy of approximately 90% or higher.
+
+___Good luck!___
+
+## Package Requirements
+
+Depending on your approach you may need to load more libraries.
+
+```{r}
+library(keras)
+library(ggplot2)
+library(glue)
+```
+
+
+# Part 1: Data Preparation
+
+## Image location
+
+We have already downloaded and organized the images into train, validation, and 
+test directories.
+
+```{r image-file-paths}
+# define the directories:
+image_dir <- here::here("materials", "data", "natural_images")
+train_dir <- file.path(image_dir, "train")
+valid_dir <- file.path(image_dir, "validation")
+test_dir <- file.path(image_dir, "test")
+```
+
+As previously mentioned, there are 8 total classes, each with fairly proportional 
+number of train, validation, and test images:
+
+```{r}
+classes <- list.files(train_dir)
+total_train <- 0
+total_valid <- 0
+total_test <- 0
+
+for (class in classes) {
+  # how many images in each class
+  n_train <- length(list.files(file.path(train_dir, class)))
+  n_valid <- length(list.files(file.path(valid_dir, class)))
+  n_test <- length(list.files(file.path(test_dir, class)))
+  
+  cat(toupper(class), ": ", 
+      "train (", n_train, "), ", 
+      "valid (", n_valid, "), ", 
+      "test (", n_test, ")", "\n", sep = "")
+  
+  # tally up totals
+  total_train <- total_train + n_train
+  total_valid <- total_valid + n_valid
+  total_test <- total_test + n_test
+}
+
+cat("\n", "total training images: ", total_train, "\n",
+    "total validation images: ", total_valid, "\n",
+    "total test images: ", total_test, sep = "")
+```
+
+Let's check out the first image from each class:
+
+```{r example-images}
+op <- par(mfrow = c(2, 4), mar = c(0.5, 0.2, 1, 0.2))
+for (class in classes) {
+  image_path <- list.files(file.path(train_dir, class), full.names = TRUE)[[1]]
+  plot(as.raster(jpeg::readJPEG(image_path)))
+  title(main = class)
+}
+       
+par(op)
+```
+
+There are two approaches you could take to model this data:
+
+1. End-to-end trained CNN with your own custom convolutional layer (reference 
+   the 04-computer-vision-CNNs/02-cats-vs-dogs.Rmd file).
+2. Apply a pre-trained model (reference the 04-computer-vision-CNNs/03-transfer-
+   learning.Rmd file). 
+
+# Part 2: End-to-End Trained CNN
+
+To train a CNN from end-to-end ou could use the exact same architecture we
+applied in the [Cats vs. Dogs notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-cats-vs-dogs.nb.html)
+and that would get you about 89-90% accuracy. Here, I use a larger capacity
+model which will take a while to train (~ 2 hours without a GPU). Also, note
+that we need to use a softmax activation function and the categorical
+crossentropy loss function since we are dealing with a multi-class
+classification problem.
+
+```{r cnn-architecture}
+model <- keras_model_sequential() %>%
+  layer_conv_2d(filters = 64, kernel_size = c(3, 3), activation = "relu", 
+                input_shape = c(150, 150, 3)) %>%
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  
+  layer_conv_2d(filters = 128, kernel_size = c(3, 3), activation = "relu") %>% 
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  
+  layer_conv_2d(filters = 256, kernel_size = c(3, 3), activation = "relu") %>% 
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  
+  layer_conv_2d(filters = 512, kernel_size = c(3, 3), activation = "relu") %>% 
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  
+  layer_flatten() %>%
+  layer_dropout(rate = 0.2) %>%
+  layer_dense(units = 512, activation = "relu") %>%
+  layer_dense(units = length(classes), activation = "softmax")
+
+summary(model)
+```
+
+When compiling the model, using the default, or slightly lower, learning rate
+is sufficient. In this example I use the default but in the model training step
+I also apply a callback to reduce the learning rate once our loss has plateaued.
+
+```{r cnn-compile}
+model %>% compile(
+  loss = "categorical_crossentropy",
+  optimizer = "rmsprop",
+  metrics = "accuracy"
+)
+```
+
+Next, I need to use `image_data_generator` and `flow_images_from_directory` to
+import and transform our images into tensors. In this example I:
+
+- apply some image augmentation by rotating, shifting, shearing, zooming and
+  flipping the training images,
+- rescale the images based on pixel values of 0-255,
+- resize the images to 150x150,
+- use a batch size of 32 (always a good starting point!),
+- and apply `class_mode = "categorical"` since we are working with a multi-class
+  problem
+
+```{r image-augmentation}
+# only augment training data
+train_datagen <- image_data_generator(
+  rescale = 1/255,
+  rotation_range = 40,
+  width_shift_range = 0.2,
+  height_shift_range = 0.2,
+  shear_range = 0.2,
+  zoom_range = 0.2,
+  horizontal_flip = TRUE,
+)
+
+# do not augment test and validation data
+test_datagen <- image_data_generator(rescale = 1/255)
+
+# generate batches of data from training directory
+train_generator <- flow_images_from_directory(
+  train_dir,
+  train_datagen,
+  target_size = c(150, 150),
+  batch_size = 32,
+  class_mode = "categorical"
+)
+
+# generate batches of data from validation directory
+validation_generator <- flow_images_from_directory(
+  valid_dir,
+  test_datagen,
+  target_size = c(150, 150),
+  batch_size = 32,
+  class_mode = "categorical"
+)
+```
+
+Now we can train our model. 50 epochs should be plenty. We also need to add the
+`steps_per_epoch` and `validation_steps`, which is just the size of the training
+and validation data divided by the batch size. Lastly, I add a callback to
+reduce the learning rate after 3 epochs of no improvement and another to stop
+training if I don't have improvement in my loss after 7 epochs. 
+
+```{r cnn-train}
+history <- model %>% fit_generator(
+  train_generator,
+  steps_per_epoch = ceiling(total_train / 32),
+  epochs = 50,
+  validation_data = validation_generator,
+  validation_steps = ceiling(total_valid / 32),
+  callbacks = list(
+    callback_reduce_lr_on_plateau(patience = 3),
+    callback_early_stopping(patience = 7)
+  )
+)
+```
+
+Our loss is optimized after 21 epochs and acheives 94% accuracy!
+
+```{r initial-model-results}
+best_epoch <- which.min(history$metrics$val_loss)
+best_loss <- history$metrics$val_loss[best_epoch] %>% round(3)
+best_acc <- history$metrics$val_accuracy[best_epoch] %>% round(3)
+
+glue("Our optimal loss is {best_loss} with an accuracy of {best_acc}")
+```
+
+
+```{r plot-history, message=FALSE}
+plot(history) + 
+  scale_x_continuous(limits = c(0, length(history$metrics$val_loss)))
+```
+
+
+# Part 3: Transfer learning
+
+An alternative approach is to use transfer learning as we did in the [transfer
+learning notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/03-transfer-learning.nb.html).
+In this example, we will perform the _feature extraction_ approach for transfer
+learning and we'll use the VGG16 model.
+
+```{r pretrained-model}
+conv_base <- application_vgg16(
+  weights = "imagenet",
+  include_top = FALSE,
+  input_shape = c(150, 150, 3)
+)
+```
+
+```{r vgg16-model-structure}
+summary(conv_base)
+```
+
+Next, we use the exact same code to extract the features as we did in the
+transfer learning notebook with one exception. Note how I add a `shuffle = TRUE`
+parameter to the `extract_features()` function. I leave this set as `TRUE` for
+the training and validation set but I do not shuffle the test set. This will
+allow me to visualize the misclassified images later on.
+
+```{r image-generator-feature-extraction}
+
+datagen <- image_data_generator(rescale = 1/255)
+batch_size <- 32
+
+extract_features <- function(directory, sample_count, shuffle = TRUE) {
+  features <- array(0, dim = c(sample_count, 4, 4, 512))
+  labels <- array(0, dim = c(sample_count, length(classes)))
+  generator <- flow_images_from_directory(
+    directory = directory,
+    generator = datagen,
+    target_size = c(150, 150),
+    batch_size = batch_size,
+    class_mode = "categorical",
+    shuffle = shuffle
+  )
+  i <- 0
+  while (TRUE) {
+    cat("Processing batch", i + 1, "of", ceiling(sample_count / batch_size), "\n")
+    batch <- generator_next(generator)
+    inputs_batch <- batch[[1]]
+    labels_batch <- batch[[2]]
+    features_batch <- conv_base %>% predict(inputs_batch)
+    index_range <- ((i * batch_size) + 1):((i + 1) * batch_size)
+    features[index_range,,,] <- features_batch
+    labels[index_range, ] <- labels_batch
+    i <- i + 1
+    if (i * batch_size >= sample_count) break
+    }
+  list(
+    features = features,
+    labels = labels
+  ) 
+  }
+
+train <- extract_features(train_dir, 32*129)
+validation <- extract_features(valid_dir, 32*43)
+test <- extract_features(test_dir, 32*43, shuffle = FALSE)
+```
+
+## Reshape features
+
+The extracted features will be a 4D tensor (samples, 4, 4, 512). We can see this
+in the last layer of our conv_base model above (block5_pool (MaxPooling2D)).
+Consequently, we need to reshape (flatten) these into a 2D tensor to feed into a
+densely connected classifier. This results in a 2D tensor of size
+(samples, 4 * 4 * 512 = 8192).
+
+```{r reshape-features}
+reshape_features <- function(features) {
+  array_reshape(features, dim = c(nrow(features), 4 * 4 * 512))
+}
+
+train$features <- reshape_features(train$features)
+validation$features <- reshape_features(validation$features)
+test$features <- reshape_features(test$features)
+```
+
+## Define model
+
+Now we can build our classifier model. Again, we use the same code as we applied
+in the transfer learning notebook; however, since we have a multi-class problem
+we need to change the number of units and the activation function in the last
+layer.
+
+```{r model-classifier}
+model <- keras_model_sequential() %>%
+  layer_dense(units = 256, activation = "relu", input_shape = ncol(train$features)) %>%
+  layer_dropout(rate = 0.5) %>%
+  layer_dense(units = 8, activation = "softmax")
+
+summary(model)
+```
+
+We can now compile and train:
+
+```{r train-model}
+model %>% compile(
+  loss = "categorical_crossentropy",
+  optimizer = optimizer_rmsprop(lr = 0.0001),
+  metrics = "accuracy"
+)
+
+history_pretrained <- model %>% fit(
+  train$features, train$labels,
+  epochs = 50,
+  batch_size = 32,
+  validation_data = list(validation$features, validation$labels),
+  callbacks = list(
+    callback_reduce_lr_on_plateau(patience = 3),
+    callback_early_stopping(patience = 7)
+  )
+)
+```
+
+Our model trains quickly and our optimal loss is 70% lower than the end-to-end
+CNN model and our accuracy increases 4 percentage points to 98.3%!
+
+```{r pretrained-model-results}
+best_epoch <- which.min(history_pretrained$metrics$val_loss)
+best_loss <- history_pretrained$metrics$val_loss[best_epoch] %>% round(3)
+best_acc <- history_pretrained$metrics$val_accuracy[best_epoch] %>% round(3)
+
+glue("Our optimal loss is {best_loss} with an accuracy of {best_acc}")
+```
+
+```{r pretrained-plot, message=FALSE}
+plot(history_pretrained) + 
+  scale_x_continuous(limits = c(0, length(history_pretrained$metrics$val_loss)))
+```
+
+# Evaluate on test set
+
+Let's see how well our pretrained model performs on the test set. The following
+shows nearly 98% accuracy on the test set.
+
+```{r}
+model %>% evaluate(test$features, test$labels, verbose = FALSE)
+```
+
+The following code will identify the misclassified predictions and the images
+related to these misclassifications.
+
+```{r}
+predictions <- model %>% predict_classes(test$features, verbose = FALSE) + 1
+actuals <- max.col(test$labels)
+misclassified <- which(predictions != actuals)
+
+actual_class <- list.files(test_dir)[actuals[misclassified]]
+predicted_class <- list.files(test_dir)[predictions[misclassified]]
+
+misclassified_img <- list.files(test_dir, recursive = TRUE, full.names = TRUE)[misclassified]
+```
+
+Now we can look at the images that were misclassified. Note that most of the
+misclassified images were cats and dogs.
+
+```{r}
+table(actual_class)
+```
+
+
+```{r misclassified-images, fig.height=20, fig.width=6}
+op <- par(
+  mfrow = c(ceiling(length(misclassified) / 3), 3),
+  mar = c(2, 0.2, 2.3, 0.2),
+  pty = "s"
+  )
+
+for (i in seq_along(misclassified_img)) {
+  img <- misclassified_img[i]
+  plot(as.raster(jpeg::readJPEG(img)))
+  title(main = glue("Predicted: {predicted_class[i]}\n Actual: {actual_class[i]}"))
+}
+       
+par(op)
+```
