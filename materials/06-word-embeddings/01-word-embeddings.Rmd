@@ -33,7 +33,7 @@ library(progress)
 source("helper_functions.R")
 ```
 
-# The "real" IMBD dataset
+# The "real" IMDB dataset
 
 So far, we've been using the built-in IMBD dataset. Here, we are going to use 
 the original data files which can be found at http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz. We have already

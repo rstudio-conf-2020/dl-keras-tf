@@ -28,6 +28,7 @@ pkgs <- c(
   "jpeg",
   "keras",
   "plotly",
+  "progress",
   "recipes",
   "ROCR",
   "Rtsne",
@@ -218,6 +219,44 @@ if (!dir.exists(natural_images)) {
   
   # clean up
   invisible(file.remove(file.path(data_directory, "natural-images.zip")))
+  fs::dir_delete(file.path(data_directory, "data"))
+}
+```
+
+## Fire images
+
+TBD
+
+## IMDB
+
+Although there is a built-in IMDB dataset, we will use the original data provided
+at http://ai.stanford.edu/~amaas/data/sentiment to go through the process of
+importing and preparing the dataset for analysis. This dataset has the same
+50K reviews as the built-in dataset and the reviews are separated into training
+(25K) and testing (25K).
+
+```{r}
+imdb_data <- file.path(data_directory, "imdb")
+
+if (!dir.exists(imdb_data)) {
+  url <- "http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
+  download.file(url, destfile = "aclImdb_v1.tar.gz")
+  untar("aclImdb_v1.tar.gz", exdir = data_directory)
+  file.rename(file.path(data_directory, "aclImdb"), imdb_data)
+
+  # get all unnecessary files/directories and remove
+  all_dir <- fs::dir_ls(imdb_data, recurse = TRUE, type = "directory", regexp = "[^(train|test)]$")
+  relevant_dir <- fs::dir_ls(imdb_data, recurse = TRUE, type = "directory", regexp = "(neg|pos)$")
+  irrelevant_dir <- setdiff(all_dir, relevant_dir)
+  
+  all_files <- list.files(imdb_data, full.names = TRUE, recursive = TRUE)
+  relevant_files <- list.files(relevant_dir, full.names = TRUE)
+  irrelevant_files <- c(setdiff(all_files, relevant_files), irrelevant_dir)
+  
+  sapply(irrelevant_files, function(x) invisible(file.remove(x)))
+  
+  # clean up
+  invisible(file.remove("aclImdb_v1.tar.gz"))
 }
 ```
 
@@ -233,9 +272,9 @@ yelp_data <- file.path(data_directory, "yelp_review_polarity_csv")
 
 if (!dir.exists(yelp_data)) {
   url <- "http://s3.amazonaws.com/fast-ai-nlp/yelp_review_polarity_csv.tgz"
-  download.file(url, destfile = "materials/data/tmp.tar.gz")
-  untar("materials/data/tmp.tar.gz", exdir = "materials/data/")
-  invisible(file.remove("materials/data/tmp.tar.gz"))
+  download.file(url, destfile = "tmp.tar.gz")
+  untar("tmp.tar.gz", exdir = data_directory)
+  invisible(file.remove("tmp.tar.gz"))
 }
 ```
 
