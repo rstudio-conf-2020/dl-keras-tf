@@ -141,12 +141,11 @@ ggplot(text_df, aes(text_length)) +
 Word embeddings are designed to encode general semantic relationships which can
 serve two principle purposes. The first is for ___language modeling___ which 
 aims to encode words for the purpose of predicting synonyms, sentence completion, 
-and word relationships.
+and word relationships. [ℹ️](http://bit.ly/dl-06)
 
-See [slides]() for more discussion of this type of modeling. We are not focusing
-on word embeddings for this purpose; however, I have written a couple helper 
-functions to train word embeddings for this purpose. See the code behind these 
-helper functions [here](https://bit.ly/32HCP1G).
+Although we are not focusing on word embeddings for this purpose, I have written
+a couple helper functions to train word embeddings for this purpose. See the
+code behind these helper functions [here](https://bit.ly/32HCP1G).
 
 ```{r}
 # clean up text and compute word embeddings
@@ -169,9 +168,7 @@ get_similar_words("horrible", word_embeddings)
 
 The other principle purpose for word embeddings is to encode text for 
 classification reasons. In this case, we train the word embeddings to take on 
-weights that optimize the classification loss function. 
-
-See [slides]() for more discussion of this type of modeling.
+weights that optimize the classification loss function. [ℹ️](http://bit.ly/dl-06#12)
 
 ## Prepare data
 

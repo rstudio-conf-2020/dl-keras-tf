@@ -310,3 +310,14 @@ Matrix::tril(similarities) %>% round(2)
 ```
 
 ]
+
+---
+# Embeddings for predictive models
+
+.center.font120[Our embeddings are developed to maximize predictive accuracy]
+
+<br>
+
+```{r, echo=FALSE, fig.align='center'}
+knitr::include_graphics("images/embeddings-weights-classification.png")
+```
