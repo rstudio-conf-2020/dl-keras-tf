@@ -260,6 +260,25 @@ if (!dir.exists(imdb_data)) {
 }
 ```
 
+## Pretrained GloVe embeddings
+
+Used for the word embeddings modules. [GloVe](https://nlp.stanford.edu/projects/glove/)
+is a pretrained language model that contains various weight sizes. The following
+downloads the 100 dimension embedding weights based on Wikipedia 2014 and
+Gigaword 5. 
+
+```{r}
+glove_data <- file.path(data_directory, "glove")
+
+if (!dir.exists(glove_data)) {
+  dir.create(glove_data)
+  url <- "http://nlp.stanford.edu/data/glove.6B.zip"
+  download.file(url, destfile = "glove.6B.zip")
+  unzip("glove.6B.zip", files = "glove.6B.100d.txt", exdir = glove_data)
+  invisible(file.remove("glove.6B.zip"))
+}
+```
+
 
 ## Yelp reviews
 

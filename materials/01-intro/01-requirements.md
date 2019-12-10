@@ -55,17 +55,6 @@ updates.
 update.packages(oldPkgs = pkgs, ask = FALSE, repos = "https://cran.rstudio.com/")
 ```
 
-    ## 
-    ##   There is a binary version available but the source version is
-    ##   later:
-    ##            binary source needs_compilation
-    ## data.table 1.12.6 1.12.8              TRUE
-
-    ## installing the source package 'data.table'
-
-    ## Warning in install.packages(update[instlib == l, "Package"], l, repos =
-    ## repos, : installation of package 'data.table' had non-zero exit status
-
 # Datasets
 
 We will use a variety of datasets throughout this workshop; many of
@@ -274,6 +263,26 @@ if (!dir.exists(imdb_data)) {
   
   # clean up
   invisible(file.remove("aclImdb_v1.tar.gz"))
+}
+```
+
+## Pretrained GloVe embeddings
+
+Used for the word embeddings modules.
+[GloVe](https://nlp.stanford.edu/projects/glove/) is a pretrained
+language model that contains various weight sizes. The following
+downloads the 100 dimension embedding weights based on Wikipedia 2014
+and Gigaword 5.
+
+``` r
+glove_data <- file.path(data_directory, "glove")
+
+if (!dir.exists(glove_data)) {
+  dir.create(glove_data)
+  url <- "http://nlp.stanford.edu/data/glove.6B.zip"
+  download.file(url, destfile = "glove.6B.zip")
+  unzip("glove.6B.zip", files = "glove.6B.100d.txt", exdir = glove_data)
+  invisible(file.remove("glove.6B.zip"))
 }
 ```
 

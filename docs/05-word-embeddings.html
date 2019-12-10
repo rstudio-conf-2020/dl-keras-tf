@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>Word Embeddings</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Brad Boehmke" />
+    <meta name="date" content="2020-01-27" />
+    <link rel="stylesheet" href="custom.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Word Embeddings
+### Brad Boehmke
+### 2020-01-27
+
+---
+
+
+
+
+# Language modeling
+
+&lt;br&gt;
+
+The relative likelihood of words and phrases...
+
+&lt;br&gt;&lt;br&gt;
+
+.center[
+.font200.blue[Brad is currently teaching a] &lt;font color="red"&gt;&lt;u&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;/u&gt;&lt;/font&gt;
+]
+
+---
+# Language modeling
+
+.pull-left[
+
+Significant growth in algorithms:
+
+- [word2vec](https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf)
+
+- [GloVe](https://nlp.stanford.edu/pubs/glove.pdf)
+
+- [BERT](https://github.com/google-research/bert)
+
+- [ELMo](https://allennlp.org/elmo)
+
+- [ULMFiT](https://arxiv.org/abs/1801.06146)
+
+- [GPT-2](https://github.com/openai/gpt-2)
+
+]
+
+.pull-right[
+
+Many use-cases:
+
+- Keyboard auto-complete
+
+- Speech recognition
+
+- Chat bot Q&amp;A
+
+- Translation
+
+- Text generation
+
+- POS tagging
+
+]
+
+&lt;br&gt;
+.blue.center.bold[Advancement in this area has been a result of moving towards vector space representations of terms.]
+
+---
+# Vector space representation
+
+.pull-left[
+
+.bold[One-hot encoding] only allows us to account for words as single distinct items without accounting for sequence or relationships to other words
+
+&lt;br&gt;
+
+&lt;img src="images/embeddings-one-hot.png" width="1351" /&gt;
+
+
+]
+
+.pull-right[
+
+.bold[Word embeddings] allow us to capture the relationship terms have without other terms. Creates better feature representation.
+
+&lt;br&gt;
+
+&lt;img src="images/embeddings-vector-representation.png" width="795" /&gt;
+
+&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;
+.font70.right[Images: [Bhaskar Mitra](https://www.slideshare.net/BhaskarMitra3/neural-text-embeddings-for-information-retrieval-wsdm-2017?from_action=save)]
+
+]
+
+---
+# Notions of similarity
+
+.pull-left-40[
+
+Consider the following phrases:
+
+- "seattle map"
+- "seattle weather"
+- "seahawks jerseys"
+- "seahawks highlights"
+- "seattle seahawks wilson"
+- "seattle seahawks sherman"
+- "seattle seahawks browner"
+- "seattle seahawks Ifedi"
+- "denver map"
+- "denver weather"
+- "broncos jerseys"
+- "broncos highlights"
+- "denver broncos lynch"
+- "denver broncos sanchez"
+- "denver broncos miller"
+- "denver broncos marshall"
+
+]
+
+--
+
+.pull-right-60[
+
+&lt;br&gt;&lt;br&gt;&lt;br&gt;
+
+&lt;img src="images/embeddings-notions-of-similarity.png" width="1389" /&gt;
+
+&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;
+.font70.right[Image: [Bhaskar Mitra](https://www.slideshare.net/BhaskarMitra3/neural-text-embeddings-for-information-retrieval-wsdm-2017?from_action=save)]
+
+]
+
+---
+# Notions of similarity
+
+.pull-left-40.code70[
+
+
+```r
+seattle &lt;- c(0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1)
+seahawks &lt;- c(1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
+
+denver &lt;- c(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+broncos &lt;- c(0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0)
+
+# rbind
+m1 &lt;- rbind(seattle, seahawks, denver, broncos)
+
+# similarities
+similarities &lt;- text2vec::sim2(m1)
+Matrix::tril(similarities)
+## 4 x 4 Matrix of class "dtrMatrix"
+##            seattle  seahawks    denver   broncos
+## seattle  1.0000000         .         .         .
+## seahawks 0.5714286 1.0000000         .         .
+## denver   0.2857143 0.0000000 1.0000000         .
+## broncos  0.0000000 0.2857143 0.5714286 1.0000000
+```
+
+.content-box-gray.center[Measured with cosine similarity]
+
+]
+
+.pull-right-60[
+
+&lt;br&gt;&lt;br&gt;&lt;br&gt;
+
+&lt;img src="images/embeddings-notions-of-similarity.png" width="1389" /&gt;
+
+&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;
+.font70.right[Image: [Bhaskar Mitra](https://www.slideshare.net/BhaskarMitra3/neural-text-embeddings-for-information-retrieval-wsdm-2017?from_action=save)]
+
+]
+
+---
+# Embedded vector space
+
+However, as our inputs (i.e. sentences, documents) get larger, this approach becomes unwieldy so we learn a lower dimensional representation of the terms.
+
+&lt;br&gt;
+
+&lt;img src="images/embeddings-weights.png" width="539" style="display: block; margin: auto;" /&gt;
+
+---
+# Example
+
+
+
+Embeddings for "King" based on Wikipedia (2014 file dump) and Gigaword 5 (2 years of newswire data)
+
+
+```r
+king_embeddings
+##   [1] -0.323070 -0.876160  0.219770  0.252680  0.229760  0.738800 -0.379540
+##   [8] -0.353070 -0.843690 -1.111300 -0.302660  0.331780 -0.251130  0.304480
+##  [15] -0.077491 -0.898150  0.092496 -1.140700 -0.583240  0.668690 -0.231220
+##  [22] -0.958550  0.282620 -0.078848  0.753150  0.265840  0.342200 -0.339490
+##  [29]  0.956080  0.065641  0.457470  0.398350  0.579650  0.392670 -0.218510
+##  [36]  0.587950 -0.559990  0.633680 -0.043983 -0.687310 -0.378410  0.380260
+##  [43]  0.616410 -0.882690 -0.123460 -0.379280 -0.383180  0.238680  0.668500
+##  [50] -0.433210 -0.110650  0.081723  1.156900  0.789580 -0.212230 -2.321100
+##  [57] -0.678060  0.445610  0.657070  0.104500  0.462170  0.199120  0.258020
+##  [64]  0.057194  0.534430 -0.431330 -0.343110  0.597890 -0.584170  0.068995
+##  [71]  0.239440 -0.851810  0.303790 -0.341770 -0.257460 -0.031101 -0.162850
+##  [78]  0.451690 -0.916270  0.645210  0.732810 -0.227520  0.302260  0.044801
+##  [85] -0.837410  0.550060 -0.525060 -1.735700  0.475100 -0.704870  0.056939
+##  [92] -0.713200  0.089623  0.413940 -1.336300 -0.619150 -0.330890 -0.528810
+##  [99]  0.164830 -0.988780
+```
+
+---
+# Example
+
+&lt;img src="05-word-embeddings_files/figure-html/unnamed-chunk-9-1.png" style="display: block; margin: auto 0 auto auto;" /&gt;
+
+&lt;img src="05-word-embeddings_files/figure-html/unnamed-chunk-10-1.png" style="display: block; margin: auto 0 auto auto;" /&gt;
+
+&lt;img src="05-word-embeddings_files/figure-html/unnamed-chunk-11-1.png" style="display: block; margin: auto 0 auto auto;" /&gt;
+
+&lt;img src="05-word-embeddings_files/figure-html/unnamed-chunk-12-1.png" style="display: block; margin: auto 0 auto auto;" /&gt;
+
+---
+# Example
+
+.code150.center[
+
+
+```
+## 7 x 7 Matrix of class "dtrMatrix"
+##        man water king woman  boy girl queen
+## man   1.00     .    .     .    .    .     .
+## water 0.36  1.00    .     .    .    .     .
+## king  0.51  0.26 1.00     .    .    .     .
+## woman 0.83  0.35 0.37  1.00    .    .     .
+## boy   0.79  0.29 0.47  0.77 1.00    .     .
+## girl  0.73  0.28 0.36  0.85 0.92 1.00     .
+## queen 0.47  0.28 0.75  0.51 0.47 0.52  1.00
+```
+
+]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="libs/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

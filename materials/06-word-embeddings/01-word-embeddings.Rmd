@@ -36,11 +36,13 @@ source("helper_functions.R")
 # The "real" IMDB dataset
 
 So far, we've been using the built-in IMBD dataset. Here, we are going to use 
-the original data files which can be found at http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz. We have already
-downloaded this data for you.
+the original data files which can be found at
+http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz. You can find the
+download instructions [here](http://bit.ly/dl-rqmts). For those in the workshop
+we have already downloaded this data for you.
 
 ```{r}
-imdb_dir <- here::here("docs", "data", "imdb")
+imdb_dir <- here::here("materials", "data", "imdb")
 fs::dir_tree(imdb_dir, type = "directory")
 ```
 
@@ -96,14 +98,15 @@ for (file in seq_len(obs)) {
 }
 ```
 
-We now have two vectors, one consisting of the labels and the other holding each
-review.
+We now have two vectors, one consisting of the labels and...
 
 ```{r}
 table(labels)
+```
 
-cat("\n")
+the other holding each review.
 
+```{r}
 texts[1]
 ```
 
@@ -207,7 +210,6 @@ glue("We have now tokenized our reviews. ", "We are considering {num_words_used}
 head(total_word_index)
 ```
 
-
 Next, we extract our vectorized review data as a list. This looks familiar from 
 the earlier modules.
 
@@ -270,7 +272,9 @@ features[which_review ,]
 
 
 Our data is now preprocessed! We have `r nrow(features)` observations and 
-`r ncol(features)` features.
+`r ncol(features)` features. Our `features` data is a matrix where each row is
+a single observation and each column represents the words in the review in the
+order that they appear.
 
 ```{r}
 dim(features)
@@ -304,8 +308,8 @@ include two things:
 ```{r}
 model <- keras_model_sequential() %>%
   layer_embedding(
-    input_dim = top_n_words,  # number of words we are considering
-    input_length = max_len,   # length that we have set each review to
+    input_dim = top_n_words,   # number of words we are considering
+    input_length = max_len,    # length that we have set each review to
     output_dim = 32            # length of our word embeddings
     ) %>%  
   layer_flatten() %>% 
@@ -321,7 +325,7 @@ in the other modules.
 model %>% compile(
   optimizer = "rmsprop",
   loss = "binary_crossentropy",
-  metrics = c("acc")
+  metrics = "accuracy"
 )
 
 history <- model %>% fit(
@@ -332,12 +336,30 @@ history <- model %>% fit(
 )
 ```
 
-## YOUR TURN!
+```{r}
+best_epoch <- which.min(history$metrics$val_loss)
+best_loss <- history$metrics$val_loss[best_epoch] %>% round(3)
+best_acc <- history$metrics$val_accuracy[best_epoch] %>% round(3)
 
-You may have noticed that we didn't add any additional hidden layers to the 
-densely connected portion of our model.  Go ahead and add 1 or 2 more hidden 
-layers.  Also experiment with different word embedding dimensions (`output_dim`) 
-and see if you can improve model performance.
+glue("Our optimal loss is {best_loss} with an accuracy of {best_acc}")
+```
+
+
+```{r, message=FALSE}
+plot(history)
+```
+
+## YOUR TURN! (5min)
+
+Spend a few minutes adjusting this model and see how it impact performance. You
+may want to test:
+
+- Does increasing and decreasing the word embedding dimension (`output_dim`)
+  impacts performance?
+- How does the learning rate impact performance?
+- You may have noticed that we didn't add any additional hidden layers to the
+  densely connected portion of our model.  Does adding 1 or 2 more hidden layers
+  improve performance?
 
 ```{r, eval=FALSE}
 yourturn_model <- keras_model_sequential() %>%
@@ -351,9 +373,9 @@ yourturn_model <- keras_model_sequential() %>%
   layer_dense(units = 1, activation = "sigmoid")
 
 yourturn_model %>% compile(
-  optimizer = "rmsprop",
+  optimizer = _____,
   loss = "binary_crossentropy",
-  metrics = c("acc")
+  metrics = "accuracy"
 )
 
 yourturn_results <- yourturn_model %>% fit(
@@ -395,7 +417,7 @@ words <- tokenizer$word_index %>%
 row.names(embedding_wts) <- words$word
 ```
 
-The following is on of the custom functions you imported from the 
+The following is one of the custom functions you imported from the 
 [helper_functions.R](https://bit.ly/32HCP1G) file. You can see the word 
 embeddings that most closely align to a given word are not as intuitive as those
 produced from the natural language model. However, these are the embeddings that
@@ -408,8 +430,7 @@ similar_classification_words("horrible", embedding_wts)
 Here's a handy sequence of code that uses the [t-SNE](https://bit.ly/2rDk6rs) 
 methodology to visualize nearest neighbor word embeddings.
 
- 
-```{r}
+```{r, fig.width=10, fig.height=6}
 # plotting too many words makes the output hard to read
 n_words_to_plot <- 1000
 
