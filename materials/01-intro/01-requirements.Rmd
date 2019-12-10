@@ -279,6 +279,26 @@ if (!dir.exists(glove_data)) {
 }
 ```
 
+## Amazon fine foods reviews
+
+Use for the word embeddings mini-project. This dataset comes from
+https://snap.stanford.edu/data/web-FineFoods.html and consists of reviews of
+fine foods from amazon. The data span a period of more than 10 years, including
+all ~500,000 reviews up to October 2012. Reviews include product and user
+information, ratings, and a plaintext review.
+
+```{r}
+amazon_data <- file.path(data_directory, "amazon-food")
+
+if (!dir.exists(amazon_data)) {
+  dir.create(amazon_data)
+  url <- "https://snap.stanford.edu/data/finefoods.txt.gz"
+  download.file(url, destfile = "finefoods.txt.gz")
+  R.utils::gunzip("finefoods.txt.gz")
+  fs::file_move(file.path("finefoods.txt"), new_path = amazon_data)
+}
+```
+
 
 ## Yelp reviews
 
