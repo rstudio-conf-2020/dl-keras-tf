@@ -80,9 +80,9 @@ hyperlink to relevant slides (or additional reading).
 
 | Time          | Activity                      | Notebook | Source Code | Slides |
 | :------------ | :---------------------------- | -------- | ----------- | ------ |
-| 09:00 - 09:15 | Recap                         |   |   |   |
+| 09:00 - 10:30 | Word embeddings               |   |   |   |
 |               | &nbsp;&nbsp;&nbsp;IMDB revisted | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-word-embeddings.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/06-word-embeddings/01-word-embeddings.Rmd) | [HTML](http://bit.ly/dl-06) |
-| 09:15 - 10:30 | Word embeddings               |   |   |   |
+|               | &nbsp;&nbsp;&nbsp;Pre-trained embeddings | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-pretrained-word-embeddings.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/06-word-embeddings/02-pretrained-word-embeddings.Rmd) | [HTML](http://bit.ly/dl-06) |
 | 10:30 - 11:00 | *Coffee break*                |   |   |   |
 | 11:00 - 12:30 | Collaborative filtering       |   |   |   |
 | 12:30 - 13:30 | *Lunch break*                 |   |   |   |

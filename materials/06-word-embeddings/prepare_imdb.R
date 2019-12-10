@@ -1,7 +1,7 @@
 library(fs)
 library(tidyverse)
 
-imdb_dir <- here::here("docs", "data", "imdb")
+imdb_dir <- here::here("materials", "data", "imdb")
   
 
 # Import reviews and labels -----------------------------------------------
