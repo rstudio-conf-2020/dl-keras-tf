@@ -314,7 +314,7 @@ Matrix::tril(similarities) %>% round(2)
 ---
 # Resources to learn more about word embeddings
 
-<br>
+- [Why do we use word embeddings in NLP?](https://towardsdatascience.com/why-do-we-use-embeddings-in-nlp-2f20e1b632d2)
 
 - [The illustrated word2vec](http://jalammar.github.io/illustrated-word2vec/)
 

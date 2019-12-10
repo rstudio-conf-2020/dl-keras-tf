@@ -9,8 +9,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 In this example, we are going to learn about an alternative method to encode 
 text data known as ___word embeddings___. This is an incomplete tutorial on 
-word embeddings but will at least give you the basic understanding on when and 
-why we use them.
+word embeddings but will at least give you the basic understanding on when, why,
+and how we use them.
 
 Learning objectives:
 
@@ -36,7 +36,7 @@ source("helper_functions.R")
 # The "real" IMDB dataset
 
 So far, we've been using the built-in IMBD dataset. Here, we are going to use 
-the original data files which can be found at
+the original IMDB movie review files which can be found at
 http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz. You can find the
 download instructions [here](http://bit.ly/dl-rqmts). For those in the workshop
 we have already downloaded this data for you.
@@ -74,9 +74,9 @@ count(training_files, label)
 
 We can now iterate over each row and
 
-1. save the label in a label vector,
+1. save the label in a `labels` vector,
 2. import the movie review and
-3. save in a texts vector.
+3. save in a `texts` vector.
 
 ```{r}
 obs <- nrow(training_files)
@@ -98,13 +98,13 @@ for (file in seq_len(obs)) {
 }
 ```
 
-We now have two vectors, one consisting of the labels and...
+We now have two vectors, one consisting of the labels...
 
 ```{r}
 table(labels)
 ```
 
-the other holding each review.
+and the other holding each review.
 
 ```{r}
 texts[1]
@@ -113,7 +113,9 @@ texts[1]
 # Exploratory text analysis
 
 A little exploratory analysis will show us the total number of unique words
-across our corpus and the average length of each review.
+across our corpus and the average length of each review. Its good to know the
+word count distribution of your text as later on we'll make a decision of how
+many words to keep.
 
 ```{r, fig.height=3.5}
 text_df <- texts %>%
@@ -172,15 +174,10 @@ weights that optimize the classification loss function. [ℹ️](http://bit.ly/d
 
 ## Prepare data
 
-To prepare our data we need to convert or `labels` vector to a tensor:
+Our response variable `labels` is already a tensor; however, we still need to
+preprocess our text features. To do so we:
 
-```{r}
-labels <- as.array(labels)
-```
-
-But more importantly, we need to preprocess our text features. To do so we:
-
-1. Specify how many words we want to include. This will capture the 10,000 words
+1. Specify how many words we want to include. This example uses the 10,000 words
    with the highest usage (frequency).
 2. Create a `text_tokenizer` object which defines how we want to preprocess the
    text (i.e. convert to lowercase, remove punctuation, token splitting 
@@ -197,14 +194,11 @@ tokenizer <- text_tokenizer(num_words = top_n_words) %>%
 names(tokenizer)
 ```
 
+We have now tokenized our reviews. We are considering 10,000 of 88,582 total
+unique words. The most common words include:
+     
 ```{r}
-total_word_index <- tokenizer$word_index
-num_words_used <- tokenizer$num_words
-
-glue("We have now tokenized our reviews. ", "We are considering {num_words_used} ",
-     "of {length(total_word_index)} total unique words. The most common words ",
-     "include:")
-head(total_word_index)
+head(tokenizer$word_index)
 ```
 
 Next, we extract our vectorized review data as a list. This looks familiar from 
@@ -229,9 +223,12 @@ paste(unlist(tokenizer$index_word)[sequences[[1]]] , collapse = " ")
 ```
 
 Next, since each review is a different length, we need to limit ourselves to a
-certain number of words so that all our features (reviews) are the same length. 
+certain number of words so that all our features (reviews) are the same length.
+This should be viewed as a tuning parameter. I typically start with values
+around the 25%, 50% (median), and 75% percentile of the word distribution.
 
 Note (`?pad_sequences`):
+
 * Any reviews that are shorter than this length will be padded.
 * Any reviews that are longer than this length will be truncated.
 
@@ -239,6 +236,10 @@ Note (`?pad_sequences`):
 max_len <- 150
 features <- pad_sequences(sequences, maxlen = max_len)
 ```
+
+Since this review includes less than 150 words from our word index of 10K most
+frequent words, it pads the front-end with zeros (see `?pad_sequences()` for
+alternative padding options).
 
 ```{r}
 features[1,]
@@ -301,6 +302,8 @@ include two things:
 1. `layer_embedding` layer that creates the embeddings,
 2. `layer_flatten` to flatten our embeddings to a 2D tensor for our densely 
     connected portion of our model
+    
+___The `output_dim` is our primary hyperparameter unique to word embeddings.___
 
 ```{r}
 model <- keras_model_sequential() %>%
@@ -315,7 +318,7 @@ model <- keras_model_sequential() %>%
 summary(model)
 ```
 
-The rest of our modeling procedures follows the same protocols that you've seen 
+The rest of our modeling procedure follows the same protocols that you've seen 
 in the other modules.
 
 ```{r}
@@ -348,7 +351,7 @@ plot(history)
 
 ## YOUR TURN! (5min)
 
-Spend a few minutes adjusting this model and see how it impact performance. You
+Spend a few minutes adjusting this model and see how it impacts performance. You
 may want to test:
 
 - Does increasing and decreasing the word embedding dimension (`output_dim`)
@@ -397,8 +400,8 @@ However, embeddings we find for classification tasks are not always so clean and
 intuitive. We can get the word embeddings from our classification model with:
 
 ```{r}
-wts <- get_weights(model)
-embedding_wts <- wts[[1]]
+wts <- get_weights(model)  # returns a list with each layers weights
+embedding_wts <- wts[[1]]  # get the first layer's weights
 ```
 
 The following just does some bookkeeping to extract the applicable words and 
@@ -446,4 +449,27 @@ p <- tsne$Y %>%
 plotly::ggplotly(p)
 ```
  
+## Key takeaways
  
+* Word embeddings
+   - Commonly used for language modeling and prediction tasks.
+   - Provide a dense, relationship rich vector representation of words.
+   - We can measure similarity with cosine similarity (other distance functions
+      are also used).
+   - See http://bit.ly/dl-06#12 for list of resources to go deeping into word
+     embeddings.
+* Data prep
+   - Use `text_tokenizer()` to define the text preprocessing we desire (defaults
+     are good).
+   - Use `fit_text_tokenizer()` to preprocess text (i.e. remove punctuation,
+     standardize to lowercase).
+   - Use `texts_to_sequences()` to convert standardized text to numeric
+     representation of word index.
+   - Use `pad_sequences()` to make all text sequences the same length. This
+     length can be adjusted to improve performance.
+* Model training
+   - Fit word embeddings with `layer_embedding()`.
+   - Tune `output_dim`ension of the embeddings.
+   - Apply `layer_flatten()` to convert embeddings to a 2D tensor and use
+     `layer_dense()` for classification (there are alternatives which we will
+     cover later).
