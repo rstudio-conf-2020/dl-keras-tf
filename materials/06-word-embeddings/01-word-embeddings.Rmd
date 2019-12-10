@@ -168,7 +168,7 @@ get_similar_words("horrible", word_embeddings)
 
 The other principle purpose for word embeddings is to encode text for 
 classification reasons. In this case, we train the word embeddings to take on 
-weights that optimize the classification loss function. [ℹ️](http://bit.ly/dl-06#12)
+weights that optimize the classification loss function. [ℹ️](http://bit.ly/dl-06#13)
 
 ## Prepare data
 
