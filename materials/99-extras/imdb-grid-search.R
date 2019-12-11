@@ -33,7 +33,7 @@ x_test <- vectorize_sequences(reviews_test)
 # set flags for hyperparameters of interest (we include default values)
 FLAGS <- flags(
   flag_integer("batch_size", 512),
-  flag_integer("layers", 1),
+  flag_integer("layers", 2),
   flag_integer("units", 16),
   flag_numeric("learning_rate", 0.01),
   flag_numeric("dropout", 0.5),
@@ -44,12 +44,17 @@ FLAGS <- flags(
 
 # Create a model with a single hidden input layer
 network <- keras_model_sequential() %>%
-  layer_dense(units = FLAGS$units, activation = "relu", input_shape = n_features)
+  layer_dense(units = FLAGS$units, activation = "relu", input_shape = n_features,
+              kernel_regularizer = regularizer_l2(l = FLAGS$weight_decay)) %>%
+  layer_dropout(rate = FLAGS$dropout)
 
 # regularizing parameter --> Add additional hidden layers based on input
 if (FLAGS$layers > 1) {
-  for (i in seq_along(FLAGS$layers - 1)) {
-    network %>% layer_dense(units = FLAGS$units, activation = "relu")
+  for (i in seq_len(FLAGS$layers - 1)) {
+    network %>% 
+      layer_dense(units = FLAGS$units, activation = "relu",
+                  kernel_regularizer = regularizer_l2(l = FLAGS$weight_decay)) %>%
+      layer_dropout(rate = FLAGS$dropout)
   }
 }
 

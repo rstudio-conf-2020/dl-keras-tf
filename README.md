@@ -83,6 +83,7 @@ hyperlink to relevant slides (or additional reading).
 | 09:00 - 10:30 | Word embeddings               |   |   |   |
 |               | &nbsp;&nbsp;&nbsp;IMDB revisted | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-word-embeddings.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/06-word-embeddings/01-word-embeddings.Rmd) | [HTML](http://bit.ly/dl-06) |
 |               | &nbsp;&nbsp;&nbsp;Pre-trained embeddings | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-pretrained-word-embeddings.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/06-word-embeddings/02-pretrained-word-embeddings.Rmd) | [HTML](http://bit.ly/dl-06) |
+|               | &nbsp;&nbsp;&nbsp;Mini project - Amazon reviews | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/03-your-turn-amazon-word-embeddings.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/06-word-embeddings/03-your-turn-amazon-word-embeddings.Rmd) | [Solution](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/project-embeddings-amazon-reviews.nb.html) |
 | 10:30 - 11:00 | *Coffee break*                |   |   |   |
 | 11:00 - 12:30 | Collaborative filtering       |   |   |   |
 | 12:30 - 13:30 | *Lunch break*                 |   |   |   |
@@ -95,7 +96,7 @@ hyperlink to relevant slides (or additional reading).
 | Activity                      | Notebook | Source Code |
 | :---------------------------- | -------- | ----------- |
 | k-fold cross validation       | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/validation-procedures.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/99-extras/validation-procedures.Rmd) |
-| Performing a grid search      | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/imdb-grid-search.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/99-extras/imdb-grid-search.Rmd) |
+| Performing a grid search | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/imdb-grid-search.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/99-extras/imdb-grid-search.Rmd) |
 
 
 ## Instructor

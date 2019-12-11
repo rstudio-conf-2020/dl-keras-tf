@@ -223,8 +223,8 @@ to use when preprocessing our text:
 These are two hyperparameters you can come back to and change as hyperparameters.
 
 ```{r}
-top_n_words <- ______
-max_len <- ______
+top_n_words <- 20000
+max_len <- 200
 ```
 
 ## Preprocessing Feature text
@@ -309,32 +309,31 @@ cat("Simply predicting the average helpfulness score of", round(avg, 2),
     "for every review would give us a loss score of", round(baseline_mse, 3))
 ```
 
-Ok, time to build your model architecture and compile it. Fill in the modeling
-blanks and consider the following:
-
-1. Your word embedding `input_dim` was already established with `top_n_words`
-   - Ref: line 226
-   - feel free to change this values and see how they impact performance
-2. Your word embedding `input_length` was already established with `max_len` on
-   - Ref: line 227
-   - feel free to change this values and see how they impact performance
-3. Try out different `output_dim` values for the word embeddings
-   - typical values: powers of 2 --> 16, 32, 64, 128, 256
-4. Feel free to add additional hidden layers and dropout layers to the densely
-   connected classifier.
+Ok, time to build your model architecture and compile it. Since this is a
+regression problem but we want to keep our predicted values bounded between 0
+and 1, I create a custom "clipped" MSE metric. This is not something I expected
+you to do but wanted to illustrate here.
 
 ```{r}
 model <- keras_model_sequential() %>%
-  layer_embedding(input_dim = _____, 
-                  output_dim = _____,
-                  input_length = _____) %>% 
+  layer_embedding(input_dim = top_n_words, 
+                  output_dim = 32,
+                  input_length = max_len) %>% 
   layer_flatten() %>%
+  layer_dense(units = 32, activation = "relu") %>%
+  layer_dropout(0.5) %>%
   layer_dense(units = 1)
 
+# create metric using backend tensor functions
+metric_clipped_mse <- custom_metric("metric_capped_mse", function(y_true, y_pred) {
+  y_pred <- k_clip(y_pred, 0, 1)
+  k_mean(k_square(y_pred - y_true))
+})
+
 model %>% compile(
-  optimizer = _____,
-  loss = "mse",
-  metrics = _____
+  optimizer = optimizer_rmsprop(lr = 0.0001),
+  loss = metric_clipped_mse,
+  metrics = c("mse", "mae")
 )
 
 summary(model)
@@ -345,17 +344,18 @@ Let's train our model:
 ```{r}
 history <- model %>% fit(
   x_train, y_train,
-  epochs = _____,
-  batch_size = _____,
+  epochs = 50,
+  batch_size = 128,
   validation_data = list(x_valid, y_valid),
   callbacks = list(
-    callback_reduce_lr_on_plateau(patience = _____),
-    callback_early_stopping(patience = _____, restore_best_weights = TRUE)
+    callback_reduce_lr_on_plateau(patience = 3),
+    callback_early_stopping(patience = 10, restore_best_weights = TRUE)
     )
 )
 ```
 
-Let's compare the optimal loss score versus the baseline loss score. 
+In this example we see that our model's optimal validation loss was 0.057, which
+is 33% lower than the baseline loss. 
 
 ```{r}
 opt_mse <- min(history$metrics$val_loss)
@@ -363,3 +363,32 @@ glue("Baseline loss score: {round(baseline_mse, 3)}")
 glue("Model loss score: {round(opt_mse, 3)}")
 ```
 
+The following plots the actual "helpfulness" value for each observation (dots)
+compared to our model's predicted value (red line) and the average predicted
+value (blue). We see that our model is picking up some signal and is a better
+representation than the average value.
+
+```{r}
+tibble(
+  actual = y_valid,
+  pred = model %>% predict(x_valid) %>% as.vector()
+  ) %>%
+  mutate(pred = case_when(
+    pred < 0 ~ 0,
+    pred > 1 ~ 1,
+    TRUE ~ pred
+  )) %>%
+  arrange(pred) %>%
+  mutate(id = row_number()) %>%
+  ggplot(aes(x = id)) +
+  geom_point(aes(y = actual), size = 1, alpha = 0.2) +
+  geom_line(aes(y = pred), color = "red", size = 1) +
+  geom_hline(yintercept = avg, lty = "dashed", color = "blue")
+```
+
+# How did I choose my parameters
+
+You may be wondering how I chose my hyperparameters (i.e. embedding layer output
+dimension, number of hidden layers and units, learning rate)? Well, unlike you
+I had the luxery of time to run a grid search. You can check it out
+[here](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/amazon-embeddings-grid-search.nb.html).

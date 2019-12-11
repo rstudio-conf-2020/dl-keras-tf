@@ -8,7 +8,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ggplot2::theme_set(ggplot2::theme_minimal())
 
 # clean up in case you run this multiple times
-clean_runs(confirm = FALSE)
+tfruns::clean_runs(confirm = FALSE)
 ```
 
 Hyperparameter tuning for DNNs tends to be a bit more involved than other ML
@@ -75,14 +75,14 @@ during the grid search.
 To list the results you can run `ls_runs()`:
 
 ```{r}
-data.frame(ls_runs())
+data.frame(ls_runs(runs_dir = "imdb_runs"))
 ```
 
 You can even filter and order the results. The following illustrates that a few
-models tied with the lowest loss score of 0.263.
+models tied with the lowest loss score of 0.262.
 
 ```{r}
-ls_runs(order = eval_best_loss, decreasing = FALSE)
+ls_runs(runs_dir = "imdb_runs", order = eval_best_loss, decreasing = FALSE)
 ```
 
 To see details about any one of these models you can run `view_run()`. In this
@@ -91,7 +91,11 @@ a pop up window will appear with that models summary information as illustrated
 below.
 
 ```{r, eval=FALSE}
-best_run <- ls_runs(order = eval_best_loss, decreasing = FALSE) %>%
+best_run <- ls_runs(
+  runs_dir = "imdb_runs",
+  order = eval_best_loss,
+  decreasing = FALSE
+  ) %>%
   slice(1) %>%
   pull(run_dir)
 
