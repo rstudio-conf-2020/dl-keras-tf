@@ -95,6 +95,7 @@ hyperlink to relevant slides (or additional reading).
 | :---------------------------- | -------- | ----------- |
 | k-fold cross validation       | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/validation-procedures.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/99-extras/validation-procedures.Rmd) |
 | Performing a grid search | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/imdb-grid-search.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/99-extras/imdb-grid-search.Rmd) |
+| Linear regression with stochastic gradient descent | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/manual-gradient-descent.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/99-extras/manual-gradient-descent.Rmd) |
 
 
 ## Instructor

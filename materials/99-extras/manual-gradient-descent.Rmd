@@ -1,0 +1,360 @@
+---
+title: "Linear regression with stochastic gradient descent"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+ggplot2::theme_set(ggplot2::theme_minimal())
+```
+
+This notebook illustrates how one can learn parameters using stochastic
+gradient descent. This will demonstrate the basic idea of how iterating over
+forward and backward passes improves our loss function.
+
+A couple things to note. First, this is note building a neural net from scratch;
+rather, it is using stochasti gradient descent to build a simple linear
+regression model which would be analogous to building a single perceptron.
+Second, this notebook does not focus on efficient implementation of this
+algorithm; rather, the code is designed to make the concept intuitive to the
+reader.
+
+# Requirements
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(glue)
+```
+
+# Creating our data
+
+For simplicity we are going to use a very simple data set that is generated
+based on a simple linear model without any error. Our data includes:
+
+- 30 observations (n),
+- with an intercept of 2 (b),
+- and slope of 30 (a)
+
+```{r}
+n <- 30
+b <- 30
+a <- 2
+
+set.seed(123)
+(df <- tibble(
+  x = runif(30, 0, 100), 
+  y = b + a*x
+  ))
+```
+
+The following plot shows how an ordinary least squares model aligns to the
+underlying data.
+
+```{r}
+ggplot(df, aes(x, y)) +
+  geom_smooth(method = "lm", se = FALSE, lty = "dashed", size = 0.75) +
+  geom_point(size = 2) +
+  ggtitle("Ordinary least squares model")
+```
+
+
+# Learning parameters with gradient descent
+
+Our quest is to learn this linear relationship using gradient descent. Recall
+that learning based on gradient descent includes the following steps
+[ℹ️](http://bit.ly/dl-01#49):
+
+1. Perform a forward pass to compute predicted values,
+2. Compute the loss of our predictions,
+3. Compute the gradient,
+4. Update our weights,
+5. Repeat until loss is sufficiently minimized.
+
+## Forward pass
+
+First, we start with some randomized values for our bias (intercept) and slope
+(weight). 
+
+```{r}
+(bias <- runif(1))
+(weight <- runif(1))
+```
+
+This notebook demonstrates stochastic gradient descent which means we are using
+a batch size of 1. Later notebooks will demo batch sizes > 1. For each step that
+we take we'll build a helper function. This first function simply grabs the
+batch (aka row) of interest.
+
+```{r}
+get_batch <- function(.data, batch_id) {
+  .data %>% 
+    slice(batch_id)
+}
+
+df %>% get_batch(batch_id = 1)
+```
+
+The next step is to make a prediction with our randomized weights:
+
+```{r}
+make_prediction <- function(.data, bias, weight) {
+  .data %>% mutate(pred = bias + weight * x)
+}
+
+df %>%
+  get_batch(batch_id = 1) %>%
+  make_prediction(bias, weight)
+```
+
+Now we can compute the error of this prediction which is just the squared error:
+
+```{r}
+compute_sq_error <- function(.data, actual, predicted) {
+  .data %>% mutate(error = ({{actual}} - {{predicted}})^2)
+}
+
+df %>%
+  get_batch(batch_id = 1) %>%
+  make_prediction(bias, weight) %>%
+  compute_sq_error(y, pred)
+```
+
+## Backward pass
+
+Now that we have our error, we can use this information to update our weights.
+To do so, we need to compute the derivative which we can use to update the
+weights.
+
+### Compute the derivative
+
+There are two ways to compute the derivative. The first is more intuitive and is
+known as finite differencing. This provides an _estimate_ of the derivative by
+simply:
+
+1. adding a small amount to the weight and bias, 
+2. making a new prediction with these adjusted amounts,
+3. computing the new error,
+4. and using this information to compute the derivative
+
+The following makes two new predictions; one where we add a small amount to our
+weight and another where we add a small amount to our bias. We then compute the
+error of these predictions.
+
+We can see that by increasing the weight and the bias our error gets smaller.
+
+Now we can compute the derivative. Recall that the derivative is just how much
+y changes divided by how x changes. Here, we make a small adjustment of 0.01 to
+our bias and weight and in both cases, this adjustment causes a small decrease
+to our error.
+
+```{r}
+compute_est_derivatives<- function(.data, bias, weight, adj_amt) {
+  .data %>% 
+    # first compute difference in errors with adjusted bias and weight values
+    mutate(
+      pred_w_adj_bias = (bias + adj_amt) + weight * x,
+      pred_w_adj_weight = bias + (weight + adj_amt) * x,
+      error_adj_bias = (y - pred_w_adj_bias)^2,
+      error_adj_weight = (y - pred_w_adj_weight)^2
+      ) %>%
+    # now compute estimated derivative based on adjust predictions
+    mutate(
+      est_deriv_bias = (error_adj_bias - error) / adj_amt,
+      est_deriv_wt = (error_adj_weight - error) / adj_amt,
+    ) %>%
+    select(-contains("pred_w_adj"))
+}
+  
+df %>%
+  get_batch(batch_id = 1) %>%
+  make_prediction(bias, weight) %>%
+  compute_sq_error(y, pred) %>%
+  compute_est_derivatives(bias, weight, adj_amt = 0.01)
+```
+
+The other approach to computing derivatives is to actually compute the
+derivatives and integrals. With this example, we can do this easily because our
+underlying function is not complicated.
+
+Considering our underlying function is $y = bias + 2x$ then the:
+
+* first derivitive = $\frac{\delta \text{ error}}{\delta \text{ weight}} = 2 * (\hat{y} - y)$
+* second derivitive = $\frac{de}{da} = x * \frac{\delta \text{ error}}{\delta \text{ weight}}$
+
+There are some R packages that provide auto-differentiation; however, you will
+never need to manually compute derivatives so we'll just go off our a priori
+knowledge of the underlying function. Yes this is cheating a bit but right now
+we're just trying to gain intuition for the gradient descent process.
+
+We can see that the estimated derivatives (`est_deriv_bias` & `est_deriv_wt`)
+are good approximates for the actual derived derivatives (`deriv_bias` &
+`deriv_wt`).
+
+```{r}
+compute_derivatives <- function(.data, predicted, actual, x_values) {
+  .data %>% 
+    mutate(
+      deriv_bias = 2 * ({{predicted}} - {{actual}}),
+      deriv_wt = deriv_bias * {{x_values}}
+    )
+}
+
+df %>%
+  get_batch(batch_id = 1) %>%
+  make_prediction(bias, weight) %>%
+  compute_sq_error(y, pred) %>%
+  compute_est_derivatives(bias, weight, adj_amt = .01) %>%
+  compute_derivatives(pred, y, x)
+```
+
+### Updating our weights
+
+To update our model we first need to decide how large of a step we want to take
+down the gradient descent.This is called the learning rate. New values for our
+bias and weights are simply the original values minus the derivative times the
+learning rate. 
+
+Here, we use a learning rate of `0.0001`. You can see that both the updated bias
+and weight (`new_bias = 0.975` & `new_wt = 1.25`) have increased in a positive
+direction compared to the original values (original bias = 0.96 & original
+weight = 0.90).
+
+```{r}
+update_value <- function(current_value, derivative, learning_rate) {
+  current_value - (derivative * learning_rate)
+}
+
+df %>%
+  get_batch(batch_id = 1) %>%
+  make_prediction(bias, weight) %>%
+  compute_sq_error(y, pred) %>%
+  compute_est_derivatives(bias, weight, adj_amt = .01) %>%
+  compute_derivatives(pred, y, x) %>%
+  mutate(new_bias = update_value(bias, deriv_bias, 0.0001),
+         new_wt = update_value(weight, deriv_wt, 0.0001))
+```
+
+## Cycling through an epoch
+
+Recall that after we update our weights, we execute a new batch following the
+same procedure. We do this for every batch until we have worked through the
+entire data set and that is considered one epoch. Let's do this procedure for
+our data. 
+
+First, let's bring all the steps we just went through together into a single
+function that does a forward and backward pass on a single batch.
+
+```{r}
+compute_batch_update <- function(.data, bias, weight, learning_rate, batch) {
+  .data %>%
+    get_batch(batch_id = batch) %>%
+    make_prediction(bias, weight) %>%
+    compute_sq_error(y, pred) %>%
+    compute_est_derivatives(bias, weight, adj_amt = .01) %>%
+    compute_derivatives(pred, y, x) %>%
+    mutate(new_bias = update_value(bias, deriv_bias, learning_rate),
+           new_wt = update_value(weight, deriv_wt, learning_rate))
+}
+```
+
+
+```{r}
+compute_batch_update(df, initial_bias, initial_weight, learning_rate = 0.0001, batch = 1)
+```
+
+We can now create a function that iterates through each batch for the entire
+data set (1 epoch):
+
+```{r}
+train_epoch <- function(.data, bias, weight, learning_rate) {
+  epoch_results <- data.frame()
+  for (batch in seq_len(nrow(.data))) {
+    batch_results <- compute_batch_update(.data, bias, weight, learning_rate, batch)
+    epoch_results <- rbind(epoch_results, batch_results)
+    bias <- batch_results[["new_bias"]]
+    weight <- batch_results[["new_wt"]]
+    }
+  epoch_results
+  }
+```
+
+If we apply this function we'll see that the output is our original data frame
+with the deriviatives and updated bias and weights computed based on each
+observation. 
+
+```{r}
+train_epoch(df, bias, weight, learning_rate = 0.0001)
+```
+
+## Cycling through multiple epochs
+
+Now let's create one last function wich will apply our functions for multiple
+epochs. This function also provides a new data frame that shows our loss score
+(MSE) for each epoch along with the original and updated biases & weights.
+
+```{r}
+train_model <- function(.data, bias, weight, learning_rate, epochs) {
+  results <- data.frame()
+  for (epoch in seq_len(epochs)) {
+    epoch_results <- train_epoch(.data, bias, weight, learning_rate) %>%
+      mutate(
+        bias = bias, 
+        weight = weight,
+        epoch = epoch,
+        mse = sqrt(sum(error))
+        ) %>%
+      slice(n()) %>%
+      select(epoch, bias, weight, mse, new_bias, new_weight = new_wt)
+    
+    results <- rbind(results, epoch_results)
+    
+    bias <- epoch_results[["new_bias"]]
+    weight <- epoch_results[["new_weight"]]
+  }
+  results
+}
+```
+
+Since we are working with a small learning rate and SGD does not include any
+momentum, we'll train this over many epochs. Looking at the last 10 rows in our
+output we see that the `new_bias` and `new_weight` nearly equal the underlying
+bias (30) and weight (2) that our data was generated with.
+
+```{r}
+history <- train_model(df, bias, weight, learning_rate = 0.0001, epochs = 4000)
+tail(history, 10)
+```
+
+The following plot shows the progression down the loss learning curve for each
+epoch; practically reach 0 towards the end.
+
+```{r}
+ggplot(history, aes(epoch, mse)) +
+  geom_point()
+```
+
+The following grabs the results from just some of our epochs (epoch 100, 200, ...,
+4000) and plots the predicted values based on the estimated bias and weight
+parameters. You can see how the final estimated bias and weight parameters
+converge to the same prediction plot illustrated earlier using ordinary least
+squares.
+
+```{r}
+subset_history <- history %>% filter((epoch %% 100) == 0)
+
+prediction_change <- data.frame()
+
+for (row in seq_len(nrow(subset_history))) {
+  bias <- subset_history[[row, "new_bias"]]
+  weight <- subset_history[[row, "new_weight"]]
+  epoch <- subset_history[[row, "epoch"]]
+  y_hat <- make_prediction(df, bias, weight) %>%
+    mutate(epoch = epoch)
+  prediction_change <- rbind(prediction_change, y_hat)
+}
+
+ggplot(prediction_change, aes(x, y)) +
+  geom_line(aes(y = pred, group = factor(epoch)), alpha = 0.3) +
+  geom_point(color = "red")
+```
+
