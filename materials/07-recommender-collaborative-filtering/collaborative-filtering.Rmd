@@ -1,0 +1,172 @@
+---
+title: "Movie recommendations with collaborative filtering"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+ggplot2::theme_set(ggplot2::theme_bw())
+```
+
+```{r, message=FALSE, warning=FALSE}
+library(keras)
+library(tidyverse)
+library(glue)
+```
+
+```{r, message=FALSE, warning=FALSE}
+data_dir <- here::here("materials", "data", "ml-latest-small")
+movies <- read_csv(file.path(data_dir, "movies.csv"))
+ratings <- read_csv(file.path(data_dir, "ratings.csv"))
+```
+
+```{r}
+movie_data <- ratings %>% 
+  distinct(movieId) %>%
+  rowid_to_column(var = "dense_movie_id") %>%
+  inner_join(ratings) %>%
+  inner_join(movies) %>%
+  select(user_id = userId, movie_id = movieId, dense_movie_id, rating, everything())
+
+movie_data
+```
+
+```{r}
+n_movies <- n_distinct(movie_data$dense_movie_id)
+n_users <- n_distinct(movie_data$user_id)
+```
+
+
+```{r}
+set.seed(123)
+movie_data <- movie_data %>% sample_frac()
+
+x_train <- movie_data %>% select(c(user_id, dense_movie_id)) %>% as.matrix()
+y_train <- movie_data %>% select(rating) %>% as.matrix()
+```
+
+
+```{r}
+embedding_dim <- 64
+```
+
+Without bias
+
+```{r}
+# input layers
+input_users <- layer_input(shape = 1, name = "users")
+input_movies <- layer_input(shape = 1, name = "movies")
+
+user_embeddings <- input_users %>% 
+  layer_embedding(
+    input_dim = n_users + 1,
+    output_dim = embedding_dim,
+    name = "user_embeddings"
+  ) 
+
+movie_embeddings <- input_movies %>% 
+  layer_embedding(
+    input_dim = n_movies + 1,
+    output_dim = embedding_dim,
+    name = "movie_embeddings"
+  ) 
+
+# dot product and output layer (can be replaced by arbitrary DNN architecture)
+pred <- layer_dot(list(user_embeddings, movie_embeddings), axes = 2, name = "dot_product") %>%
+  layer_dense(units = 1, name = "rating_prediction")
+
+# define model inputs/outputs
+model <- keras_model(inputs = c(input_users, input_movies), outputs = pred)
+
+model %>% compile(
+  optimizer = "rmsprop",
+  loss = "mse",
+  metric = "mae"
+)
+
+# inspect model
+summary(model)
+
+# train the model
+history <- model %>% fit(
+  x = list(
+    x_train[, "user_id", drop = FALSE],
+    x_train[, "dense_movie_id", drop = FALSE]
+  ),
+  y = y_train,
+  epochs = 10,
+  batch_size = 32, 
+  validation_split = 0.2,
+  callbacks = list(callback_early_stopping(patience = 2))
+)
+```
+
+
+With bias
+
+```{r}
+# input layers
+input_users <- layer_input(shape = 1, name = "users")
+input_movies <- layer_input(shape = 1, name = "movies")
+
+user_embeddings <- input_users %>%
+  layer_embedding(
+    input_dim = n_users + 1,
+    output_dim = embedding_dim,
+    name = "user_embeddings"
+  )
+
+movie_embeddings <- input_movies %>%
+  layer_embedding(
+    input_dim = n_movies + 1,
+    output_dim = embedding_dim,
+    name = "movie_embeddings"
+  )
+
+user_bias <- input_users %>%
+  layer_embedding(
+    input_dim = n_users + 1,
+    output_dim = 1,
+    name = "user_bias"
+  ) 
+
+movie_bias <- input_users %>%
+  layer_embedding(
+    input_dim = n_movies + 1,
+    output_dim = 1,
+    name = "movie_bias"
+  ) 
+
+dot <- layer_dot(list(user_embeddings, movie_embeddings), axes = 2, name = "dot_product") 
+dot_bias <- layer_add(list(dot, user_bias, movie_bias), name = "add_bias")
+
+pred <- dot_bias %>% layer_dense(units = 1, name = "rating_prediction")
+
+# define model inputs/outputs
+model <- keras_model(inputs = c(input_users, input_movies), outputs = pred)
+
+model %>% compile(
+  optimizer = "rmsprop",
+  loss = "mse",
+  metric = "mae"
+)
+
+# inspect model
+summary(model)
+```
+
+```{r}
+# train the model
+history <- model %>% fit(
+  x = list(
+    x_train[, "user_id", drop = FALSE],
+    x_train[, "dense_movie_id", drop = FALSE]
+  ),
+  y = y_train,
+  epochs = 10,
+  batch_size = 32, 
+  validation_split = 0.2,
+  callbacks = list(callback_early_stopping(patience = 2))
+)
+```
+

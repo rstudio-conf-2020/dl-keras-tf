@@ -288,7 +288,7 @@ if (!dir.exists(glove_data)) {
 
 ## Amazon fine foods reviews
 
-Use for the word embeddings mini-project. This dataset comes from
+Used for the word embeddings mini-project. This dataset comes from
 <https://snap.stanford.edu/data/web-FineFoods.html> and consists of
 reviews of fine foods from amazon. The data span a period of more than
 10 years, including all ~500,000 reviews up to October 2012. Reviews
@@ -303,6 +303,25 @@ if (!dir.exists(amazon_data)) {
   download.file(url, destfile = "finefoods.txt.gz")
   R.utils::gunzip("finefoods.txt.gz")
   fs::file_move(file.path("finefoods.txt"), new_path = amazon_data)
+}
+```
+
+## MovieLens
+
+Used for collaborative filtering module to illustrate how to create a
+movie recommendation system. This data comes from
+<https://grouplens.org/datasets/movielens/>. There are multiple dataset
+sizes; however, for efficiency we will use the smaller dataset that
+contains 100,000 ratings of 9,900 movies rated by ~700 users.
+
+``` r
+movielens_data <- file.path(data_directory, "ml-latest-small")
+
+if (!dir.exists(movielens_data)) {
+  url <- "http://files.grouplens.org/datasets/movielens/ml-latest-small.zip"
+  download.file(url, destfile = "ml-latest-small.zip")
+  unzip("ml-latest-small.zip", exdir = data_directory)
+  invisible(file.remove("ml-latest-small.zip"))
 }
 ```
 
