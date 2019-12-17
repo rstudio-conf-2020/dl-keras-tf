@@ -58,32 +58,32 @@ hyperlink to relevant slides (or additional reading).
 
 ### Day 1
 
-| Time          | Activity                      | Notebook | Source Code | Slides |
+| Time          | Activity                      | Notebook | Source Code | Additional Resources |
 | :------------ | :---------------------------- | -------- | ----------- | ------ |
-| 09:00 - 09:30 | Introduction                  |          |             | [HTML](https://rstudio-conf-2020.github.io/dl-keras-tf/01-intro.html#1) |
-| 09:30 - 10:30 | Hello [Deep Learning] World!  | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-hello-DL-world.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/02-the-dl-engine/01-hello-DL-world.Rmd) | [HTML](http://bit.ly/dl-01) |
+| 09:00 - 09:30 | Introduction                  |          |             | [Slides (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/01-intro.html#1) |
+| 09:30 - 10:30 | Hello [Deep Learning] World!  | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-hello-DL-world.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/02-the-dl-engine/01-hello-DL-world.Rmd) | [Slides (HTML)](http://bit.ly/dl-01) |
 | 10:30 - 11:00 | *Coffee break*                |   |   |   |
 | 11:00 - 12:30 | Case studies                  |   |   |   |
-|               | &nbsp;&nbsp;&nbsp;Regression - sales prices | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-ames.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/03-case-studies/01-ames.Rmd) | [HTML](http://bit.ly/dl-02) |
-|               | &nbsp;&nbsp;&nbsp;Binary classification - movie reviews | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-imdb.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/03-case-studies/02-imdb.Rmd) | [HTML](http://bit.ly/dl-02#20) |
+|               | &nbsp;&nbsp;&nbsp;Regression - sales prices | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-ames.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/03-case-studies/01-ames.Rmd) | [Slides (HTML)](http://bit.ly/dl-02) |
+|               | &nbsp;&nbsp;&nbsp;Binary classification - movie reviews | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-imdb.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/03-case-studies/02-imdb.Rmd) | [Slides (HTML)](http://bit.ly/dl-02#20) |
 | 12:30 - 13:30 | *Lunch break*                 |   |   |   |
 | 13:30 - 15:00 | Computer vision & CNNs        |   |   |   |
-|               | &nbsp;&nbsp;&nbsp;MNIST revisted | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-mnist-revisited.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/04-computer-vision-CNNs/01-mnist-revisited.Rmd) | [HTML](http://bit.ly/dl-03#12) |
-|               | &nbsp;&nbsp;&nbsp;Cats vs dogs | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-cats-vs-dogs.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/04-computer-vision-CNNs/02-cats-vs-dogs.Rmd) | [HTML](http://bit.ly/dl-03#37) |
-|               | &nbsp;&nbsp;&nbsp;Transfer learning | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/03-transfer-learning.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/04-computer-vision-CNNs/03-transfer-learning.Rmd) | [HTML](http://bit.ly/dl-03#45) |
+|               | &nbsp;&nbsp;&nbsp;MNIST revisted | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-mnist-revisited.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/04-computer-vision-CNNs/01-mnist-revisited.Rmd) | [Slides (HTML)](http://bit.ly/dl-03#12) |
+|               | &nbsp;&nbsp;&nbsp;Cats vs dogs | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-cats-vs-dogs.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/04-computer-vision-CNNs/02-cats-vs-dogs.Rmd) | [Slides (HTML)](http://bit.ly/dl-03#37) |
+|               | &nbsp;&nbsp;&nbsp;Transfer learning | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/03-transfer-learning.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/04-computer-vision-CNNs/03-transfer-learning.Rmd) | [Slides (HTML)](http://bit.ly/dl-03#45) |
 | 15:00 - 15:30 | *Coffee break*                |   |   |   |
 | 15:30 - 17:00 | Project: Classifying natural images  | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-Project.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/05-project/01-Project.Rmd) | [Solution](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/project1-natural-images.nb.html) |
 
 ### Day 2
 
-| Time          | Activity                      | Notebook | Source Code | Slides |
+| Time          | Activity                      | Notebook | Source Code | Additional Resources |
 | :------------ | :---------------------------- | -------- | ----------- | ------ |
 | 09:00 - 10:30 | Word embeddings               |   |   |   |
-|               | &nbsp;&nbsp;&nbsp;IMDB revisted | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-word-embeddings.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/06-word-embeddings/01-word-embeddings.Rmd) | [HTML](http://bit.ly/dl-06) |
-|               | &nbsp;&nbsp;&nbsp;Pre-trained embeddings | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-pretrained-word-embeddings.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/06-word-embeddings/02-pretrained-word-embeddings.Rmd) | [HTML](http://bit.ly/dl-06) |
+|               | &nbsp;&nbsp;&nbsp;IMDB revisted | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-word-embeddings.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/06-word-embeddings/01-word-embeddings.Rmd) | [Slides (HTML)](http://bit.ly/dl-06) |
+|               | &nbsp;&nbsp;&nbsp;Pre-trained embeddings | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-pretrained-word-embeddings.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/06-word-embeddings/02-pretrained-word-embeddings.Rmd) | [Slides (HTML)](http://bit.ly/dl-06) |
 |               | &nbsp;&nbsp;&nbsp;Mini project - Amazon reviews | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/03-your-turn-amazon-word-embeddings.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/06-word-embeddings/03-your-turn-amazon-word-embeddings.Rmd) | [Solution](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/project-embeddings-amazon-reviews.nb.html) |
 | 10:30 - 11:00 | *Coffee break*                |   |   |   |
-| 11:00 - 12:30 | Collaborative filtering       |   |   |   |
+| 11:00 - 12:30 | Collaborative filtering       | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/collaborative-filtering.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/07-recommender-collaborative-filtering/collaborative-filtering.Rmd) | [Excel file](http://bit.ly/dl-07-Excel) |
 | 12:30 - 13:30 | *Lunch break*                 |   |   |   |
 | 13:30 - 15:00 | RNNs & LSTMs             |   |   |   |
 | 15:00 - 15:30 | *Coffee break*                |   |   |   |
