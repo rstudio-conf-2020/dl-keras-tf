@@ -58,8 +58,8 @@ hyperlink to relevant slides (or additional reading).
 
 ### Day 1
 
-| Time          | Activity                          | Notebook      | Source Code   | Other    |
-| :------------ | :-------------------------------- | :-----------: | :-----------: | :------: |
+| Time          | Activity                             | Notebook      | Source Code   | Other    |
+| :------------ | :----------------------------------- | :-----------: | :-----------: | :------: |
 | 09:00 - 09:30 | Introduction                  |          |             | [Slides (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/01-intro.html#1) |
 | 09:30 - 10:30 | Hello [Deep Learning] World!  | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-hello-DL-world.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/02-the-dl-engine/01-hello-DL-world.Rmd) | [Slides (HTML)](http://bit.ly/dl-01) |
 | 10:30 - 11:00 | *Coffee break*                |   |   |   |
@@ -76,8 +76,8 @@ hyperlink to relevant slides (or additional reading).
 
 ### Day 2
 
-| Time          | Activity                          | Notebook      | Source Code   | Other    |
-| :------------ | :-------------------------------- | :-----------: | :-----------: | :------: |
+| Time          | Activity                             | Notebook      | Source Code   | Other    |
+| :------------ | :----------------------------------- | :-----------: | :-----------: | :------: |
 | 09:00 - 10:30 | Word embeddings               |   |   |   |
 |               | &nbsp;&nbsp;&nbsp;IMDB revisted | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-word-embeddings.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/06-word-embeddings/01-word-embeddings.Rmd) | [Slides (HTML)](http://bit.ly/dl-06) |
 |               | &nbsp;&nbsp;&nbsp;Pre-trained embeddings | [Notebook (HTML)](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-pretrained-word-embeddings.nb.html) | [R Markdown (Rmd)](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/06-word-embeddings/02-pretrained-word-embeddings.Rmd) | [Slides (HTML)](http://bit.ly/dl-06) |
