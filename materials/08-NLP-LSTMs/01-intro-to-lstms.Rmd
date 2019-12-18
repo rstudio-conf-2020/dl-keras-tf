@@ -1,0 +1,160 @@
+---
+title: "Introduction to RNNs & LSTMs"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+ggplot2::theme_set(ggplot2::theme_bw())
+```
+
+In this example, we are going to learn about recurrent neural networks (RNNs)
+and long short term memory (LSTM) neural networks. These architectures are
+designed for sequence data, which can include text, videos, time series, and
+more. However, for this workshop we are going to focus on text data as this is
+the domain seeing the largest impact from LSTMs.
+
+Learning objectives:
+
+- Understand how an RNN works, how to implement it, and its primary weakness
+- Understand how an LSTM works and how to implement it
+
+# Requirements
+
+```{r, message=FALSE, warning=FALSE}
+library(keras)
+library(tidyverse)
+library(glue)
+```
+
+
+# Prepare our data
+
+```{r}
+n_features <- 10000
+max_len <- 500
+```
+
+
+```{r}
+imdb <- dataset_imdb(num_words = n_features)
+c(c(x_train, y_train), c(x_test, y_test)) %<-% imdb
+```
+
+```{r}
+x_train <- pad_sequences(x_train, maxlen = max_len)
+```
+
+# RNNs
+
+Resources:
+
+- http://www.kurious.pub/blog/Illustrated-Guide-to-Recurrent-Neural-Networks-4
+- http://www.kurious.pub/blog/Illustrated-Guide-to-LSTMs-and-GRUs-A-step-by-step-explanation-6
+- http://www.kurious.pub/blog/Illustrated-Guide-on-Vanishing-Gradients-5
+- https://colah.github.io/posts/2015-08-Understanding-LSTMs/
+
+
+# Train an RNN
+
+```{r}
+model <- keras_model_sequential() %>%
+  layer_embedding(
+    input_dim = n_features,
+    input_length = max_len,
+    output_dim = 32, 
+    name = "Embeddings") %>%
+  layer_simple_rnn(units = 32, name = "RNN") %>%
+  layer_dense(units = 1, activation = "sigmoid", name = "Prediction")
+
+model %>% compile(
+  optimizer = "rmsprop",
+  loss = "binary_crossentropy",
+  metrics = "accuracy"
+  )
+
+summary(model)
+```
+
+```{r}
+history <- model %>% fit(
+  x_train, y_train,
+  epochs = 10,
+  batch_size = 128,
+  validation_split = 0.2,
+  callbacks = list(callback_early_stopping(patience = 3))
+)
+```
+
+```{r}
+best_epoch <- which(history$metrics$val_loss == min(history$metrics$val_loss))
+loss <- history$metrics$val_loss[best_epoch] %>% round(3)
+acc <- history$metrics$val_acc[best_epoch] %>% round(3)
+
+glue("The best epoch had a loss of {loss} and an accuracy of {acc}")
+```
+
+# Your Turn! (5min)
+
+Spend a few minutes adjusting this model and see how it impacts performance. You
+may want to test:
+
+- Does increasing and decreasing the word embedding dimension and/or the number
+  of RNN layer units impact performance?
+- It's sometimes userful to stack several recurrent layers one after the other
+  in order to increase the representational power of a network. What happens
+  when you try this?
+
+```{r}
+model <- keras_model_sequential() %>%
+  layer_embedding(
+    input_dim = n_features,
+    input_length = max_len,
+    output_dim = 32, 
+    name = "Embeddings") %>%
+  layer_simple_rnn(units = 32, name = "RNN_1", return_sequences = TRUE) %>%
+  layer_simple_rnn(units = 32, name = "RNN_2") %>%
+  layer_dense(units = 1, activation = "sigmoid", name = "Prediction")
+
+model %>% compile(
+  optimizer = "rmsprop",
+  loss = "binary_crossentropy",
+  metrics = "accuracy"
+  )
+
+summary(model)
+```
+
+```{r}
+history <- model %>% fit(
+  x_train, y_train,
+  epochs = 10,
+  batch_size = 128,
+  validation_split = 0.2,
+  callbacks = list(callback_early_stopping(patience = 3))
+)
+```
+
+```{r}
+best_epoch <- which(history$metrics$val_loss == min(history$metrics$val_loss))
+loss <- history$metrics$val_loss[best_epoch] %>% round(3)
+acc <- history$metrics$val_acc[best_epoch] %>% round(3)
+
+glue("The best epoch had a loss of {loss} and an accuracy of {acc}")
+```
+
+# The problem with RNNs
+
+
+
+# LSTMs
+
+
+# Train an LSTM
+
+
+# Why the lack of accuracy
+
+
+# Takeaways
+
