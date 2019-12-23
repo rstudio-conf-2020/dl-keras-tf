@@ -4,7 +4,7 @@ output: html_notebook
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+knitr::opts_chunk$set(echo = TRUE)
 ggplot2::theme_set(ggplot2::theme_bw())
 ```
 
@@ -27,25 +27,37 @@ library(tidyverse)
 library(glue)
 ```
 
-
 # Prepare our data
 
+For our introduction we're going to start with the built-in IMDB data set. Let's
+use the 10,000 most frequent words and we will set the max length of each
+review to be 500, which will capture the majority of most reviews.
+
 ```{r}
+# establish our data characteristics
 n_features <- 10000
 max_len <- 500
-```
 
-
-```{r}
+# import and prep our data
 imdb <- dataset_imdb(num_words = n_features)
 c(c(x_train, y_train), c(x_test, y_test)) %<-% imdb
-```
 
-```{r}
 x_train <- pad_sequences(x_train, maxlen = max_len)
 ```
 
 # RNNs
+
+To model our IMDB data, we have used:
+
+1. __one-hot encoding__, which has a problem with only allowing a single
+   representation of a word. "Seattle" is simply a word but has no relationship
+   to "Seahawks", "Wilson", "weather", or "Starbucks".
+2. __embeddings__, which allow our inputs (i.e. words) to have relationships
+   with other inputs but does not control for the sequential nature of the
+   inputs.
+   
+Recurrent neural networks were specifically designed to model sequential data.
+[ℹ️]()
 
 Resources:
 
@@ -56,6 +68,10 @@ Resources:
 
 
 # Train an RNN
+
+Let's build a model with an RNN layer. First, we still use an embedding layer to
+allow for more complex representation of our words but we follow that with
+`layer_simple_rnn()`. Everything else remains the same as before.
 
 ```{r}
 model <- keras_model_sequential() %>%
@@ -104,6 +120,11 @@ may want to test:
 - It's sometimes userful to stack several recurrent layers one after the other
   in order to increase the representational power of a network. What happens
   when you try this?
+  
+__Note:__ An RNN will take inputs from different parts of a sequence and produce
+a single output. When stacking multiple recurrent layers, you need to set
+`return_sequences = TRUE` so that you get the output for each part of the
+sequence so that you can supply a sequence into the next RNN layer.
 
 ```{r}
 model <- keras_model_sequential() %>%
@@ -143,18 +164,140 @@ acc <- history$metrics$val_acc[best_epoch] %>% round(3)
 glue("The best epoch had a loss of {loss} and an accuracy of {acc}")
 ```
 
-# The problem with RNNs
-
-
-
 # LSTMs
 
+Unfortunately, a problem with RNNs (and any very deep neural network) is as our
+network gets deep, it loses the signal due to the vanishing gradient descent
+problem. LSTMs were developed to address this problem. [ℹ️]()
 
 # Train an LSTM
 
+To train an LSTM, we simply replace `layer_simple_rnn()` with `layer_lstm()`.
+
+```{r}
+model <- keras_model_sequential() %>%
+  layer_embedding(
+    input_dim = n_features,
+    input_length = max_len,
+    output_dim = 32, 
+    name = "Embeddings") %>%
+  layer_lstm(units = 32, name = "LSTM") %>%
+  layer_dense(units = 1, activation = "sigmoid", name = "Prediction")
+
+model %>% compile(
+  optimizer = "rmsprop",
+  loss = "binary_crossentropy",
+  metrics = "accuracy"
+  )
+
+summary(model)
+```
+
+```{r}
+history <- model %>% fit(
+  x_train, y_train,
+  epochs = 10,
+  batch_size = 128,
+  validation_split = 0.2,
+  callbacks = list(callback_early_stopping(patience = 3))
+)
+```
+
+```{r}
+best_epoch <- which(history$metrics$val_loss == min(history$metrics$val_loss))
+loss <- history$metrics$val_loss[best_epoch] %>% round(3)
+acc <- history$metrics$val_acc[best_epoch] %>% round(3)
+
+glue("The best epoch had a loss of {loss} and an accuracy of {acc}")
+```
+
+# Your Turn! (5min)
+
+Spend a few minutes adjusting this model and see how it impacts performance. You
+may want to test:
+
+- Does increasing and decreasing the word embedding dimension and/or the number
+  of LSTM layer units impact performance?
+- As we learned in an earlier module, dropout can help reduce overfitting and
+  improve model performance. See if you can add dropout to your model. Hint,
+  checkout the docs (`?layer_lstm()`) because adding dropout to LSTMs are a
+  little unique.
+  
+__Note:__ When applying dropout to a recurrent network, it's important to apply
+the same dropout pattern to each timestep within the recurrent layer, rather
+than randomly. Consequently, recurrent layers have two dropout parameters:
+
+- `dropout`: the dropout rate for inputs going into the recurrent layer
+- `recurrent_dropout`: the dropout rate for the recurrent units within the
+   recurrent layer
+
+```{r}
+model <- keras_model_sequential() %>%
+  layer_embedding(
+    input_dim = n_features,
+    input_length = max_len,
+    output_dim = 32, 
+    name = "Embeddings") %>%
+  layer_lstm(units = 32, dropout = 0.3, recurrent_dropout = 0.3, name = "LSTM") %>%
+  layer_dense(units = 1, activation = "sigmoid", name = "Prediction")
+
+model %>% compile(
+  optimizer = "rmsprop",
+  loss = "binary_crossentropy",
+  metrics = "accuracy"
+  )
+
+summary(model)
+```
+
+```{r}
+history <- model %>% fit(
+  x_train, y_train,
+  epochs = 10,
+  batch_size = 128,
+  validation_split = 0.2,
+  callbacks = list(callback_early_stopping(patience = 3))
+)
+```
+
+```{r}
+best_epoch <- which(history$metrics$val_loss == min(history$metrics$val_loss))
+loss <- history$metrics$val_loss[best_epoch] %>% round(3)
+acc <- history$metrics$val_acc[best_epoch] %>% round(3)
+
+glue("The best epoch had a loss of {loss} and an accuracy of {acc}")
+```
 
 # Why the lack of accuracy
 
+So why are our recurrent models not doing much better than our one-hot encoding
+and simple word embedding models? For most sentiment predictions we can capture
+the essence of the tone (i.e. positive vs. negative) by focusing on a few key
+words, which our simpler encoding models can do quite well.
+
+```{r echo=FALSE}
+knitr::include_graphics("images/customer_review.gif")
+```
+
+As your prediction task requires more spatial context, then recurrent networks
+should begin to out perform the more simpler encoding models.
 
 # Takeaways
 
+* Recurrent networks help to capture spatial context within text
+* RNNs
+   - are just multiple perceptions sequentially linked
+   - pass information through hidden states
+   - use the Tanh activation to control value magnitudes
+   - suffer from the vanishing gradient
+   - implemented with `layer_simple_rnn()`
+* LSTMs
+   - use multiple gates that help to "remember" or "forget" information
+   - computationally expensive
+   - implemented with `layer_lstm()`
+* Unique characteristics
+   - must use `return_sequences = TRUE` to stack multiple recurrent layers
+   - recurrent layers have their own special dropout procedures --> don't use
+     `layer_dropout()`; rather, use the dropout parameters within the recurrent
+     layer.
+     

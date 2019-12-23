@@ -1771,32 +1771,31 @@ library(glue)</code></pre>
 </div>
 <div id="prepare-our-data" class="section level1">
 <h1>Prepare our data</h1>
+<p>For our introduction we’re going to start with the built-in IMDB data set. Let’s use the 10,000 most frequent words and we will set the max length of each review to be 500, which will capture the majority of most reviews.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubl9mZWF0dXJlcyA8LSAxMDAwMFxubWF4X2xlbiA8LSA1MDBcbmBgYCJ9 -->
-<pre class="r"><code>n_features &lt;- 10000
-max_len &lt;- 500</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuaW1kYiA8LSBkYXRhc2V0X2ltZGIobnVtX3dvcmRzID0gbl9mZWF0dXJlcylcbmMoYyh4X3RyYWluLCB5X3RyYWluKSwgYyh4X3Rlc3QsIHlfdGVzdCkpICU8LSUgaW1kYlxuYGBgIn0= -->
-<pre class="r"><code>imdb &lt;- dataset_imdb(num_words = n_features)
-c(c(x_train, y_train), c(x_test, y_test)) %&lt;-% imdb</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxueF90cmFpbiA8LSBwYWRfc2VxdWVuY2VzKHhfdHJhaW4sIG1heGxlbiA9IG1heF9sZW4pXG5gYGAifQ== -->
-<pre class="r"><code>x_train &lt;- pad_sequences(x_train, maxlen = max_len)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBlc3RhYmxpc2ggb3VyIGRhdGEgY2hhcmFjdGVyaXN0aWNzXG5uX2ZlYXR1cmVzIDwtIDEwMDAwXG5tYXhfbGVuIDwtIDUwMFxuXG4jIGltcG9ydCBhbmQgcHJlcCBvdXIgZGF0YVxuaW1kYiA8LSBkYXRhc2V0X2ltZGIobnVtX3dvcmRzID0gbl9mZWF0dXJlcylcbmMoYyh4X3RyYWluLCB5X3RyYWluKSwgYyh4X3Rlc3QsIHlfdGVzdCkpICU8LSUgaW1kYlxuXG54X3RyYWluIDwtIHBhZF9zZXF1ZW5jZXMoeF90cmFpbiwgbWF4bGVuID0gbWF4X2xlbilcbmBgYCJ9 -->
+<pre class="r"><code># establish our data characteristics
+n_features &lt;- 10000
+max_len &lt;- 500
+
+# import and prep our data
+imdb &lt;- dataset_imdb(num_words = n_features)
+c(c(x_train, y_train), c(x_test, y_test)) %&lt;-% imdb
+
+x_train &lt;- pad_sequences(x_train, maxlen = max_len)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 </div>
 <div id="rnns" class="section level1">
 <h1>RNNs</h1>
+<p>To model our IMDB data, we have used:</p>
+<ol style="list-style-type: decimal">
+<li><strong>one-hot encoding</strong>, which has a problem with only allowing a single representation of a word. “Seattle” is simply a word but has no relationship to “Seahawks”, “Wilson”, “weather”, or “Starbucks”.</li>
+<li><strong>embeddings</strong>, which allow our inputs (i.e. words) to have relationships with other inputs but does not control for the sequential nature of the inputs.</li>
+</ol>
+<p>Recurrent neural networks were specifically designed to model sequential data. <a href>ℹ️</a></p>
 <p>Resources:</p>
 <ul>
 <li><a href="http://www.kurious.pub/blog/Illustrated-Guide-to-Recurrent-Neural-Networks-4" class="uri">http://www.kurious.pub/blog/Illustrated-Guide-to-Recurrent-Neural-Networks-4</a></li>
@@ -1807,6 +1806,7 @@ c(c(x_train, y_train), c(x_test, y_test)) %&lt;-% imdb</code></pre>
 </div>
 <div id="train-an-rnn" class="section level1">
 <h1>Train an RNN</h1>
+<p>Let’s build a model with an RNN layer. First, we still use an embedding layer to allow for more complex representation of our words but we follow that with <code>layer_simple_rnn()</code>. Everything else remains the same as before.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
 <!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubW9kZWwgPC0ga2VyYXNfbW9kZWxfc2VxdWVudGlhbCgpICU+JVxuICBsYXllcl9lbWJlZGRpbmcoXG4gICAgaW5wdXRfZGltID0gbl9mZWF0dXJlcyxcbiAgICBpbnB1dF9sZW5ndGggPSBtYXhfbGVuLFxuICAgIG91dHB1dF9kaW0gPSAzMiwgXG4gICAgbmFtZSA9IFwiRW1iZWRkaW5nc1wiKSAlPiVcbiAgbGF5ZXJfc2ltcGxlX3Jubih1bml0cyA9IDMyLCBuYW1lID0gXCJSTk5cIikgJT4lXG4gIGxheWVyX2RlbnNlKHVuaXRzID0gMSwgYWN0aXZhdGlvbiA9IFwic2lnbW9pZFwiLCBuYW1lID0gXCJQcmVkaWN0aW9uXCIpXG5cbm1vZGVsICU+JSBjb21waWxlKFxuICBvcHRpbWl6ZXIgPSBcInJtc3Byb3BcIixcbiAgbG9zcyA9IFwiYmluYXJ5X2Nyb3NzZW50cm9weVwiLFxuICBtZXRyaWNzID0gXCJhY2N1cmFjeVwiXG4gIClcblxuc3VtbWFyeShtb2RlbClcbmBgYCJ9 -->
@@ -1827,6 +1827,22 @@ model %&gt;% compile(
 
 summary(model)</code></pre>
 <!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiTW9kZWw6IFwic2VxdWVudGlhbF8xXCJcbl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19cbkxheWVyICh0eXBlKSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBPdXRwdXQgU2hhcGUgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFBhcmFtICMgICAgICAgICBcbj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT1cbkVtYmVkZGluZ3MgKEVtYmVkZGluZykgICAgICAgICAgICAgICAgICAgICAgICAoTm9uZSwgNTAwLCAzMikgICAgICAgICAgICAgICAgICAgICAgICAgIDMyMDAwMCAgICAgICAgICBcbl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19cblJOTiAoU2ltcGxlUk5OKSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoTm9uZSwgMzIpICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDIwODAgICAgICAgICAgICBcbl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19cblByZWRpY3Rpb24gKERlbnNlKSAgICAgICAgICAgICAgICAgICAgICAgICAgICAoTm9uZSwgMSkgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDMzICAgICAgICAgICAgICBcbj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT1cblRvdGFsIHBhcmFtczogMzIyLDExM1xuVHJhaW5hYmxlIHBhcmFtczogMzIyLDExM1xuTm9uLXRyYWluYWJsZSBwYXJhbXM6IDBcbl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19cbiJ9 -->
+<pre><code>Model: &quot;sequential_1&quot;
+_______________________________________________________________________________________________________
+Layer (type)                                  Output Shape                             Param #         
+=======================================================================================================
+Embeddings (Embedding)                        (None, 500, 32)                          320000          
+_______________________________________________________________________________________________________
+RNN (SimpleRNN)                               (None, 32)                               2080            
+_______________________________________________________________________________________________________
+Prediction (Dense)                            (None, 1)                                33              
+=======================================================================================================
+Total params: 322,113
+Trainable params: 322,113
+Non-trainable params: 0
+_______________________________________________________________________________________________________</code></pre>
+<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
@@ -1851,8 +1867,8 @@ acc &lt;- history$metrics$val_acc[best_epoch] %&gt;% round(3)
 
 glue(&quot;The best epoch had a loss of {loss} and an accuracy of {acc}&quot;)</code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiVGhlIGJlc3QgZXBvY2ggaGFkIGEgbG9zcyBvZiAwLjMzNiBhbmQgYW4gYWNjdXJhY3kgb2YgMC44NjlcbiJ9 -->
-<pre><code>The best epoch had a loss of 0.336 and an accuracy of 0.869</code></pre>
+<!-- rnb-output-begin eyJkYXRhIjoiVGhlIGJlc3QgZXBvY2ggaGFkIGEgbG9zcyBvZiAwLjM2IGFuZCBhbiBhY2N1cmFjeSBvZiAwLjg1MlxuIn0= -->
+<pre><code>The best epoch had a loss of 0.36 and an accuracy of 0.852</code></pre>
 <!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
@@ -1864,6 +1880,7 @@ glue(&quot;The best epoch had a loss of {loss} and an accuracy of {acc}&quot;)</
 <li>Does increasing and decreasing the word embedding dimension and/or the number of RNN layer units impact performance?</li>
 <li>It’s sometimes userful to stack several recurrent layers one after the other in order to increase the representational power of a network. What happens when you try this?</li>
 </ul>
+<p><strong>Note:</strong> An RNN will take inputs from different parts of a sequence and produce a single output. When stacking multiple recurrent layers, you need to set <code>return_sequences = TRUE</code> so that you get the output for each part of the sequence so that you can supply a sequence into the next RNN layer.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
 <!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubW9kZWwgPC0ga2VyYXNfbW9kZWxfc2VxdWVudGlhbCgpICU+JVxuICBsYXllcl9lbWJlZGRpbmcoXG4gICAgaW5wdXRfZGltID0gbl9mZWF0dXJlcyxcbiAgICBpbnB1dF9sZW5ndGggPSBtYXhfbGVuLFxuICAgIG91dHB1dF9kaW0gPSAzMiwgXG4gICAgbmFtZSA9IFwiRW1iZWRkaW5nc1wiKSAlPiVcbiAgbGF5ZXJfc2ltcGxlX3Jubih1bml0cyA9IDMyLCBuYW1lID0gXCJSTk5fMVwiLCByZXR1cm5fc2VxdWVuY2VzID0gVFJVRSkgJT4lXG4gIGxheWVyX3NpbXBsZV9ybm4odW5pdHMgPSAzMiwgbmFtZSA9IFwiUk5OXzJcIikgJT4lXG4gIGxheWVyX2RlbnNlKHVuaXRzID0gMSwgYWN0aXZhdGlvbiA9IFwic2lnbW9pZFwiLCBuYW1lID0gXCJQcmVkaWN0aW9uXCIpXG5cbm1vZGVsICU+JSBjb21waWxlKFxuICBvcHRpbWl6ZXIgPSBcInJtc3Byb3BcIixcbiAgbG9zcyA9IFwiYmluYXJ5X2Nyb3NzZW50cm9weVwiLFxuICBtZXRyaWNzID0gXCJhY2N1cmFjeVwiXG4gIClcblxuc3VtbWFyeShtb2RlbClcbmBgYCJ9 -->
@@ -1912,24 +1929,175 @@ glue(&quot;The best epoch had a loss of {loss} and an accuracy of {acc}&quot;)</
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 </div>
-<div id="the-problem-with-rnns" class="section level1">
-<h1>The problem with RNNs</h1>
-</div>
 <div id="lstms" class="section level1">
 <h1>LSTMs</h1>
+<p>Unfortunately, a problem with RNNs (and any very deep neural network) is as our network gets deep, it loses the signal due to the vanishing gradient descent problem. LSTMs were developed to address this problem. <a href>ℹ️</a></p>
 </div>
 <div id="train-an-lstm" class="section level1">
 <h1>Train an LSTM</h1>
+<p>To train an LSTM, we simply replace <code>layer_simple_rnn()</code> with <code>layer_lstm()</code>.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubW9kZWwgPC0ga2VyYXNfbW9kZWxfc2VxdWVudGlhbCgpICU+JVxuICBsYXllcl9lbWJlZGRpbmcoXG4gICAgaW5wdXRfZGltID0gbl9mZWF0dXJlcyxcbiAgICBpbnB1dF9sZW5ndGggPSBtYXhfbGVuLFxuICAgIG91dHB1dF9kaW0gPSAzMiwgXG4gICAgbmFtZSA9IFwiRW1iZWRkaW5nc1wiKSAlPiVcbiAgbGF5ZXJfbHN0bSh1bml0cyA9IDMyLCBuYW1lID0gXCJMU1RNXCIpICU+JVxuICBsYXllcl9kZW5zZSh1bml0cyA9IDEsIGFjdGl2YXRpb24gPSBcInNpZ21vaWRcIiwgbmFtZSA9IFwiUHJlZGljdGlvblwiKVxuXG5tb2RlbCAlPiUgY29tcGlsZShcbiAgb3B0aW1pemVyID0gXCJybXNwcm9wXCIsXG4gIGxvc3MgPSBcImJpbmFyeV9jcm9zc2VudHJvcHlcIixcbiAgbWV0cmljcyA9IFwiYWNjdXJhY3lcIlxuICApXG5cbnN1bW1hcnkobW9kZWwpXG5gYGAifQ== -->
+<pre class="r"><code>model &lt;- keras_model_sequential() %&gt;%
+  layer_embedding(
+    input_dim = n_features,
+    input_length = max_len,
+    output_dim = 32, 
+    name = &quot;Embeddings&quot;) %&gt;%
+  layer_lstm(units = 32, name = &quot;LSTM&quot;) %&gt;%
+  layer_dense(units = 1, activation = &quot;sigmoid&quot;, name = &quot;Prediction&quot;)
+
+model %&gt;% compile(
+  optimizer = &quot;rmsprop&quot;,
+  loss = &quot;binary_crossentropy&quot;,
+  metrics = &quot;accuracy&quot;
+  )
+
+summary(model)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiTW9kZWw6IFwic2VxdWVudGlhbF82XCJcbl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19cbkxheWVyICh0eXBlKSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBPdXRwdXQgU2hhcGUgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFBhcmFtICMgICAgICAgICBcbj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT1cbkVtYmVkZGluZ3MgKEVtYmVkZGluZykgICAgICAgICAgICAgICAgICAgICAgICAoTm9uZSwgNTAwLCAzMikgICAgICAgICAgICAgICAgICAgICAgICAgIDMyMDAwMCAgICAgICAgICBcbl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19cbkxTVE0gKExTVE0pICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoTm9uZSwgMzIpICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDgzMjAgICAgICAgICAgICBcbl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19cblByZWRpY3Rpb24gKERlbnNlKSAgICAgICAgICAgICAgICAgICAgICAgICAgICAoTm9uZSwgMSkgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDMzICAgICAgICAgICAgICBcbj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT1cblRvdGFsIHBhcmFtczogMzI4LDM1M1xuVHJhaW5hYmxlIHBhcmFtczogMzI4LDM1M1xuTm9uLXRyYWluYWJsZSBwYXJhbXM6IDBcbl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19cbiJ9 -->
+<pre><code>Model: &quot;sequential_6&quot;
+_______________________________________________________________________________________________________
+Layer (type)                                  Output Shape                             Param #         
+=======================================================================================================
+Embeddings (Embedding)                        (None, 500, 32)                          320000          
+_______________________________________________________________________________________________________
+LSTM (LSTM)                                   (None, 32)                               8320            
+_______________________________________________________________________________________________________
+Prediction (Dense)                            (None, 1)                                33              
+=======================================================================================================
+Total params: 328,353
+Trainable params: 328,353
+Non-trainable params: 0
+_______________________________________________________________________________________________________</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuaGlzdG9yeSA8LSBtb2RlbCAlPiUgZml0KFxuICB4X3RyYWluLCB5X3RyYWluLFxuICBlcG9jaHMgPSAxMCxcbiAgYmF0Y2hfc2l6ZSA9IDEyOCxcbiAgdmFsaWRhdGlvbl9zcGxpdCA9IDAuMixcbiAgY2FsbGJhY2tzID0gbGlzdChjYWxsYmFja19lYXJseV9zdG9wcGluZyhwYXRpZW5jZSA9IDMpKVxuKVxuYGBgIn0= -->
+<pre class="r"><code>history &lt;- model %&gt;% fit(
+  x_train, y_train,
+  epochs = 10,
+  batch_size = 128,
+  validation_split = 0.2,
+  callbacks = list(callback_early_stopping(patience = 3))
+)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYmVzdF9lcG9jaCA8LSB3aGljaChoaXN0b3J5JG1ldHJpY3MkdmFsX2xvc3MgPT0gbWluKGhpc3RvcnkkbWV0cmljcyR2YWxfbG9zcykpXG5sb3NzIDwtIGhpc3RvcnkkbWV0cmljcyR2YWxfbG9zc1tiZXN0X2Vwb2NoXSAlPiUgcm91bmQoMylcbmFjYyA8LSBoaXN0b3J5JG1ldHJpY3MkdmFsX2FjY1tiZXN0X2Vwb2NoXSAlPiUgcm91bmQoMylcblxuZ2x1ZShcIlRoZSBiZXN0IGVwb2NoIGhhZCBhIGxvc3Mgb2Yge2xvc3N9IGFuZCBhbiBhY2N1cmFjeSBvZiB7YWNjfVwiKVxuYGBgIn0= -->
+<pre class="r"><code>best_epoch &lt;- which(history$metrics$val_loss == min(history$metrics$val_loss))
+loss &lt;- history$metrics$val_loss[best_epoch] %&gt;% round(3)
+acc &lt;- history$metrics$val_acc[best_epoch] %&gt;% round(3)
+
+glue(&quot;The best epoch had a loss of {loss} and an accuracy of {acc}&quot;)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiVGhlIGJlc3QgZXBvY2ggaGFkIGEgbG9zcyBvZiAwLjMxIGFuZCBhbiBhY2N1cmFjeSBvZiAwLjg4NVxuIn0= -->
+<pre><code>The best epoch had a loss of 0.31 and an accuracy of 0.885</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
+<div id="your-turn-5min-1" class="section level1">
+<h1>Your Turn! (5min)</h1>
+<p>Spend a few minutes adjusting this model and see how it impacts performance. You may want to test:</p>
+<ul>
+<li>Does increasing and decreasing the word embedding dimension and/or the number of LSTM layer units impact performance?</li>
+<li>As we learned in an earlier module, dropout can help reduce overfitting and improve model performance. See if you can add dropout to your model. Hint, checkout the docs (<code>?layer_lstm()</code>) because adding dropout to LSTMs are a little unique.</li>
+</ul>
+<p><strong>Note:</strong> When applying dropout to a recurrent network, it’s important to apply the same dropout pattern to each timestep within the recurrent layer, rather than randomly. Consequently, recurrent layers have two dropout parameters:</p>
+<ul>
+<li><code>dropout</code>: the dropout rate for inputs going into the recurrent layer</li>
+<li><code>recurrent_dropout</code>: the dropout rate for the recurrent units within the recurrent layer</li>
+</ul>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubW9kZWwgPC0ga2VyYXNfbW9kZWxfc2VxdWVudGlhbCgpICU+JVxuICBsYXllcl9lbWJlZGRpbmcoXG4gICAgaW5wdXRfZGltID0gbl9mZWF0dXJlcyxcbiAgICBpbnB1dF9sZW5ndGggPSBtYXhfbGVuLFxuICAgIG91dHB1dF9kaW0gPSAzMiwgXG4gICAgbmFtZSA9IFwiRW1iZWRkaW5nc1wiKSAlPiVcbiAgbGF5ZXJfbHN0bSh1bml0cyA9IDMyLCBkcm9wb3V0ID0gMC4zLCByZWN1cnJlbnRfZHJvcG91dCA9IDAuMywgbmFtZSA9IFwiTFNUTVwiKSAlPiVcbiAgbGF5ZXJfZGVuc2UodW5pdHMgPSAxLCBhY3RpdmF0aW9uID0gXCJzaWdtb2lkXCIsIG5hbWUgPSBcIlByZWRpY3Rpb25cIilcblxubW9kZWwgJT4lIGNvbXBpbGUoXG4gIG9wdGltaXplciA9IFwicm1zcHJvcFwiLFxuICBsb3NzID0gXCJiaW5hcnlfY3Jvc3NlbnRyb3B5XCIsXG4gIG1ldHJpY3MgPSBcImFjY3VyYWN5XCJcbiAgKVxuXG5zdW1tYXJ5KG1vZGVsKVxuYGBgIn0= -->
+<pre class="r"><code>model &lt;- keras_model_sequential() %&gt;%
+  layer_embedding(
+    input_dim = n_features,
+    input_length = max_len,
+    output_dim = 32, 
+    name = &quot;Embeddings&quot;) %&gt;%
+  layer_lstm(units = 32, dropout = 0.3, recurrent_dropout = 0.3, name = &quot;LSTM&quot;) %&gt;%
+  layer_dense(units = 1, activation = &quot;sigmoid&quot;, name = &quot;Prediction&quot;)
+
+model %&gt;% compile(
+  optimizer = &quot;rmsprop&quot;,
+  loss = &quot;binary_crossentropy&quot;,
+  metrics = &quot;accuracy&quot;
+  )
+
+summary(model)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuaGlzdG9yeSA8LSBtb2RlbCAlPiUgZml0KFxuICB4X3RyYWluLCB5X3RyYWluLFxuICBlcG9jaHMgPSAxMCxcbiAgYmF0Y2hfc2l6ZSA9IDEyOCxcbiAgdmFsaWRhdGlvbl9zcGxpdCA9IDAuMixcbiAgY2FsbGJhY2tzID0gbGlzdChjYWxsYmFja19lYXJseV9zdG9wcGluZyhwYXRpZW5jZSA9IDMpKVxuKVxuYGBgIn0= -->
+<pre class="r"><code>history &lt;- model %&gt;% fit(
+  x_train, y_train,
+  epochs = 10,
+  batch_size = 128,
+  validation_split = 0.2,
+  callbacks = list(callback_early_stopping(patience = 3))
+)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYmVzdF9lcG9jaCA8LSB3aGljaChoaXN0b3J5JG1ldHJpY3MkdmFsX2xvc3MgPT0gbWluKGhpc3RvcnkkbWV0cmljcyR2YWxfbG9zcykpXG5sb3NzIDwtIGhpc3RvcnkkbWV0cmljcyR2YWxfbG9zc1tiZXN0X2Vwb2NoXSAlPiUgcm91bmQoMylcbmFjYyA8LSBoaXN0b3J5JG1ldHJpY3MkdmFsX2FjY1tiZXN0X2Vwb2NoXSAlPiUgcm91bmQoMylcblxuZ2x1ZShcIlRoZSBiZXN0IGVwb2NoIGhhZCBhIGxvc3Mgb2Yge2xvc3N9IGFuZCBhbiBhY2N1cmFjeSBvZiB7YWNjfVwiKVxuYGBgIn0= -->
+<pre class="r"><code>best_epoch &lt;- which(history$metrics$val_loss == min(history$metrics$val_loss))
+loss &lt;- history$metrics$val_loss[best_epoch] %&gt;% round(3)
+acc &lt;- history$metrics$val_acc[best_epoch] %&gt;% round(3)
+
+glue(&quot;The best epoch had a loss of {loss} and an accuracy of {acc}&quot;)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
 </div>
 <div id="why-the-lack-of-accuracy" class="section level1">
 <h1>Why the lack of accuracy</h1>
+<p>So why are our recurrent models not doing much better than our one-hot encoding and simple word embedding models? For most sentiment predictions we can capture the essence of the tone (i.e. positive vs. negative) by focusing on a few key words, which our simpler encoding models can do quite well.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>As your prediction task requires more spatial context, then recurrent networks should begin to out perform the more simpler encoding models.</p>
 </div>
 <div id="takeaways" class="section level1">
 <h1>Takeaways</h1>
+<ul>
+<li>Recurrent networks help to capture spatial context within text</li>
+<li>RNNs
+<ul>
+<li>are just multiple perceptions sequentially linked</li>
+<li>pass information through hidden states</li>
+<li>use the Tanh activation to control value magnitudes</li>
+<li>suffer from the vanishing gradient</li>
+<li>implemented with <code>layer_simple_rnn()</code></li>
+</ul></li>
+<li>LSTMs
+<ul>
+<li>use multiple gates that help to “remember” or “forget” information</li>
+<li>computationally expensive</li>
+<li>implemented with <code>layer_lstm()</code></li>
+</ul></li>
+<li>Unique characteristics
+<ul>
+<li>must use <code>return_sequences = TRUE</code> to stack multiple recurrent layers</li>
+<li>recurrent layers have their own special dropout procedures –&gt; don’t use <code>layer_dropout()</code>; rather, use the dropout parameters within the recurrent layer.</li>
+</ul></li>
+</ul>
 <!-- rnb-text-end -->
 </div>
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiSW50cm9kdWN0aW9uIHRvIFJOTnMgJiBMU1RNcyIKb3V0cHV0OiBodG1sX25vdGVib29rCi0tLQoKYGBge3Igc2V0dXAsIGluY2x1ZGU9RkFMU0V9CmtuaXRyOjpvcHRzX2NodW5rJHNldChlY2hvID0gVFJVRSwgY2FjaGUgPSBUUlVFKQpnZ3Bsb3QyOjp0aGVtZV9zZXQoZ2dwbG90Mjo6dGhlbWVfYncoKSkKYGBgCgpJbiB0aGlzIGV4YW1wbGUsIHdlIGFyZSBnb2luZyB0byBsZWFybiBhYm91dCByZWN1cnJlbnQgbmV1cmFsIG5ldHdvcmtzIChSTk5zKQphbmQgbG9uZyBzaG9ydCB0ZXJtIG1lbW9yeSAoTFNUTSkgbmV1cmFsIG5ldHdvcmtzLiBUaGVzZSBhcmNoaXRlY3R1cmVzIGFyZQpkZXNpZ25lZCBmb3Igc2VxdWVuY2UgZGF0YSwgd2hpY2ggY2FuIGluY2x1ZGUgdGV4dCwgdmlkZW9zLCB0aW1lIHNlcmllcywgYW5kCm1vcmUuIEhvd2V2ZXIsIGZvciB0aGlzIHdvcmtzaG9wIHdlIGFyZSBnb2luZyB0byBmb2N1cyBvbiB0ZXh0IGRhdGEgYXMgdGhpcyBpcwp0aGUgZG9tYWluIHNlZWluZyB0aGUgbGFyZ2VzdCBpbXBhY3QgZnJvbSBMU1RNcy4KCkxlYXJuaW5nIG9iamVjdGl2ZXM6CgotIFVuZGVyc3RhbmQgaG93IGFuIFJOTiB3b3JrcywgaG93IHRvIGltcGxlbWVudCBpdCwgYW5kIGl0cyBwcmltYXJ5IHdlYWtuZXNzCi0gVW5kZXJzdGFuZCBob3cgYW4gTFNUTSB3b3JrcyBhbmQgaG93IHRvIGltcGxlbWVudCBpdAoKIyBSZXF1aXJlbWVudHMKCmBgYHtyLCBtZXNzYWdlPUZBTFNFLCB3YXJuaW5nPUZBTFNFfQpsaWJyYXJ5KGtlcmFzKQpsaWJyYXJ5KHRpZHl2ZXJzZSkKbGlicmFyeShnbHVlKQpgYGAKCgojIFByZXBhcmUgb3VyIGRhdGEKCmBgYHtyfQpuX2ZlYXR1cmVzIDwtIDEwMDAwCm1heF9sZW4gPC0gNTAwCmBgYAoKCmBgYHtyfQppbWRiIDwtIGRhdGFzZXRfaW1kYihudW1fd29yZHMgPSBuX2ZlYXR1cmVzKQpjKGMoeF90cmFpbiwgeV90cmFpbiksIGMoeF90ZXN0LCB5X3Rlc3QpKSAlPC0lIGltZGIKYGBgCgpgYGB7cn0KeF90cmFpbiA8LSBwYWRfc2VxdWVuY2VzKHhfdHJhaW4sIG1heGxlbiA9IG1heF9sZW4pCmBgYAoKIyBSTk5zCgpSZXNvdXJjZXM6CgotIGh0dHA6Ly93d3cua3VyaW91cy5wdWIvYmxvZy9JbGx1c3RyYXRlZC1HdWlkZS10by1SZWN1cnJlbnQtTmV1cmFsLU5ldHdvcmtzLTQKLSBodHRwOi8vd3d3Lmt1cmlvdXMucHViL2Jsb2cvSWxsdXN0cmF0ZWQtR3VpZGUtdG8tTFNUTXMtYW5kLUdSVXMtQS1zdGVwLWJ5LXN0ZXAtZXhwbGFuYXRpb24tNgotIGh0dHA6Ly93d3cua3VyaW91cy5wdWIvYmxvZy9JbGx1c3RyYXRlZC1HdWlkZS1vbi1WYW5pc2hpbmctR3JhZGllbnRzLTUKLSBodHRwczovL2NvbGFoLmdpdGh1Yi5pby9wb3N0cy8yMDE1LTA4LVVuZGVyc3RhbmRpbmctTFNUTXMvCgoKIyBUcmFpbiBhbiBSTk4KCmBgYHtyfQptb2RlbCA8LSBrZXJhc19tb2RlbF9zZXF1ZW50aWFsKCkgJT4lCiAgbGF5ZXJfZW1iZWRkaW5nKAogICAgaW5wdXRfZGltID0gbl9mZWF0dXJlcywKICAgIGlucHV0X2xlbmd0aCA9IG1heF9sZW4sCiAgICBvdXRwdXRfZGltID0gMzIsIAogICAgbmFtZSA9ICJFbWJlZGRpbmdzIikgJT4lCiAgbGF5ZXJfc2ltcGxlX3Jubih1bml0cyA9IDMyLCBuYW1lID0gIlJOTiIpICU+JQogIGxheWVyX2RlbnNlKHVuaXRzID0gMSwgYWN0aXZhdGlvbiA9ICJzaWdtb2lkIiwgbmFtZSA9ICJQcmVkaWN0aW9uIikKCm1vZGVsICU+JSBjb21waWxlKAogIG9wdGltaXplciA9ICJybXNwcm9wIiwKICBsb3NzID0gImJpbmFyeV9jcm9zc2VudHJvcHkiLAogIG1ldHJpY3MgPSAiYWNjdXJhY3kiCiAgKQoKc3VtbWFyeShtb2RlbCkKYGBgCgpgYGB7cn0KaGlzdG9yeSA8LSBtb2RlbCAlPiUgZml0KAogIHhfdHJhaW4sIHlfdHJhaW4sCiAgZXBvY2hzID0gMTAsCiAgYmF0Y2hfc2l6ZSA9IDEyOCwKICB2YWxpZGF0aW9uX3NwbGl0ID0gMC4yLAogIGNhbGxiYWNrcyA9IGxpc3QoY2FsbGJhY2tfZWFybHlfc3RvcHBpbmcocGF0aWVuY2UgPSAzKSkKKQpgYGAKCmBgYHtyfQpiZXN0X2Vwb2NoIDwtIHdoaWNoKGhpc3RvcnkkbWV0cmljcyR2YWxfbG9zcyA9PSBtaW4oaGlzdG9yeSRtZXRyaWNzJHZhbF9sb3NzKSkKbG9zcyA8LSBoaXN0b3J5JG1ldHJpY3MkdmFsX2xvc3NbYmVzdF9lcG9jaF0gJT4lIHJvdW5kKDMpCmFjYyA8LSBoaXN0b3J5JG1ldHJpY3MkdmFsX2FjY1tiZXN0X2Vwb2NoXSAlPiUgcm91bmQoMykKCmdsdWUoIlRoZSBiZXN0IGVwb2NoIGhhZCBhIGxvc3Mgb2Yge2xvc3N9IGFuZCBhbiBhY2N1cmFjeSBvZiB7YWNjfSIpCmBgYAoKIyBZb3VyIFR1cm4hICg1bWluKQoKU3BlbmQgYSBmZXcgbWludXRlcyBhZGp1c3RpbmcgdGhpcyBtb2RlbCBhbmQgc2VlIGhvdyBpdCBpbXBhY3RzIHBlcmZvcm1hbmNlLiBZb3UKbWF5IHdhbnQgdG8gdGVzdDoKCi0gRG9lcyBpbmNyZWFzaW5nIGFuZCBkZWNyZWFzaW5nIHRoZSB3b3JkIGVtYmVkZGluZyBkaW1lbnNpb24gYW5kL29yIHRoZSBudW1iZXIKICBvZiBSTk4gbGF5ZXIgdW5pdHMgaW1wYWN0IHBlcmZvcm1hbmNlPwotIEl0J3Mgc29tZXRpbWVzIHVzZXJmdWwgdG8gc3RhY2sgc2V2ZXJhbCByZWN1cnJlbnQgbGF5ZXJzIG9uZSBhZnRlciB0aGUgb3RoZXIKICBpbiBvcmRlciB0byBpbmNyZWFzZSB0aGUgcmVwcmVzZW50YXRpb25hbCBwb3dlciBvZiBhIG5ldHdvcmsuIFdoYXQgaGFwcGVucwogIHdoZW4geW91IHRyeSB0aGlzPwoKYGBge3J9Cm1vZGVsIDwtIGtlcmFzX21vZGVsX3NlcXVlbnRpYWwoKSAlPiUKICBsYXllcl9lbWJlZGRpbmcoCiAgICBpbnB1dF9kaW0gPSBuX2ZlYXR1cmVzLAogICAgaW5wdXRfbGVuZ3RoID0gbWF4X2xlbiwKICAgIG91dHB1dF9kaW0gPSAzMiwgCiAgICBuYW1lID0gIkVtYmVkZGluZ3MiKSAlPiUKICBsYXllcl9zaW1wbGVfcm5uKHVuaXRzID0gMzIsIG5hbWUgPSAiUk5OXzEiLCByZXR1cm5fc2VxdWVuY2VzID0gVFJVRSkgJT4lCiAgbGF5ZXJfc2ltcGxlX3Jubih1bml0cyA9IDMyLCBuYW1lID0gIlJOTl8yIikgJT4lCiAgbGF5ZXJfZGVuc2UodW5pdHMgPSAxLCBhY3RpdmF0aW9uID0gInNpZ21vaWQiLCBuYW1lID0gIlByZWRpY3Rpb24iKQoKbW9kZWwgJT4lIGNvbXBpbGUoCiAgb3B0aW1pemVyID0gInJtc3Byb3AiLAogIGxvc3MgPSAiYmluYXJ5X2Nyb3NzZW50cm9weSIsCiAgbWV0cmljcyA9ICJhY2N1cmFjeSIKICApCgpzdW1tYXJ5KG1vZGVsKQpgYGAKCmBgYHtyfQpoaXN0b3J5IDwtIG1vZGVsICU+JSBmaXQoCiAgeF90cmFpbiwgeV90cmFpbiwKICBlcG9jaHMgPSAxMCwKICBiYXRjaF9zaXplID0gMTI4LAogIHZhbGlkYXRpb25fc3BsaXQgPSAwLjIsCiAgY2FsbGJhY2tzID0gbGlzdChjYWxsYmFja19lYXJseV9zdG9wcGluZyhwYXRpZW5jZSA9IDMpKQopCmBgYAoKYGBge3J9CmJlc3RfZXBvY2ggPC0gd2hpY2goaGlzdG9yeSRtZXRyaWNzJHZhbF9sb3NzID09IG1pbihoaXN0b3J5JG1ldHJpY3MkdmFsX2xvc3MpKQpsb3NzIDwtIGhpc3RvcnkkbWV0cmljcyR2YWxfbG9zc1tiZXN0X2Vwb2NoXSAlPiUgcm91bmQoMykKYWNjIDwtIGhpc3RvcnkkbWV0cmljcyR2YWxfYWNjW2Jlc3RfZXBvY2hdICU+JSByb3VuZCgzKQoKZ2x1ZSgiVGhlIGJlc3QgZXBvY2ggaGFkIGEgbG9zcyBvZiB7bG9zc30gYW5kIGFuIGFjY3VyYWN5IG9mIHthY2N9IikKYGBgCgojIFRoZSBwcm9ibGVtIHdpdGggUk5OcwoKCgojIExTVE1zCgoKIyBUcmFpbiBhbiBMU1RNCgoKIyBXaHkgdGhlIGxhY2sgb2YgYWNjdXJhY3kKCgojIFRha2Vhd2F5cwoK</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiSW50cm9kdWN0aW9uIHRvIFJOTnMgJiBMU1RNcyIKb3V0cHV0OiBodG1sX25vdGVib29rCi0tLQoKYGBge3Igc2V0dXAsIGluY2x1ZGU9RkFMU0V9CmtuaXRyOjpvcHRzX2NodW5rJHNldChlY2hvID0gVFJVRSkKZ2dwbG90Mjo6dGhlbWVfc2V0KGdncGxvdDI6OnRoZW1lX2J3KCkpCmBgYAoKSW4gdGhpcyBleGFtcGxlLCB3ZSBhcmUgZ29pbmcgdG8gbGVhcm4gYWJvdXQgcmVjdXJyZW50IG5ldXJhbCBuZXR3b3JrcyAoUk5OcykKYW5kIGxvbmcgc2hvcnQgdGVybSBtZW1vcnkgKExTVE0pIG5ldXJhbCBuZXR3b3Jrcy4gVGhlc2UgYXJjaGl0ZWN0dXJlcyBhcmUKZGVzaWduZWQgZm9yIHNlcXVlbmNlIGRhdGEsIHdoaWNoIGNhbiBpbmNsdWRlIHRleHQsIHZpZGVvcywgdGltZSBzZXJpZXMsIGFuZAptb3JlLiBIb3dldmVyLCBmb3IgdGhpcyB3b3Jrc2hvcCB3ZSBhcmUgZ29pbmcgdG8gZm9jdXMgb24gdGV4dCBkYXRhIGFzIHRoaXMgaXMKdGhlIGRvbWFpbiBzZWVpbmcgdGhlIGxhcmdlc3QgaW1wYWN0IGZyb20gTFNUTXMuCgpMZWFybmluZyBvYmplY3RpdmVzOgoKLSBVbmRlcnN0YW5kIGhvdyBhbiBSTk4gd29ya3MsIGhvdyB0byBpbXBsZW1lbnQgaXQsIGFuZCBpdHMgcHJpbWFyeSB3ZWFrbmVzcwotIFVuZGVyc3RhbmQgaG93IGFuIExTVE0gd29ya3MgYW5kIGhvdyB0byBpbXBsZW1lbnQgaXQKCiMgUmVxdWlyZW1lbnRzCgpgYGB7ciwgbWVzc2FnZT1GQUxTRSwgd2FybmluZz1GQUxTRX0KbGlicmFyeShrZXJhcykKbGlicmFyeSh0aWR5dmVyc2UpCmxpYnJhcnkoZ2x1ZSkKYGBgCgojIFByZXBhcmUgb3VyIGRhdGEKCkZvciBvdXIgaW50cm9kdWN0aW9uIHdlJ3JlIGdvaW5nIHRvIHN0YXJ0IHdpdGggdGhlIGJ1aWx0LWluIElNREIgZGF0YSBzZXQuIExldCdzCnVzZSB0aGUgMTAsMDAwIG1vc3QgZnJlcXVlbnQgd29yZHMgYW5kIHdlIHdpbGwgc2V0IHRoZSBtYXggbGVuZ3RoIG9mIGVhY2gKcmV2aWV3IHRvIGJlIDUwMCwgd2hpY2ggd2lsbCBjYXB0dXJlIHRoZSBtYWpvcml0eSBvZiBtb3N0IHJldmlld3MuCgpgYGB7cn0KIyBlc3RhYmxpc2ggb3VyIGRhdGEgY2hhcmFjdGVyaXN0aWNzCm5fZmVhdHVyZXMgPC0gMTAwMDAKbWF4X2xlbiA8LSA1MDAKCiMgaW1wb3J0IGFuZCBwcmVwIG91ciBkYXRhCmltZGIgPC0gZGF0YXNldF9pbWRiKG51bV93b3JkcyA9IG5fZmVhdHVyZXMpCmMoYyh4X3RyYWluLCB5X3RyYWluKSwgYyh4X3Rlc3QsIHlfdGVzdCkpICU8LSUgaW1kYgoKeF90cmFpbiA8LSBwYWRfc2VxdWVuY2VzKHhfdHJhaW4sIG1heGxlbiA9IG1heF9sZW4pCmBgYAoKIyBSTk5zCgpUbyBtb2RlbCBvdXIgSU1EQiBkYXRhLCB3ZSBoYXZlIHVzZWQ6CgoxLiBfX29uZS1ob3QgZW5jb2RpbmdfXywgd2hpY2ggaGFzIGEgcHJvYmxlbSB3aXRoIG9ubHkgYWxsb3dpbmcgYSBzaW5nbGUKICAgcmVwcmVzZW50YXRpb24gb2YgYSB3b3JkLiAiU2VhdHRsZSIgaXMgc2ltcGx5IGEgd29yZCBidXQgaGFzIG5vIHJlbGF0aW9uc2hpcAogICB0byAiU2VhaGF3a3MiLCAiV2lsc29uIiwgIndlYXRoZXIiLCBvciAiU3RhcmJ1Y2tzIi4KMi4gX19lbWJlZGRpbmdzX18sIHdoaWNoIGFsbG93IG91ciBpbnB1dHMgKGkuZS4gd29yZHMpIHRvIGhhdmUgcmVsYXRpb25zaGlwcwogICB3aXRoIG90aGVyIGlucHV0cyBidXQgZG9lcyBub3QgY29udHJvbCBmb3IgdGhlIHNlcXVlbnRpYWwgbmF0dXJlIG9mIHRoZQogICBpbnB1dHMuCiAgIApSZWN1cnJlbnQgbmV1cmFsIG5ldHdvcmtzIHdlcmUgc3BlY2lmaWNhbGx5IGRlc2lnbmVkIHRvIG1vZGVsIHNlcXVlbnRpYWwgZGF0YS4KW+KEue+4j10oKQoKUmVzb3VyY2VzOgoKLSBodHRwOi8vd3d3Lmt1cmlvdXMucHViL2Jsb2cvSWxsdXN0cmF0ZWQtR3VpZGUtdG8tUmVjdXJyZW50LU5ldXJhbC1OZXR3b3Jrcy00Ci0gaHR0cDovL3d3dy5rdXJpb3VzLnB1Yi9ibG9nL0lsbHVzdHJhdGVkLUd1aWRlLXRvLUxTVE1zLWFuZC1HUlVzLUEtc3RlcC1ieS1zdGVwLWV4cGxhbmF0aW9uLTYKLSBodHRwOi8vd3d3Lmt1cmlvdXMucHViL2Jsb2cvSWxsdXN0cmF0ZWQtR3VpZGUtb24tVmFuaXNoaW5nLUdyYWRpZW50cy01Ci0gaHR0cHM6Ly9jb2xhaC5naXRodWIuaW8vcG9zdHMvMjAxNS0wOC1VbmRlcnN0YW5kaW5nLUxTVE1zLwoKCiMgVHJhaW4gYW4gUk5OCgpMZXQncyBidWlsZCBhIG1vZGVsIHdpdGggYW4gUk5OIGxheWVyLiBGaXJzdCwgd2Ugc3RpbGwgdXNlIGFuIGVtYmVkZGluZyBsYXllciB0bwphbGxvdyBmb3IgbW9yZSBjb21wbGV4IHJlcHJlc2VudGF0aW9uIG9mIG91ciB3b3JkcyBidXQgd2UgZm9sbG93IHRoYXQgd2l0aApgbGF5ZXJfc2ltcGxlX3JubigpYC4gRXZlcnl0aGluZyBlbHNlIHJlbWFpbnMgdGhlIHNhbWUgYXMgYmVmb3JlLgoKYGBge3J9Cm1vZGVsIDwtIGtlcmFzX21vZGVsX3NlcXVlbnRpYWwoKSAlPiUKICBsYXllcl9lbWJlZGRpbmcoCiAgICBpbnB1dF9kaW0gPSBuX2ZlYXR1cmVzLAogICAgaW5wdXRfbGVuZ3RoID0gbWF4X2xlbiwKICAgIG91dHB1dF9kaW0gPSAzMiwgCiAgICBuYW1lID0gIkVtYmVkZGluZ3MiKSAlPiUKICBsYXllcl9zaW1wbGVfcm5uKHVuaXRzID0gMzIsIG5hbWUgPSAiUk5OIikgJT4lCiAgbGF5ZXJfZGVuc2UodW5pdHMgPSAxLCBhY3RpdmF0aW9uID0gInNpZ21vaWQiLCBuYW1lID0gIlByZWRpY3Rpb24iKQoKbW9kZWwgJT4lIGNvbXBpbGUoCiAgb3B0aW1pemVyID0gInJtc3Byb3AiLAogIGxvc3MgPSAiYmluYXJ5X2Nyb3NzZW50cm9weSIsCiAgbWV0cmljcyA9ICJhY2N1cmFjeSIKICApCgpzdW1tYXJ5KG1vZGVsKQpgYGAKCmBgYHtyfQpoaXN0b3J5IDwtIG1vZGVsICU+JSBmaXQoCiAgeF90cmFpbiwgeV90cmFpbiwKICBlcG9jaHMgPSAxMCwKICBiYXRjaF9zaXplID0gMTI4LAogIHZhbGlkYXRpb25fc3BsaXQgPSAwLjIsCiAgY2FsbGJhY2tzID0gbGlzdChjYWxsYmFja19lYXJseV9zdG9wcGluZyhwYXRpZW5jZSA9IDMpKQopCmBgYAoKYGBge3J9CmJlc3RfZXBvY2ggPC0gd2hpY2goaGlzdG9yeSRtZXRyaWNzJHZhbF9sb3NzID09IG1pbihoaXN0b3J5JG1ldHJpY3MkdmFsX2xvc3MpKQpsb3NzIDwtIGhpc3RvcnkkbWV0cmljcyR2YWxfbG9zc1tiZXN0X2Vwb2NoXSAlPiUgcm91bmQoMykKYWNjIDwtIGhpc3RvcnkkbWV0cmljcyR2YWxfYWNjW2Jlc3RfZXBvY2hdICU+JSByb3VuZCgzKQoKZ2x1ZSgiVGhlIGJlc3QgZXBvY2ggaGFkIGEgbG9zcyBvZiB7bG9zc30gYW5kIGFuIGFjY3VyYWN5IG9mIHthY2N9IikKYGBgCgojIFlvdXIgVHVybiEgKDVtaW4pCgpTcGVuZCBhIGZldyBtaW51dGVzIGFkanVzdGluZyB0aGlzIG1vZGVsIGFuZCBzZWUgaG93IGl0IGltcGFjdHMgcGVyZm9ybWFuY2UuIFlvdQptYXkgd2FudCB0byB0ZXN0OgoKLSBEb2VzIGluY3JlYXNpbmcgYW5kIGRlY3JlYXNpbmcgdGhlIHdvcmQgZW1iZWRkaW5nIGRpbWVuc2lvbiBhbmQvb3IgdGhlIG51bWJlcgogIG9mIFJOTiBsYXllciB1bml0cyBpbXBhY3QgcGVyZm9ybWFuY2U/Ci0gSXQncyBzb21ldGltZXMgdXNlcmZ1bCB0byBzdGFjayBzZXZlcmFsIHJlY3VycmVudCBsYXllcnMgb25lIGFmdGVyIHRoZSBvdGhlcgogIGluIG9yZGVyIHRvIGluY3JlYXNlIHRoZSByZXByZXNlbnRhdGlvbmFsIHBvd2VyIG9mIGEgbmV0d29yay4gV2hhdCBoYXBwZW5zCiAgd2hlbiB5b3UgdHJ5IHRoaXM/CiAgCl9fTm90ZTpfXyBBbiBSTk4gd2lsbCB0YWtlIGlucHV0cyBmcm9tIGRpZmZlcmVudCBwYXJ0cyBvZiBhIHNlcXVlbmNlIGFuZCBwcm9kdWNlCmEgc2luZ2xlIG91dHB1dC4gV2hlbiBzdGFja2luZyBtdWx0aXBsZSByZWN1cnJlbnQgbGF5ZXJzLCB5b3UgbmVlZCB0byBzZXQKYHJldHVybl9zZXF1ZW5jZXMgPSBUUlVFYCBzbyB0aGF0IHlvdSBnZXQgdGhlIG91dHB1dCBmb3IgZWFjaCBwYXJ0IG9mIHRoZQpzZXF1ZW5jZSBzbyB0aGF0IHlvdSBjYW4gc3VwcGx5IGEgc2VxdWVuY2UgaW50byB0aGUgbmV4dCBSTk4gbGF5ZXIuCgpgYGB7cn0KbW9kZWwgPC0ga2VyYXNfbW9kZWxfc2VxdWVudGlhbCgpICU+JQogIGxheWVyX2VtYmVkZGluZygKICAgIGlucHV0X2RpbSA9IG5fZmVhdHVyZXMsCiAgICBpbnB1dF9sZW5ndGggPSBtYXhfbGVuLAogICAgb3V0cHV0X2RpbSA9IDMyLCAKICAgIG5hbWUgPSAiRW1iZWRkaW5ncyIpICU+JQogIGxheWVyX3NpbXBsZV9ybm4odW5pdHMgPSAzMiwgbmFtZSA9ICJSTk5fMSIsIHJldHVybl9zZXF1ZW5jZXMgPSBUUlVFKSAlPiUKICBsYXllcl9zaW1wbGVfcm5uKHVuaXRzID0gMzIsIG5hbWUgPSAiUk5OXzIiKSAlPiUKICBsYXllcl9kZW5zZSh1bml0cyA9IDEsIGFjdGl2YXRpb24gPSAic2lnbW9pZCIsIG5hbWUgPSAiUHJlZGljdGlvbiIpCgptb2RlbCAlPiUgY29tcGlsZSgKICBvcHRpbWl6ZXIgPSAicm1zcHJvcCIsCiAgbG9zcyA9ICJiaW5hcnlfY3Jvc3NlbnRyb3B5IiwKICBtZXRyaWNzID0gImFjY3VyYWN5IgogICkKCnN1bW1hcnkobW9kZWwpCmBgYAoKYGBge3J9Cmhpc3RvcnkgPC0gbW9kZWwgJT4lIGZpdCgKICB4X3RyYWluLCB5X3RyYWluLAogIGVwb2NocyA9IDEwLAogIGJhdGNoX3NpemUgPSAxMjgsCiAgdmFsaWRhdGlvbl9zcGxpdCA9IDAuMiwKICBjYWxsYmFja3MgPSBsaXN0KGNhbGxiYWNrX2Vhcmx5X3N0b3BwaW5nKHBhdGllbmNlID0gMykpCikKYGBgCgpgYGB7cn0KYmVzdF9lcG9jaCA8LSB3aGljaChoaXN0b3J5JG1ldHJpY3MkdmFsX2xvc3MgPT0gbWluKGhpc3RvcnkkbWV0cmljcyR2YWxfbG9zcykpCmxvc3MgPC0gaGlzdG9yeSRtZXRyaWNzJHZhbF9sb3NzW2Jlc3RfZXBvY2hdICU+JSByb3VuZCgzKQphY2MgPC0gaGlzdG9yeSRtZXRyaWNzJHZhbF9hY2NbYmVzdF9lcG9jaF0gJT4lIHJvdW5kKDMpCgpnbHVlKCJUaGUgYmVzdCBlcG9jaCBoYWQgYSBsb3NzIG9mIHtsb3NzfSBhbmQgYW4gYWNjdXJhY3kgb2Yge2FjY30iKQpgYGAKCiMgTFNUTXMKClVuZm9ydHVuYXRlbHksIGEgcHJvYmxlbSB3aXRoIFJOTnMgKGFuZCBhbnkgdmVyeSBkZWVwIG5ldXJhbCBuZXR3b3JrKSBpcyBhcyBvdXIKbmV0d29yayBnZXRzIGRlZXAsIGl0IGxvc2VzIHRoZSBzaWduYWwgZHVlIHRvIHRoZSB2YW5pc2hpbmcgZ3JhZGllbnQgZGVzY2VudApwcm9ibGVtLiBMU1RNcyB3ZXJlIGRldmVsb3BlZCB0byBhZGRyZXNzIHRoaXMgcHJvYmxlbS4gW+KEue+4j10oKQoKIyBUcmFpbiBhbiBMU1RNCgpUbyB0cmFpbiBhbiBMU1RNLCB3ZSBzaW1wbHkgcmVwbGFjZSBgbGF5ZXJfc2ltcGxlX3JubigpYCB3aXRoIGBsYXllcl9sc3RtKClgLgoKYGBge3J9Cm1vZGVsIDwtIGtlcmFzX21vZGVsX3NlcXVlbnRpYWwoKSAlPiUKICBsYXllcl9lbWJlZGRpbmcoCiAgICBpbnB1dF9kaW0gPSBuX2ZlYXR1cmVzLAogICAgaW5wdXRfbGVuZ3RoID0gbWF4X2xlbiwKICAgIG91dHB1dF9kaW0gPSAzMiwgCiAgICBuYW1lID0gIkVtYmVkZGluZ3MiKSAlPiUKICBsYXllcl9sc3RtKHVuaXRzID0gMzIsIG5hbWUgPSAiTFNUTSIpICU+JQogIGxheWVyX2RlbnNlKHVuaXRzID0gMSwgYWN0aXZhdGlvbiA9ICJzaWdtb2lkIiwgbmFtZSA9ICJQcmVkaWN0aW9uIikKCm1vZGVsICU+JSBjb21waWxlKAogIG9wdGltaXplciA9ICJybXNwcm9wIiwKICBsb3NzID0gImJpbmFyeV9jcm9zc2VudHJvcHkiLAogIG1ldHJpY3MgPSAiYWNjdXJhY3kiCiAgKQoKc3VtbWFyeShtb2RlbCkKYGBgCgpgYGB7cn0KaGlzdG9yeSA8LSBtb2RlbCAlPiUgZml0KAogIHhfdHJhaW4sIHlfdHJhaW4sCiAgZXBvY2hzID0gMTAsCiAgYmF0Y2hfc2l6ZSA9IDEyOCwKICB2YWxpZGF0aW9uX3NwbGl0ID0gMC4yLAogIGNhbGxiYWNrcyA9IGxpc3QoY2FsbGJhY2tfZWFybHlfc3RvcHBpbmcocGF0aWVuY2UgPSAzKSkKKQpgYGAKCmBgYHtyfQpiZXN0X2Vwb2NoIDwtIHdoaWNoKGhpc3RvcnkkbWV0cmljcyR2YWxfbG9zcyA9PSBtaW4oaGlzdG9yeSRtZXRyaWNzJHZhbF9sb3NzKSkKbG9zcyA8LSBoaXN0b3J5JG1ldHJpY3MkdmFsX2xvc3NbYmVzdF9lcG9jaF0gJT4lIHJvdW5kKDMpCmFjYyA8LSBoaXN0b3J5JG1ldHJpY3MkdmFsX2FjY1tiZXN0X2Vwb2NoXSAlPiUgcm91bmQoMykKCmdsdWUoIlRoZSBiZXN0IGVwb2NoIGhhZCBhIGxvc3Mgb2Yge2xvc3N9IGFuZCBhbiBhY2N1cmFjeSBvZiB7YWNjfSIpCmBgYAoKIyBZb3VyIFR1cm4hICg1bWluKQoKU3BlbmQgYSBmZXcgbWludXRlcyBhZGp1c3RpbmcgdGhpcyBtb2RlbCBhbmQgc2VlIGhvdyBpdCBpbXBhY3RzIHBlcmZvcm1hbmNlLiBZb3UKbWF5IHdhbnQgdG8gdGVzdDoKCi0gRG9lcyBpbmNyZWFzaW5nIGFuZCBkZWNyZWFzaW5nIHRoZSB3b3JkIGVtYmVkZGluZyBkaW1lbnNpb24gYW5kL29yIHRoZSBudW1iZXIKICBvZiBMU1RNIGxheWVyIHVuaXRzIGltcGFjdCBwZXJmb3JtYW5jZT8KLSBBcyB3ZSBsZWFybmVkIGluIGFuIGVhcmxpZXIgbW9kdWxlLCBkcm9wb3V0IGNhbiBoZWxwIHJlZHVjZSBvdmVyZml0dGluZyBhbmQKICBpbXByb3ZlIG1vZGVsIHBlcmZvcm1hbmNlLiBTZWUgaWYgeW91IGNhbiBhZGQgZHJvcG91dCB0byB5b3VyIG1vZGVsLiBIaW50LAogIGNoZWNrb3V0IHRoZSBkb2NzIChgP2xheWVyX2xzdG0oKWApIGJlY2F1c2UgYWRkaW5nIGRyb3BvdXQgdG8gTFNUTXMgYXJlIGEKICBsaXR0bGUgdW5pcXVlLgogIApfX05vdGU6X18gV2hlbiBhcHBseWluZyBkcm9wb3V0IHRvIGEgcmVjdXJyZW50IG5ldHdvcmssIGl0J3MgaW1wb3J0YW50IHRvIGFwcGx5CnRoZSBzYW1lIGRyb3BvdXQgcGF0dGVybiB0byBlYWNoIHRpbWVzdGVwIHdpdGhpbiB0aGUgcmVjdXJyZW50IGxheWVyLCByYXRoZXIKdGhhbiByYW5kb21seS4gQ29uc2VxdWVudGx5LCByZWN1cnJlbnQgbGF5ZXJzIGhhdmUgdHdvIGRyb3BvdXQgcGFyYW1ldGVyczoKCi0gYGRyb3BvdXRgOiB0aGUgZHJvcG91dCByYXRlIGZvciBpbnB1dHMgZ29pbmcgaW50byB0aGUgcmVjdXJyZW50IGxheWVyCi0gYHJlY3VycmVudF9kcm9wb3V0YDogdGhlIGRyb3BvdXQgcmF0ZSBmb3IgdGhlIHJlY3VycmVudCB1bml0cyB3aXRoaW4gdGhlCiAgIHJlY3VycmVudCBsYXllcgoKYGBge3J9Cm1vZGVsIDwtIGtlcmFzX21vZGVsX3NlcXVlbnRpYWwoKSAlPiUKICBsYXllcl9lbWJlZGRpbmcoCiAgICBpbnB1dF9kaW0gPSBuX2ZlYXR1cmVzLAogICAgaW5wdXRfbGVuZ3RoID0gbWF4X2xlbiwKICAgIG91dHB1dF9kaW0gPSAzMiwgCiAgICBuYW1lID0gIkVtYmVkZGluZ3MiKSAlPiUKICBsYXllcl9sc3RtKHVuaXRzID0gMzIsIGRyb3BvdXQgPSAwLjMsIHJlY3VycmVudF9kcm9wb3V0ID0gMC4zLCBuYW1lID0gIkxTVE0iKSAlPiUKICBsYXllcl9kZW5zZSh1bml0cyA9IDEsIGFjdGl2YXRpb24gPSAic2lnbW9pZCIsIG5hbWUgPSAiUHJlZGljdGlvbiIpCgptb2RlbCAlPiUgY29tcGlsZSgKICBvcHRpbWl6ZXIgPSAicm1zcHJvcCIsCiAgbG9zcyA9ICJiaW5hcnlfY3Jvc3NlbnRyb3B5IiwKICBtZXRyaWNzID0gImFjY3VyYWN5IgogICkKCnN1bW1hcnkobW9kZWwpCmBgYAoKYGBge3J9Cmhpc3RvcnkgPC0gbW9kZWwgJT4lIGZpdCgKICB4X3RyYWluLCB5X3RyYWluLAogIGVwb2NocyA9IDEwLAogIGJhdGNoX3NpemUgPSAxMjgsCiAgdmFsaWRhdGlvbl9zcGxpdCA9IDAuMiwKICBjYWxsYmFja3MgPSBsaXN0KGNhbGxiYWNrX2Vhcmx5X3N0b3BwaW5nKHBhdGllbmNlID0gMykpCikKYGBgCgpgYGB7cn0KYmVzdF9lcG9jaCA8LSB3aGljaChoaXN0b3J5JG1ldHJpY3MkdmFsX2xvc3MgPT0gbWluKGhpc3RvcnkkbWV0cmljcyR2YWxfbG9zcykpCmxvc3MgPC0gaGlzdG9yeSRtZXRyaWNzJHZhbF9sb3NzW2Jlc3RfZXBvY2hdICU+JSByb3VuZCgzKQphY2MgPC0gaGlzdG9yeSRtZXRyaWNzJHZhbF9hY2NbYmVzdF9lcG9jaF0gJT4lIHJvdW5kKDMpCgpnbHVlKCJUaGUgYmVzdCBlcG9jaCBoYWQgYSBsb3NzIG9mIHtsb3NzfSBhbmQgYW4gYWNjdXJhY3kgb2Yge2FjY30iKQpgYGAKCiMgV2h5IHRoZSBsYWNrIG9mIGFjY3VyYWN5CgpTbyB3aHkgYXJlIG91ciByZWN1cnJlbnQgbW9kZWxzIG5vdCBkb2luZyBtdWNoIGJldHRlciB0aGFuIG91ciBvbmUtaG90IGVuY29kaW5nCmFuZCBzaW1wbGUgd29yZCBlbWJlZGRpbmcgbW9kZWxzPyBGb3IgbW9zdCBzZW50aW1lbnQgcHJlZGljdGlvbnMgd2UgY2FuIGNhcHR1cmUKdGhlIGVzc2VuY2Ugb2YgdGhlIHRvbmUgKGkuZS4gcG9zaXRpdmUgdnMuIG5lZ2F0aXZlKSBieSBmb2N1c2luZyBvbiBhIGZldyBrZXkKd29yZHMsIHdoaWNoIG91ciBzaW1wbGVyIGVuY29kaW5nIG1vZGVscyBjYW4gZG8gcXVpdGUgd2VsbC4KCmBgYHtyIGVjaG89RkFMU0V9CmtuaXRyOjppbmNsdWRlX2dyYXBoaWNzKCJpbWFnZXMvY3VzdG9tZXJfcmV2aWV3LmdpZiIpCmBgYAoKQXMgeW91ciBwcmVkaWN0aW9uIHRhc2sgcmVxdWlyZXMgbW9yZSBzcGF0aWFsIGNvbnRleHQsIHRoZW4gcmVjdXJyZW50IG5ldHdvcmtzCnNob3VsZCBiZWdpbiB0byBvdXQgcGVyZm9ybSB0aGUgbW9yZSBzaW1wbGVyIGVuY29kaW5nIG1vZGVscy4KCiMgVGFrZWF3YXlzCgoqIFJlY3VycmVudCBuZXR3b3JrcyBoZWxwIHRvIGNhcHR1cmUgc3BhdGlhbCBjb250ZXh0IHdpdGhpbiB0ZXh0CiogUk5OcwogICAtIGFyZSBqdXN0IG11bHRpcGxlIHBlcmNlcHRpb25zIHNlcXVlbnRpYWxseSBsaW5rZWQKICAgLSBwYXNzIGluZm9ybWF0aW9uIHRocm91Z2ggaGlkZGVuIHN0YXRlcwogICAtIHVzZSB0aGUgVGFuaCBhY3RpdmF0aW9uIHRvIGNvbnRyb2wgdmFsdWUgbWFnbml0dWRlcwogICAtIHN1ZmZlciBmcm9tIHRoZSB2YW5pc2hpbmcgZ3JhZGllbnQKICAgLSBpbXBsZW1lbnRlZCB3aXRoIGBsYXllcl9zaW1wbGVfcm5uKClgCiogTFNUTXMKICAgLSB1c2UgbXVsdGlwbGUgZ2F0ZXMgdGhhdCBoZWxwIHRvICJyZW1lbWJlciIgb3IgImZvcmdldCIgaW5mb3JtYXRpb24KICAgLSBjb21wdXRhdGlvbmFsbHkgZXhwZW5zaXZlCiAgIC0gaW1wbGVtZW50ZWQgd2l0aCBgbGF5ZXJfbHN0bSgpYAoqIFVuaXF1ZSBjaGFyYWN0ZXJpc3RpY3MKICAgLSBtdXN0IHVzZSBgcmV0dXJuX3NlcXVlbmNlcyA9IFRSVUVgIHRvIHN0YWNrIG11bHRpcGxlIHJlY3VycmVudCBsYXllcnMKICAgLSByZWN1cnJlbnQgbGF5ZXJzIGhhdmUgdGhlaXIgb3duIHNwZWNpYWwgZHJvcG91dCBwcm9jZWR1cmVzIC0tPiBkb24ndCB1c2UKICAgICBgbGF5ZXJfZHJvcG91dCgpYDsgcmF0aGVyLCB1c2UgdGhlIGRyb3BvdXQgcGFyYW1ldGVycyB3aXRoaW4gdGhlIHJlY3VycmVudAogICAgIGxheWVyLgogICAgIA==</div>
 
 
 

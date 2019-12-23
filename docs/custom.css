@@ -409,8 +409,11 @@ a, a > code {
 .footnote {
   position: absolute;
   bottom: 3em;
-  padding-right: 4em;
-  font-size: 90%;
+  padding-left: 65em;
+  padding-right: 1em;
+  font-size: 60%;
+  float:right;
+  text-align: right;
 }
 .remark-code-line-highlighted     { background-color: #ffff88; }
 

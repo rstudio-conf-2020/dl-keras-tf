@@ -1295,3 +1295,11 @@ knitr::include_graphics("https://s3.amazonaws.com/book.keras.io/img/ch5/swapping
 
 
 ]
+
+---
+# Back home
+
+<br><br><br><br>
+[.center[`r anicon::faa("home", size = 10, animate = FALSE)`]](https://github.com/rstudio-conf-2020/dl-keras-tf)
+
+.center[https://github.com/rstudio-conf-2020/dl-keras-tf]

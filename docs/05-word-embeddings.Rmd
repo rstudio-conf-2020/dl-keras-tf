@@ -17,6 +17,16 @@ output:
 
 ```{r setup, include=FALSE}
 library(tidyverse)
+
+# Set global knitr chunk options
+knitr::opts_chunk$set(
+  fig.align = "center", 
+  cache = FALSE,
+  error = FALSE,
+  message = FALSE, 
+  warning = FALSE, 
+  collapse = TRUE 
+)
 ```
 
 # Language modeling
@@ -340,3 +350,11 @@ Matrix::tril(similarities) %>% round(2)
 ```{r, echo=FALSE, fig.align='center'}
 knitr::include_graphics("images/embeddings-weights-classification.png")
 ```
+
+---
+# Back home
+
+<br><br><br><br>
+[.center[`r anicon::faa("home", size = 10, animate = FALSE)`]](https://github.com/rstudio-conf-2020/dl-keras-tf)
+
+.center[https://github.com/rstudio-conf-2020/dl-keras-tf]
