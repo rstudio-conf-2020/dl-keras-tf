@@ -31,15 +31,15 @@ knitr::include_graphics("images/sequential-text.gif")
 
 Sometimes our context is nearby:
 
-.center[I grew up in .blue[France] and speak .red[French]]
+_.center[I grew up in .blue[France] and speak .red[French]]_
 
 <br>
 
 Sometimes we need distant context:
 
-.center[My father worked for the .blue[French] retailer .blue[Carrefour] and I
+_.center[My father worked for the .blue[French] retailer .blue[Carrefour] and I
 grew up in a little village called .blue[La Roque-Gageac], which is on the north
-bank of the .blue[Dordogne River]. Consequently, I learned to speak .red[French]]
+bank of the .blue[Dordogne River]. Consequently, I learned to speak .red[French]]_
 
 ]
 
@@ -224,6 +224,151 @@ knitr::include_graphics("https://cdn-images-1.medium.com/max/1600/1*Ku54qmCryZVB
 ---
 # LSTMs
 
+.font120[Similar in nature to RNNs but have additional features to help fight the short-term memory issue of RNNs.]
+
+---
+# LSTMs `r emo::ji("face_screaming_in_fear")`
+
+.font120[Similar in nature to RNNs but have additional features to help fight the short-term memory issue of RNNs.]
+
+```{r, echo=FALSE, out.height="60%", out.width="60%", fig.align='center'}
+knitr::include_graphics("https://miro.medium.com/max/1400/1*0f8r3Vd-i4ueYND1CUrhMA.png")
+```
+
+.footnote[Image: [Michael Phi](http://www.kurious.pub/)]
+
+---
+# Forget gate
+
+.pull-left[
+
+* Information from the previous hidden state and information from the current input is passed through the sigmoid activation function. 
+
+* Values come out between 0 and 1
+   - closer to 0 means to forget
+   - closer to 1 means to remember
+
+<br>
+.center.bold[Decides what information should be thrown away or kept]
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+knitr::include_graphics("https://miro.medium.com/max/1400/1*GjehOa513_BgpDDP6Vkw2Q.gif")
+```
+
+]
+
+.footnote[Image: [Michael Phi](http://www.kurious.pub/)]
+
+---
+# Input gate
+
+.pull-left[
+
+* Step 1: 
+   - `sigmoid(hidden state + current input)`
+   - decides which values we’ll update
+
+* Step 2:
+   - `tahn(hidden state + current input)`
+   - creates vector of new candidate info to be added to the state
+
+* Step 3:
+   - `Step 1 output x Step 2 output`
+
+.center.bold[Decides what new information we’re going to store in the cell state]
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+knitr::include_graphics("https://miro.medium.com/max/1400/1*TTmYy7Sy8uUXxUXfzmoKbA.gif")
+```
+
+]
+
+.footnote[Image: [Michael Phi](http://www.kurious.pub/)]
+
+---
+# Cell state
+
+.pull-left[
+
+* Use outputs of previous gates to update current cell state
+
+* The cell state gets pointwise multiplied by the forget vector. This has a possibility of dropping values in the cell state if it gets multiplied by values near 0. 
+
+* Then we take the output from the input gate and do a pointwise addition which updates the cell state to new values that the neural network finds relevant.
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+knitr::include_graphics("https://miro.medium.com/max/1400/1*S0rXIeO_VoUVOyrYHckUWg.gif")
+```
+
+]
+
+.footnote[Image: [Michael Phi](http://www.kurious.pub/)]
+
+---
+# Output gate
+
+.pull-left[
+
+* Step 1: 
+   - `sigmoid(hidden state + current input)`
+   - decides how to filter our current cell state
+
+* Step 2:
+   - `tahn(hidden state + current input)`
+   - regulates our current cell state values
+
+* Step 3:
+   - `Step 1 output x Step 2 output`
+
+.center.bold[Decides what new information to pass along as our hidden state]
+
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+knitr::include_graphics("https://miro.medium.com/max/1400/1*VOXRGhOShoWWks6ouoDN3Q.gif")
+```
+
+]
+
+.footnote[Image: [Michael Phi](http://www.kurious.pub/)]
+
+---
+# Computational complexity
+
+```{r, echo=FALSE, fig.align='center', out.height="35%", out.width="35%"}
+knitr::include_graphics("images/still_waiting.jpeg")
+```
+
+---
+# Variants
+
+Many variants exists...
+
+* Learning to forget [`r anicon::aia("google-scholar", animate = 'tada', anitype="hover")`](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C47&q=Recurrent+nets+that+time+and+count&btnG=)
+
+* Gate recurrent unit [`r anicon::aia("google-scholar", animate = 'tada', anitype="hover")`](https://arxiv.org/abs/1406.1078)
+
+* Depth gated RNNs [`r anicon::aia("google-scholar", animate = 'tada', anitype="hover")`](https://arxiv.org/pdf/1508.03790v2.pdf)
+
+* Clockwork RNNs [`r anicon::aia("google-scholar", animate = 'tada', anitype="hover")`](https://arxiv.org/pdf/1402.3511v1.pdf)
+
+* Which is best?  .bold[Depends...]
+   - [Greff, et al. (2015)](http://arxiv.org/pdf/1503.04069.pdf)
+   - [Jozefowicz, et al. (2015)](http://jmlr.org/proceedings/papers/v37/jozefowicz15.pdf)
 
 ---
 # Learn more

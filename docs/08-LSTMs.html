@@ -5,6 +5,7 @@
     <meta charset="utf-8" />
     <meta name="author" content="Brad Boehmke" />
     <meta name="date" content="2020-01-27" />
+    <link href="libs/academicons-1.8.6/css/academicons.min.css" rel="stylesheet" />
     <link href="libs/font-awesome-animation-1.0/font-awesome-animation-emi.css" rel="stylesheet" />
     <script src="libs/fontawesome-5.0.13/js/fontawesome-all.min.js"></script>
     <link rel="stylesheet" href="custom.css" type="text/css" />
@@ -34,15 +35,15 @@ class: center, middle, inverse, title-slide
 
 Sometimes our context is nearby:
 
-.center[I grew up in .blue[France] and speak .red[French]]
+_.center[I grew up in .blue[France] and speak .red[French]]_
 
 &lt;br&gt;
 
 Sometimes we need distant context:
 
-.center[My father worked for the .blue[French] retailer .blue[Carrefour] and I
+_.center[My father worked for the .blue[French] retailer .blue[Carrefour] and I
 grew up in a little village called .blue[La Roque-Gageac], which is on the north
-bank of the .blue[Dordogne River]. Consequently, I learned to speak .red[French]]
+bank of the .blue[Dordogne River]. Consequently, I learned to speak .red[French]]_
 
 ]
 
@@ -211,6 +212,139 @@ in CNNs.
 ---
 # LSTMs
 
+.font120[Similar in nature to RNNs but have additional features to help fight the short-term memory issue of RNNs.]
+
+---
+# LSTMs 😱
+
+.font120[Similar in nature to RNNs but have additional features to help fight the short-term memory issue of RNNs.]
+
+&lt;img src="https://miro.medium.com/max/1400/1*0f8r3Vd-i4ueYND1CUrhMA.png" width="60%" height="60%" style="display: block; margin: auto;" /&gt;
+
+.footnote[Image: [Michael Phi](http://www.kurious.pub/)]
+
+---
+# Forget gate
+
+.pull-left[
+
+* Information from the previous hidden state and information from the current input is passed through the sigmoid activation function. 
+
+* Values come out between 0 and 1
+   - closer to 0 means to forget
+   - closer to 1 means to remember
+
+&lt;br&gt;
+.center.bold[Decides what information should be thrown away or kept]
+]
+
+.pull-right[
+
+![](https://miro.medium.com/max/1400/1*GjehOa513_BgpDDP6Vkw2Q.gif)&lt;!-- --&gt;
+
+]
+
+.footnote[Image: [Michael Phi](http://www.kurious.pub/)]
+
+---
+# Input gate
+
+.pull-left[
+
+* Step 1: 
+   - `sigmoid(hidden state + current input)`
+   - decides which values we’ll update
+
+* Step 2:
+   - `tahn(hidden state + current input)`
+   - creates vector of new candidate info to be added to the state
+
+* Step 3:
+   - `Step 1 output x Step 2 output`
+
+.center.bold[Decides what new information we’re going to store in the cell state]
+
+]
+
+.pull-right[
+
+![](https://miro.medium.com/max/1400/1*TTmYy7Sy8uUXxUXfzmoKbA.gif)&lt;!-- --&gt;
+
+]
+
+.footnote[Image: [Michael Phi](http://www.kurious.pub/)]
+
+---
+# Cell state
+
+.pull-left[
+
+* Use outputs of previous gates to update current cell state
+
+* The cell state gets pointwise multiplied by the forget vector. This has a possibility of dropping values in the cell state if it gets multiplied by values near 0. 
+
+* Then we take the output from the input gate and do a pointwise addition which updates the cell state to new values that the neural network finds relevant.
+
+]
+
+.pull-right[
+
+![](https://miro.medium.com/max/1400/1*S0rXIeO_VoUVOyrYHckUWg.gif)&lt;!-- --&gt;
+
+]
+
+.footnote[Image: [Michael Phi](http://www.kurious.pub/)]
+
+---
+# Output gate
+
+.pull-left[
+
+* Step 1: 
+   - `sigmoid(hidden state + current input)`
+   - decides how to filter our current cell state
+
+* Step 2:
+   - `tahn(hidden state + current input)`
+   - regulates our current cell state values
+
+* Step 3:
+   - `Step 1 output x Step 2 output`
+
+.center.bold[Decides what new information to pass along as our hidden state]
+
+
+]
+
+.pull-right[
+
+![](https://miro.medium.com/max/1400/1*VOXRGhOShoWWks6ouoDN3Q.gif)&lt;!-- --&gt;
+
+]
+
+.footnote[Image: [Michael Phi](http://www.kurious.pub/)]
+
+---
+# Computational complexity
+
+&lt;img src="images/still_waiting.jpeg" width="35%" height="35%" style="display: block; margin: auto;" /&gt;
+
+---
+# Variants
+
+Many variants exists...
+
+* Learning to forget [<span>&lt;i class="ai  ai-google-scholar faa-tada animated-hover "&gt;&lt;/i&gt;</span>](https://scholar.google.com/scholar?hl=en&amp;as_sdt=0%2C47&amp;q=Recurrent+nets+that+time+and+count&amp;btnG=)
+
+* Gate recurrent unit [<span>&lt;i class="ai  ai-google-scholar faa-tada animated-hover "&gt;&lt;/i&gt;</span>](https://arxiv.org/abs/1406.1078)
+
+* Depth gated RNNs [<span>&lt;i class="ai  ai-google-scholar faa-tada animated-hover "&gt;&lt;/i&gt;</span>](https://arxiv.org/pdf/1508.03790v2.pdf)
+
+* Clockwork RNNs [<span>&lt;i class="ai  ai-google-scholar faa-tada animated-hover "&gt;&lt;/i&gt;</span>](https://arxiv.org/pdf/1402.3511v1.pdf)
+
+* Which is best?  .bold[Depends...]
+   - [Greff, et al. (2015)](http://arxiv.org/pdf/1503.04069.pdf)
+   - [Jozefowicz, et al. (2015)](http://jmlr.org/proceedings/papers/v37/jozefowicz15.pdf)
 
 ---
 # Learn more
