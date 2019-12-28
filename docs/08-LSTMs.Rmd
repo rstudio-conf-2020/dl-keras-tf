@@ -373,11 +373,15 @@ Many variants exists...
 ---
 # Learn more
 
+- [Deep Learning with R](https://www.manning.com/books/deep-learning-with-r), Ch. 6
+
 - [Colah's blog](https://colah.github.io/)
 
 - [Michael Phi's "Illustrated" blog](http://www.kurious.pub/)
 
+- [Rohan & Lenny: Recurrent Neural Networks & LSTMs](https://ayearofai.com/rohan-lenny-3-recurrent-neural-networks-10300100899b)
 
+- [The Unreasonable Effectiveness of Recurrent Neural Networks](http://karpathy.github.io/2015/05/21/rnn-effectiveness/)
 
 ---
 # Back home

@@ -86,6 +86,7 @@ hyperlink to relevant slides (or additional reading).
 | 11:00 - 12:30 | Collaborative filtering       | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/collaborative-filtering.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/07-recommender-collaborative-filtering/collaborative-filtering.Rmd) | [Excel file](http://bit.ly/dl-07-Excel) |
 | 12:30 - 13:30 | *Lunch break*                 |   |   |   |
 | 13:30 - 15:00 | RNNs & LSTMs             |   |   |   |
+|               | &nbsp;&nbsp;&nbsp;IMDB revisted...again! 😒 | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-intro-to-lstms.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/08-NLP-LSTMs/01-intro-to-lstms.Rmd) | [Slides](http://bit.ly/dl-08) |
 | 15:00 - 15:30 | *Coffee break*                |   |   |   |
 | 15:30 - 17:00 | Project                       |   |   |   |
 

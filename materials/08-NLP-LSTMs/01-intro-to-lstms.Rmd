@@ -57,7 +57,7 @@ To model our IMDB data, we have used:
    inputs.
    
 Recurrent neural networks were specifically designed to model sequential data.
-[ℹ️]()
+[ℹ️](http://bit.ly/dl-08)
 
 # Train an RNN
 
@@ -113,21 +113,15 @@ may want to test:
   in order to increase the representational power of a network. What happens
   when you try this?
   
-__Note:__ An RNN will take inputs from different parts of a sequence and produce
-a single output. When stacking multiple recurrent layers, you need to set
-`return_sequences = TRUE` so that you get the output for each part of the
-sequence so that you can supply a sequence into the next RNN layer.
-
 ```{r}
 model <- keras_model_sequential() %>%
   layer_embedding(
     input_dim = n_features,
     input_length = max_len,
-    output_dim = 32, 
+    output_dim = _____, 
     name = "Embeddings") %>%
-  layer_simple_rnn(units = 32, name = "RNN_1", return_sequences = TRUE) %>%
-  layer_simple_rnn(units = 32, name = "RNN_2") %>%
-  layer_dense(units = 1, activation = "sigmoid", name = "Prediction")
+  layer_simple______(_____) %>%
+  layer_dense(units = 1, activation = _____, name = "Prediction")
 
 model %>% compile(
   optimizer = "rmsprop",
@@ -144,7 +138,7 @@ history <- model %>% fit(
   epochs = 10,
   batch_size = 128,
   validation_split = 0.2,
-  callbacks = list(callback_early_stopping(patience = 3))
+  callbacks = list(callback_early_stopping(patience = _____))
 )
 ```
 
@@ -160,7 +154,7 @@ glue("The best epoch had a loss of {loss} and an accuracy of {acc}")
 
 Unfortunately, a problem with RNNs (and any very deep neural network) is as our
 network gets deep, it loses the signal due to the vanishing gradient descent
-problem. LSTMs were developed to address this problem. [ℹ️]()
+problem. LSTMs were developed to address this problem. [ℹ️](http://bit.ly/dl-08#12)
 
 # Train an LSTM
 
@@ -215,23 +209,16 @@ may want to test:
   checkout the docs (`?layer_lstm()`) because adding dropout to LSTMs are a
   little unique.
   
-__Note:__ When applying dropout to a recurrent network, it's important to apply
-the same dropout pattern to each timestep within the recurrent layer, rather
-than randomly. Consequently, recurrent layers have two dropout parameters:
-
-- `dropout`: the dropout rate for inputs going into the recurrent layer
-- `recurrent_dropout`: the dropout rate for the recurrent units within the
-   recurrent layer
 
 ```{r}
 model <- keras_model_sequential() %>%
   layer_embedding(
     input_dim = n_features,
     input_length = max_len,
-    output_dim = 32, 
+    output_dim = _____, 
     name = "Embeddings") %>%
-  layer_lstm(units = 32, dropout = 0.3, recurrent_dropout = 0.3, name = "LSTM") %>%
-  layer_dense(units = 1, activation = "sigmoid", name = "Prediction")
+  layer______(_____) %>%
+  layer_dense(units = _____, activation = _____, name = "Prediction")
 
 model %>% compile(
   optimizer = "rmsprop",
@@ -248,7 +235,7 @@ history <- model %>% fit(
   epochs = 10,
   batch_size = 128,
   validation_split = 0.2,
-  callbacks = list(callback_early_stopping(patience = 3))
+  callbacks = _____
 )
 ```
 
@@ -278,7 +265,7 @@ should begin to out perform the more simpler encoding models.
 
 * Recurrent networks help to capture spatial context within text
 * RNNs
-   - are just multiple perceptions sequentially linked
+   - are just multiple perceptrons sequentially linked
    - pass information through hidden states
    - use the Tanh activation to control value magnitudes
    - suffer from the vanishing gradient
