@@ -1,0 +1,290 @@
+---
+title: "Project 2: Detecting Duplicate Quora Questions"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE
+  )
+```
+
+```{r}
+library(keras)
+library(tidyverse)
+library(rsample)
+library(testthat)
+library(glue)
+```
+
+# Part 1: Data Preparation
+
+```{r}
+quora_data <- get_file(
+  "quora_duplicate_questions.tsv",
+  "http://qim.fs.quoracdn.net/quora_duplicate_questions.tsv"
+) %>%
+  read_tsv()
+
+expect_equal(dim(quora_data), c(404290, 6))
+```
+
+```{r}
+quora_data <- quora_data %>% sample_frac(0.05)
+```
+
+```{r}
+head(quora_data)
+```
+
+```{r}
+table(quora_data$is_duplicate)
+```
+
+```{r}
+unique_questions <- unique(c(quora_data$question1, quora_data$question2))
+```
+
+```{r}
+unique_questions %>% 
+  str_split(pattern = " ") %>% 
+  unlist() %>% 
+  str_remove_all(pattern = "[[:punct:]]") %>%
+  str_to_lower() %>%
+  unique() %>% 
+  length()
+```
+
+```{r}
+unique_questions %>%
+  map_int(~ str_count(., "\\w+")) %>%
+  quantile(c(0.8, 0.9, 0.95, 0.99), na.rm = TRUE)
+```
+
+
+```{r}
+vocab_size <- 10000  #50000
+max_len <- 20
+embedding_size <- 256
+lstm_units <- 512
+```
+
+
+```{r}
+tokenizer <- text_tokenizer(num_words = vocab_size)
+fit_text_tokenizer(tokenizer, x = unique_questions)
+```
+
+```{r}
+save_text_tokenizer(tokenizer, "tokenizer-question-pairs")
+```
+
+```{r}
+question1 <- texts_to_sequences(tokenizer, quora_data$question1)
+question2 <- texts_to_sequences(tokenizer, quora_data$question2)
+```
+
+```{r}
+question1_padded <- pad_sequences(question1, maxlen = max_len, value = vocab_size + 1)
+question2_padded <- pad_sequences(question2, maxlen = max_len, value = vocab_size + 1)
+```
+
+# Part 2: Simple benchmark
+
+```{r}
+perc_words_question1 <- map2_dbl(question1, question2, ~mean(.x %in% .y))
+perc_words_question2 <- map2_dbl(question2, question1, ~ mean(.x %in% .y))
+
+df_model <- data.frame(
+  perc_words_question1 = perc_words_question1,
+  perc_words_question2 = perc_words_question2,
+  is_duplicate = quora_data$is_duplicate
+) %>%
+  na.omit()
+```
+
+```{r}
+set.seed(123)
+index <- sample.int(nrow(df_model), 0.9 * nrow(df_model))
+benchmark_train <- df_model[index, ]
+benchmark_valid <- df_model[-index, ]
+
+logistic_regression <- glm(
+  is_duplicate ~ perc_words_question1 + perc_words_question2, 
+  family = "binomial",
+  data = benchmark_train
+)
+
+summary(logistic_regression)
+```
+
+
+```{r}
+pred <- predict(logistic_regression, benchmark_valid, type = "response")
+pred <- pred > mean(benchmark_valid$is_duplicate)
+accuracy <- table(pred, benchmark_valid$is_duplicate) %>% 
+  prop.table() %>% 
+  diag() %>% 
+  sum()
+
+glue("Our benchmark model achieves a {round(accuracy * 100, 2)}% accuracy.")
+```
+
+# Part 3: Modeling with 
+
+```{r}
+# input layers
+input_q1 <- layer_input(shape = max_len, name = "Q1")
+input_q2 <- layer_input(shape = max_len, name = "Q2")
+
+q1_embeddings <- input_q1 %>% 
+  layer_embedding(
+    input_dim = vocab_size + 2,
+    output_dim = embedding_size,
+    input_length = max_len,
+    name = "Q1_embeddings"
+  ) %>%
+  layer_flatten()
+
+q2_embeddings <- input_q2 %>% 
+  layer_embedding(
+    input_dim = vocab_size + 2,
+    output_dim = embedding_size,
+    input_length = max_len,
+    name = "Q2_embeddings"
+  ) %>%
+  layer_flatten()
+
+dot <- layer_dot(list(q1_embeddings, q2_embeddings), axes = 1, name = "dot_product")
+
+pred <- dot %>% layer_dense(units = 1, activation = "sigmoid", name = "similarity_prediction")
+```
+
+```{r}
+model <- keras_model(list(input_q1, input_q2), pred)
+model %>% compile(
+  optimizer = "rmsprop", 
+  loss = "binary_crossentropy", 
+  metrics = "accuracy"
+)
+
+summary(model)
+```
+
+```{r}
+train_question1_padded <- question1_padded[index,]
+train_question2_padded <- question2_padded[index,]
+train_response <- quora_data$is_duplicate[index]
+
+val_question1_padded <- question1_padded[-index,]
+val_question2_padded <- question2_padded[-index,]
+val_response <- quora_data$is_duplicate[-index]
+```
+
+
+```{r}
+history <- model %>%
+  fit(
+    list(train_question1_padded, train_question2_padded),
+    train_response, 
+    batch_size = 64, 
+    epochs = 10, 
+    validation_data = list(
+      list(val_question1_padded, val_question2_padded), 
+      val_response
+    ),
+    callbacks = list(
+      callback_early_stopping(patience = 5),
+      callback_reduce_lr_on_plateau(patience = 3)
+    )
+  )
+```
+
+```{r}
+predict_question_pairs <- function(model, tokenizer, q1, q2) {
+  q1 <- texts_to_sequences(tokenizer, list(q1))
+  q2 <- texts_to_sequences(tokenizer, list(q2))
+  
+  q1 <- pad_sequences(q1, 20)
+  q2 <- pad_sequences(q2, 20)
+  
+  as.numeric(predict(model, list(q1, q2)))
+}
+```
+
+```{r}
+predict_question_pairs(model, tokenizer, "What's R programming?", "What is R programming?")
+```
+
+# Part 4: Modeling with 
+
+```{r}
+q1_embeddings <- input_q1 %>% 
+  layer_embedding(
+    input_dim = vocab_size + 2,
+    output_dim = embedding_size,
+    input_length = max_len,
+    embeddings_regularizer = regularizer_l2(0.0001),
+    name = "Q1_embeddings"
+  )
+
+q2_embeddings <- input_q2 %>% 
+  layer_embedding(
+    input_dim = vocab_size + 2,
+    output_dim = embedding_size,
+    input_length = max_len,
+    embeddings_regularizer = regularizer_l2(0.0001),
+    name = "Q2_embeddings"
+  )
+
+q1_lstm <- q1_embeddings %>%
+  layer_lstm(
+    units = lstm_units, 
+    kernel_regularizer = regularizer_l2(0.0001), 
+    name = "Q1_lstm"
+    )
+
+q2_lstm <- q2_embeddings %>%
+  layer_lstm(
+    units = lstm_units, 
+    kernel_regularizer = regularizer_l2(0.0001),  
+    name = "Q2_lstm"
+    )
+
+dot <- layer_dot(list(q1_lstm, q2_lstm), axes = 1, name = "dot_product")
+
+pred <- dot %>% layer_dense(units = 1, activation = "sigmoid", name = "similarity_prediction")
+
+model <- keras_model(list(input_q1, input_q2), pred)
+model %>% compile(
+  optimizer = "rmsprop", 
+  loss = "binary_crossentropy", 
+  metrics = "accuracy"
+)
+
+summary(model)
+```
+
+```{r}
+history <- model %>%
+  fit(
+    list(train_question1_padded, train_question2_padded),
+    train_response, 
+    batch_size = 64, 
+    epochs = 10, 
+    validation_data = list(
+      list(val_question1_padded, val_question2_padded), 
+      val_response
+    ),
+    callbacks = list(
+      callback_early_stopping(patience = 5),
+      callback_reduce_lr_on_plateau(patience = 3)
+    )
+  )
+```
+
+```{r}
+predict_question_pairs(model, tokenizer, "What's R programming?", "What is R programming?")
+```

@@ -317,7 +317,6 @@ if (!dir.exists(movielens_data)) {
 }
 ```
 
-
 ## Yelp reviews
 
 Used for sentiment classification. Contains 1,569,264 samples from the 
@@ -334,4 +333,3 @@ if (!dir.exists(yelp_data)) {
   invisible(file.remove("tmp.tar.gz"))
 }
 ```
-
