@@ -101,16 +101,22 @@ hyperlink to relevant slides (or additional reading).
 
 ## Instructor
 
+<img src="https://avatars2.githubusercontent.com/u/6753598?s=460&v=4" width="100"/>
+
 Brad Boehmke is a Director of Data science at 84.51° where he wears both
 software developer and machine learning engineer hats. His team focuses
 on developing algorithmic processes, solutions, and tools that enable
 84.51° and its data scientists to efficiently extract insights from data
 and provide solution alternatives to decision-makers. He is a visiting
-professor at the University of Cincinnati, author of the Hands-on
-Machine Learning with R and Data Wrangling with R books, creator of
-multiple public and private enterprise R packages, and developer of
+professor at the University of Cincinnati, author of the _[Hands-on
+Machine Learning with R](https://www.crcpress.com/Hands-On-Machine-Learning-with-R/Boehmke-Greenwell/p/book/9781138495685)_ and [_Data Wrangling with R_](https://www.springer.com/us/book/9783319455983)
+books, creator of multiple public and private enterprise R packages, and developer of
 various data science educational content. You can learn more about his
 work, and connect with him, at [bradleyboehmke.github.io](http://bradleyboehmke.github.io/).
+
+## TAs
+
+TBD
 
 -----
 
