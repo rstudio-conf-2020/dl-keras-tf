@@ -116,7 +116,13 @@ work, and connect with him, at [bradleyboehmke.github.io](http://bradleyboehmke.
 
 ## TAs
 
-TBD
+<img src="https://avatars2.githubusercontent.com/u/4276246?s=400&v=4" width="100"/>
+
+__Rick Scavetta__
+
+<img src="https://assets.datacamp.com/users/avatars/000/254/434/medium/B7H1-OMAYMA_SAID.jpg?1534974674" width="100"/>
+
+__Omayma Said__
 
 -----
 
