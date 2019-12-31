@@ -11,6 +11,22 @@ knitr::opts_chunk$set(
   )
 ```
 
+This project is designed to test your current knowledge on applying several of
+the skills you learned today (i.e. embeddings, LSTM, functional keras API). The
+objective is to develop a model that predicts which of the provided pairs of
+Quora questions contain the same meaning (could be classified as duplicates).
+The dataset first appeared in the Kaggle competition
+[Quora Question Pairs](https://www.kaggle.com/c/quora-question-pairs) and
+consists of approximately 400,000 pairs of questions along with a column
+indicating if the question pair is considered a duplicate.
+
+After you complete this project, you can read about Quora's approach to this
+problem in this [blog post](https://bit.ly/39po8VI).
+
+___Good luck!___
+
+# Package Requirements
+
 ```{r}
 library(keras)
 library(tidyverse)
@@ -19,7 +35,10 @@ library(testthat)
 library(glue)
 ```
 
-# Part 1: Data Preparation
+# Import Data
+
+Data can be downloaded from the Kaggle dataset webpage or from Quora’s release
+of the dataset. The data set should contain 404,290 observations and 6 columns.
 
 ```{r}
 quora_data <- get_file(
@@ -31,21 +50,64 @@ quora_data <- get_file(
 expect_equal(dim(quora_data), c(404290, 6))
 ```
 
+<br><center>⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️️⚠️⚠️⚠️⚠️⚠️⚠️</center><br>
+
+Often when you are working with large datasets, it is wise to just start with
+a fraction of the data to do initial model exploration. Once you have a good
+working model, then you can remove this code chunk and run the analysis on the
+full dataset. Note that modeling with the full dataset can take multiple hours
+on a CPU and even close to an hour on a GPU when using LSTM layers.
+
+<br><center>⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️️⚠️⚠️⚠️⚠️⚠️⚠️</center>
+
 ```{r}
+# remove after you have a good working model
+set.seed(123)
 quora_data <- quora_data %>% sample_frac(0.05)
+dim(quora_data)
 ```
 
-```{r}
-head(quora_data)
-```
+Our dataset contains six columns. The last three columns are the ones of
+interest:
+
+* __id__: observation (aka row) ID
+* __qid1__, __qid2__: unique IDs of each question
+* __question1__, __question2__: the full text of each question
+* __is_duplicate__: the target variable, set to 1 if question1 and question2
+  have essentially the same meaning, and 0 otherwise.
 
 ```{r}
-table(quora_data$is_duplicate)
+quora_data
 ```
+
+# Data Exploration
+
+We can see that approximately 36% of our question pairs represent questions with
+similar meaning (aka duplicates). For this project you do not need to worry
+about resampling procedures to balance the response.
+
+```{r}
+table(quora_data$is_duplicate) %>% prop.table()
+```
+
+Now let's assess our questions text. First, we'll get all unique questions.
 
 ```{r}
 unique_questions <- unique(c(quora_data$question1, quora_data$question2))
 ```
+
+Let’s take a look at the number of unique words across all our questions. This
+will helps us to decide the vocabular size, which can be treated as a
+hyperparameter of our model.
+
+The following code chunk:
+
+1. splits up all our text into individual words,
+2. does some text cleaning to remove punctuations and normalize the case,
+3. and computes the number of unique words.
+
+We can see that there are 110,842 unique words in the full dataset (23,739
+unique words when using our sampled data).
 
 ```{r}
 unique_questions %>% 
@@ -57,34 +119,73 @@ unique_questions %>%
   length()
 ```
 
+Let’s take a look at the number of words in each question. This will helps us to
+decide the padding length, another hyperparameter of our model. We can see that
+nearly all questions have 32 or less words.
+
 ```{r}
 unique_questions %>%
   map_int(~ str_count(., "\\w+")) %>%
-  quantile(c(0.8, 0.9, 0.95, 0.99), na.rm = TRUE)
+  quantile(c(0.25, 0.5, 0.75, 0.99), na.rm = TRUE)
 ```
 
+# Set basic hyperparameters
+
+Let's go ahead and set some basic hyperparameters for our model. These are all
+values that you can adjust if time allows.
+
+* __vocab_size__: The size of our vocab. Often, we start with about 50% of our
+  total vocab size. So we can start with about 10,000 for our sampled dataset
+  and 50,000 for the entire dataset. This would be a hyperparameter you tune
+  for optimal performance.
+* __max_len__: Length to pad each question to. Since the text is shorter, and
+  we want to capture as much content as possible in each question, we can set
+  this using the upper quantile (80-95%) of the word distribution, which equates
+  to 15-25.
+* __embedding_size__: The size of the word embeddings. We'll start large since
+  we want to capture fine relationships aross semantic meanings.
+* __lstm_size__: The size of the LSTM sequence embedding. Similar to the word
+  embedding size, We'll start large since we want to capture fine relationships
+  aross semantic meanings.
 
 ```{r}
-vocab_size <- 10000  #50000
+vocab_size <- 10000
 max_len <- 20
 embedding_size <- 256
-lstm_units <- 512
+lstm_size <- 512
 ```
 
+# Preprocess our text
+
+Next, let's create a text tokenizer to define how we want to preprocess the text
+(i.e. convert to lowercase, remove punctuation, token splitting characters) and
+then apply it to our question text.
 
 ```{r}
-tokenizer <- text_tokenizer(num_words = vocab_size)
-fit_text_tokenizer(tokenizer, x = unique_questions)
+tokenizer <- text_tokenizer(num_words = vocab_size) %>%
+  fit_text_tokenizer(unique_questions)
 ```
+
+Let’s save the tokenizer to disk in order to use it for inference later.
 
 ```{r}
 save_text_tokenizer(tokenizer, "tokenizer-question-pairs")
 ```
 
+Next, let's create two new objects:
+
+* `question1`: the text tokenizer for all `quora_data$question1` text
+* `question2`: the text tokenizer for all `quora_data$question2` text
+
 ```{r}
 question1 <- texts_to_sequences(tokenizer, quora_data$question1)
 question2 <- texts_to_sequences(tokenizer, quora_data$question2)
 ```
+
+If you look at the first 6 `question1` obs, we see that they are of different
+length. To create embeddings for these questions, we need to standardize their
+length.  Go ahead and create two new objects (`question1_padded` & `question2_padded`)
+that pad `question1` and `question2`. 
 
 ```{r}
 question1_padded <- pad_sequences(question1, maxlen = max_len, value = vocab_size + 1)
