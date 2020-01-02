@@ -22,6 +22,7 @@ pkgs <- c(
   "caret",
   "crayon",
   "data.table",
+  "flexdashboard",
   "fs",
   "glue",
   "here",

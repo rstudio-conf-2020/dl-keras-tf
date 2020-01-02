@@ -1,0 +1,69 @@
+---
+title: "Quora Question Pairs"
+output: 
+  flexdashboard::flex_dashboard:
+    vertical_layout: scroll
+runtime: shiny_prerendered  
+---
+
+```{r setup, include=FALSE}
+library(keras)
+library(shiny)
+library(scales)
+library(flexdashboard)
+
+# load model and tokenizer objects
+model <- load_model_hdf5("model-question-pairs.hdf5", compile = FALSE)
+tokenizer <- load_text_tokenizer("tokenizer-question-pairs")
+
+# function to predict probability of questions being duplicates
+predict_question_pairs <- function(model, tokenizer, q1, q2) {
+  q1 <- texts_to_sequences(tokenizer, list(q1))
+  q2 <- texts_to_sequences(tokenizer, list(q2))
+  
+  q1 <- pad_sequences(q1, 20)
+  q2 <- pad_sequences(q2, 20)
+  
+  as.numeric(predict(model, list(q1, q2)))
+}
+```
+
+### Questions
+
+```{r}
+textInput("q1", 
+  label = "Question 1:",
+  value = "What is the main benefit of Quora?",
+  width = "100%"
+)
+textInput("q2", 
+  label = "Question 2:",
+  value = "What are the advantages of using Quora?",
+  width = "100%"
+)
+```
+
+### Probability
+
+```{r}
+valueBoxOutput("prob")
+```
+
+```{r, context="server"}
+probability <- debounce(millis = 500, reactive({
+  predict_question_pairs(
+    model, 
+    tokenizer, 
+    input$q1, 
+    input$q2
+  )
+}))
+output$prob <- renderValueBox({
+  valueBox(
+    percent(probability()),
+    icon = "fa-exchange",
+    color = "success",
+    "Probability of questions being duplicates"
+  )
+})
+```

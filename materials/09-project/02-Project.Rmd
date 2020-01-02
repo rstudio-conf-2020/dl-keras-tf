@@ -60,7 +60,7 @@ on a CPU and even close to an hour on a GPU when using LSTM layers.
 
 <br><center>⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️️⚠️⚠️⚠️⚠️⚠️⚠️</center>
 
-```{r}
+```{r, eval=FALSE}
 # remove after you have a good working model
 set.seed(123)
 quora_data <- quora_data %>% sample_frac(0.05)
@@ -550,7 +550,7 @@ save_text_tokenizer(tokenizer, "tokenizer-question-pairs")
 
 2. Save your final model to the `dl-keras-tf/materials/09-project` directory.
 ```{r}
-save_model_hdf5(model, "model-question-pairs.hdf5")
+save_model_hdf5(embedding_model, "model-question-pairs.hdf5")
 ```
 
 3. Now launch the Shiny app by running the `app-question-pairs.Rmd` file in the
