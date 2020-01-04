@@ -1,0 +1,78 @@
+---
+title: "Comparing Optimizers"
+output: html_document
+---
+
+```{r}
+library(keras)     # for deep learning
+library(dplyr)     # for minor data wrangling
+library(ggplot2)   # for plotting
+```
+
+
+```{r}
+mnist <- dataset_mnist()
+c(c(train_images, train_labels), c(test_images, test_labels)) %<-% mnist
+
+train_images <- array_reshape(train_images, c(60000, 28 * 28)) / 255
+test_images <- array_reshape(test_images, c(10000, 28 * 28)) / 255
+train_labels <- to_categorical(train_labels)
+test_labels <- to_categorical(test_labels)
+```
+
+```{r}
+options <- c("sgd", "rmsprop", "adagrad", "adadelta", "adam", "nadam", "adamax")
+results <- tibble()
+```
+
+```{r}
+my_optimizer <- function(optimizer, lr = 0.001) {
+  switch(optimizer,
+         sgd = optimizer_sgd(lr = lr),
+         rmsprop = optimizer_rmsprop(lr = lr),
+         adagrad = optimizer_adagrad(lr = lr),
+         adadelta = optimizer_adadelta(lr = lr),
+         adam = optimizer_adam(lr = lr),
+         nadam = optimizer_nadam(lr = lr),
+         adamax = optimizer_adamax(lr = lr)
+  )
+  }
+```
+
+```{r}
+for (i in options) {
+  
+  cat(i, "optimizer...")
+  
+  network <- keras_model_sequential() %>%
+    layer_dense(units = 512, activation = 'relu', input_shape = ncol(train_images)) %>%
+    layer_dense(units = 10, activation = 'softmax')
+  
+  network %>% compile(
+    loss = "categorical_crossentropy",
+    optimizer = my_optimizer(i),
+    metrics = c("accuracy")
+    )
+  
+  history <- network %>%
+    fit(train_images, train_labels, 
+      batch_size = 128, epochs = 50, 
+      validation_split = 0.2,
+      verbose = FALSE)
+  
+  iteration_results <- as_tibble(history) %>% mutate(optimizer = i)
+  results <- rbind(results, iteration_results)
+  
+  cat(cli::symbol$tick, "\n", append = TRUE)
+}
+```
+
+```{r}
+results %>%
+  filter(metric == "loss", data == "training") %>%
+  ggplot(aes(epoch, value, color = optimizer)) +
+  geom_line(show.legend = FALSE) +
+  scale_y_log10() +
+  facet_wrap(~ optimizer)
+```
+
