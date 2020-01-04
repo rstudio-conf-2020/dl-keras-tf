@@ -3,6 +3,11 @@ title: "NLP: Transfer learning for non-IMDB movie review word embeddings"
 output: html_notebook
 ---
 
+__NOTE__: This is an unfinished notebook that I have not decided whether to keep
+or not. Consequently, I have not set up the data install pipeline for it in the
+Requirements file.
+
+
 ```{r setup, message=FALSE}
 knitr::opts_chunk$set(echo = TRUE, cache = FALSE)
 
