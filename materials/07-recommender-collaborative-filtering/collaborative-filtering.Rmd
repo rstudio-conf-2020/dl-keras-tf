@@ -203,7 +203,7 @@ history <- model %>% fit(
 )
 ```
 
-Our model obtains a a loss in the lower 0.8 range.
+Our model obtains a loss in the lower 0.8 range.
 
 ```{r}
 best_epoch <- which(history$metrics$val_loss == min(history$metrics$val_loss))
@@ -409,7 +409,7 @@ movie_options <- movie_data %>%
 movie_options
 ```
 
-To do so, we create a new matrix that includes the user ID. In this example we
+To do so, we create a new matrix that includes the user ID. In this example we can see
 this column is always "53" since we are only focusing on this one user. We then
 add a second column of all the `dense_movie_id`s for the movies that user 53
 has not watched.
