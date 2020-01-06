@@ -21,6 +21,7 @@ pkgs <- c(
   "caret",
   "crayon",
   "data.table",
+  "flexdashboard",
   "fs",
   "glue",
   "here",
@@ -229,10 +230,6 @@ if (!dir.exists(natural_images)) {
 }
 ```
 
-## Fire images
-
-TBD
-
 ## IMDB
 
 Although there is a built-in IMDB dataset, we will use the original data
@@ -340,5 +337,29 @@ if (!dir.exists(yelp_data)) {
   download.file(url, destfile = "tmp.tar.gz")
   untar("tmp.tar.gz", exdir = data_directory)
   invisible(file.remove("tmp.tar.gz"))
+}
+```
+
+## Cornell reviews
+
+Used for the LSTM mini-project. This dataset comes from
+<http://www.cs.cornell.edu/people/pabo/movie-review-data/> and consists
+of movie reviews introduced in [Pang & Lee
+(2004)](https://bit.ly/2SWGVBZ) with 2000 total observations. Detailed
+information about the data can be found [here](https://bit.ly/2N08o22).
+
+``` r
+cornell_reviews <- file.path(data_directory, "cornell_reviews")
+
+if (!dir.exists(cornell_reviews)) {
+  dir.create(cornell_reviews)
+  url <- "http://www.cs.cornell.edu/people/pabo/movie-review-data/review_polarity.tar.gz"
+  download.file(url, destfile = "review_polarity.tar.gz")
+  untar("review_polarity.tar.gz", exdir = cornell_reviews)
+  invisible(file.remove("review_polarity.tar.gz"))
+  invisible(file.rename(
+    from = file.path(cornell_reviews, "txt_sentoken"), 
+    to = file.path(cornell_reviews, "data"))
+  )
 }
 ```

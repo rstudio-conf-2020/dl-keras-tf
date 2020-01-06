@@ -15,6 +15,7 @@ knitr::opts_chunk$set(echo = TRUE, cache = FALSE)
 library(keras)
 library(tidyverse)
 library(fs)
+library(glue)
 ```
 
 ```{r}
