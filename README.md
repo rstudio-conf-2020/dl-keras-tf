@@ -87,8 +87,9 @@ hyperlink to relevant slides (or additional reading).
 | 12:30 - 13:30 | *Lunch break*                 |   |   |   |
 | 13:30 - 15:00 | RNNs & LSTMs             |   |   |   |
 |               | &nbsp;&nbsp;&nbsp;IMDB revisted...again! 😒 | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-intro-to-lstms.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/08-NLP-LSTMs/01-intro-to-lstms.Rmd) | [Slides](http://bit.ly/dl-08) |
+|               | &nbsp;&nbsp;&nbsp;Mini project - Non-IMDB reviews 😃 | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-your-turn-lstms.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/08-NLP-LSTMs/02-your-turn-lstms.Rmd) | [Solution](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-your-turn-lstms-solution.nb.html) |
 | 15:00 - 15:30 | *Coffee break*                |   |   |   |
-| 15:30 - 17:00 | Project                       |   |   |   |
+| 15:30 - 17:00 | Wrap up                       |   |   |   |
 
 ### Extras
 

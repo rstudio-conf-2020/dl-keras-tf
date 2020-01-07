@@ -1,0 +1,364 @@
+---
+title: "Can You Improve Sentiment Polarity with LSTMs?"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = FALSE, message = FALSE, warning = FALSE)
+```
+
+This project is designed to test your current knowledge on applying LSTMS to the
+[Cornell Movie Review dataset](http://www.cs.cornell.edu/people/pabo/movie-review-data/)
+provided by Cornell University. This dataset contains movie reviews introduced
+in [Pang & Lee (2004)](https://bit.ly/2SWGVBZ) with 2000 total observations.
+Detailed information about the data can be found [here](https://bit.ly/2N08o22).
+
+Your goal is to develop and compare the performance of a word embedding deep
+learning classifier to one that incorporates LSTM sequence embedding. I will
+guide you along the way but this project expects you to do most of the work from
+importing and preprocessing text, to building the models.
+
+Nearly all the code that you need can be found in these notebooks:
+
+* [Intro to word embeddings](http://bit.ly/dl-imdb-embeddings)
+* [Intro to LSTMs](http://bit.ly/dl-lstm-intro)
+
+___Good luck!___
+
+## Requirements
+
+```{r}
+library(keras)
+library(tidyverse)
+library(fs)
+library(glue)
+library(testthat)
+```
+
+## Import the data
+
+For those in the workshop we have already downloaded the movie review data for
+you into the `"/materials/data/cornell_reviews"` directory. Outside of the
+workshop, you can find the download instructions [here](http://bit.ly/dl-rqmts).
+
+```{r}
+movie_dir <- here::here("materials", "data", "cornell_reviews", "data")
+fs::dir_tree(movie_dir, recurse = FALSE)
+```
+
+__Step 1__: You can see the data have already been separated into  positive vs 
+negative sets. The actual reviews are contained in individual .txt files. Similar
+to [Intro to word embeddings](http://bit.ly/dl-imdb-embeddings), let's go ahead
+use this structure to our advantage by iterating over each review and...
+
+1. creating the path to each individual review file,
+2. creating a label based on the “neg” or “pos” folder the review is in, and
+3. saving the output as a data frame with each review on an individual row.
+
+```{r}
+training_files <- movie_dir %>%
+  dir_ls() %>%
+  map(dir_ls) %>%
+  set_names(basename) %>%
+  plyr::ldply(data_frame) %>%
+  set_names(c("label", "path"))
+
+# you should have 2000 total observations
+expect_equal(nrow(training_files), 2000)
+```
+
+Go ahead and take a look at your data frame
+
+```{r}
+training_files
+```
+
+__Step 2__: How many obseravations are in each response label (i.e. "neg" vs "pos")?
+
+```{r}
+count(training_files, label)
+```
+
+__Step 3__: Next, let's iterate over each row and
+
+1. save the label in a labels vector,
+2. import the movie review, and
+3. save in a texts vector.
+
+```{r}
+obs <- nrow(training_files)
+labels <- vector(mode = "integer", length = obs)
+texts <- vector(mode = "character", length = obs)
+
+for (file in seq_len(obs)) {
+  label <- training_files[[file, "label"]]
+  path <- training_files[[file, "path"]]
+  
+  labels[file] <- ifelse(label == "neg", 0, 1)
+  texts[file] <- readChar(path, nchars = file.size(path)) 
+}
+```
+
+The number of observations in your text should be equal to the number of responses.
+
+```{r}
+expect_equal(length(texts), length(labels))
+```
+
+Go ahead and check out the text of a couple reviews.
+
+```{r}
+texts[1]
+```
+
+## Data exploration
+
+__Step 4__: Before preprocessing, let's get a sense of two attributes that will
+help us set two of our preprocessing hyperparameters:
+
+1. How many unique words exist across all our reviews? We'll use this to determine
+a good starting point for preprocessing our text.
+
+2. What is the distribution of word count across all movie reviews (i.e. mean, 
+median)? We'll use this to determine a good starting point for preprocessing our
+text.
+
+```{r}
+text_df <- texts %>%
+  tibble(.name_repair = ~ "text") %>%
+  mutate(text_length = str_count(text, "\\w+"))
+
+unique_words <- text_df %>%
+  tidytext::unnest_tokens(word, text) %>%
+  pull(word) %>%
+  n_distinct()
+
+avg_review_length <- median(text_df$text_length, na.rm = TRUE)
+  
+ggplot(text_df, aes(text_length)) +
+  geom_histogram(bins = 100, fill = "grey70", color = "grey40") +
+  geom_vline(xintercept = avg_review_length, color = "red", lty = "dashed") +
+  scale_x_log10("# words") +
+  ggtitle(glue("Median review length is {avg_review_length} words"),
+          subtitle = glue("Total number of unique words is {unique_words}"))
+```
+
+## Data preprocessing
+
+__Step 5__: Now let's tokenize our text sequences. To do so we:
+
+1. Specify how many words we want to include. Remember, a good starting point
+   to use roughly 50% of the number of unique words in the data. This is a hyper-
+   parameter that you can always come back to and adjust.
+2. Create a `text_tokenizer` object which defines how we want to preprocess the
+   text. The defaults are sufficient.
+3. Apply the tokenizer to our text with `fit_text_tokenizer()`.
+4. Extract our vectorized review data with `texts_to_sequences()`.
+
+```{r}
+# 1
+top_n_words <- 20000
+
+# 2-3
+tokenizer <- text_tokenizer(num_words = top_n_words) %>% 
+  fit_text_tokenizer(texts)
+
+# 4
+sequences <- texts_to_sequences(tokenizer, texts)
+```
+
+Go ahead and check out the first vectorized sequence. Should look familiar from
+earlier modules.
+
+```{r}
+# The vectorized first instance:
+sequences[[1]]
+```
+
+We can see how our tokenizer converted our original text to a cleaned up 
+version:
+
+```{r} 
+cat(crayon::blue("Original text:\n"))
+texts[[1]]
+
+cat(crayon::blue("\nRevised text:\n"))
+paste(unlist(tokenizer$index_word)[sequences[[1]]] , collapse = " ")
+```
+
+__Step 6__: Next, since each review is a different length, we need to limit
+ourselves to a certain number of words so that all our text sequences are the
+same length. 
+
+To do so we:
+
+1. Specify the max length for each sequence. You can start out with 500 and then
+tune this hyperparameter later.
+2. Use `pad_sequences()` to truncate or pad reviews to the specified `max_len`.
+
+```{r}
+max_len <- 500
+features <- pad_sequences(sequences, maxlen = max_len)
+```
+
+Your now have your preprocessed feature data that is a 2D tensor (aka matrix)
+and contains 2000 observations (rows) and `max_len` columns.
+
+```{r}
+dim(features)
+
+expect_equal(class(features), "matrix")
+expect_equal(dim(features), c(obs, max_len))
+```
+
+You can see how the final preprocessed sequence looks for the first movie review
+with the following code:
+
+```{r}
+paste(unlist(tokenizer$index_word)[features[1,]], collapse = " ")
+```
+
+## Model training
+
+__Step 7__: To train our model we will use the `validation_split` procedure
+within `fit()`. Remember, this takes the last XX% of our data to be used as our
+validation set. But if you recall, our data was organized in "neg" and "pos"
+folders so we should randomize our data to make sure our validation set doesn’t
+end up being all positive or negative reviews!
+
+```{r}
+set.seed(123)
+index <- sample(1:nrow(features))
+
+x_train <- features[index, ]
+y_train <- labels[index]
+
+# there should be 2 unique values (0 - neg, 1 - pos) in last 30% of data
+expect_equal(
+  length(unique(y_train[floor(length(y_train) * 0.7):length(y_train)])), 
+  2
+  )
+```
+
+### Word embedding model
+
+__Step 8__: We're now ready to do modeling. For our first model, let's create a
+model that:
+
+1. applies a word embedding layer
+   - `input_dim` should equal `top_n_words`
+   - `input_length` should equal `max_len`
+   - start with `output_dim` = 16
+2. flattens the embeddings
+3. classifies with a dense layer
+
+You can use early stopping if you'd like but for the first model:
+
+* use the default learning rate
+* 20 epochs is more than enough
+* use a batch size of 32
+* use a validation split of 30%
+
+```{r}
+model_basic <- keras_model_sequential() %>%
+  layer_embedding(
+    input_dim = top_n_words,  # number of words we are considering
+    input_length = max_len,   # length that we have set each review to
+    output_dim = 16            # length of our word embeddings
+    ) %>%  
+  layer_flatten() %>%
+  layer_dense(units = 1, activation = "sigmoid")
+  
+model_basic %>% compile(
+  optimizer = "rmsprop",
+  loss = "binary_crossentropy",
+  metrics = "accuracy"
+)
+
+history_basic <- model_basic %>% 
+  fit(
+    x_train, y_train,
+    epochs = 20,
+    batch_size = 32,
+    validation_split = 0.3,
+    callbacks = list(
+      callback_early_stopping(patience = 3, restore_best_weights = TRUE)
+      )
+    )
+```
+
+Run the following code to check out your optimal loss and corresponding accuracy.
+
+```{r}
+best_epoch <- which.min(history_basic$metrics$val_loss)
+best_loss <- history_basic$metrics$val_loss[best_epoch] %>% round(3)
+best_acc <- history_basic$metrics$val_accuracy[best_epoch] %>% round(3)
+
+glue("Our optimal loss is {best_loss} with an accuracy of {best_acc}")
+```
+
+### Word embedding + LSTM model
+
+__Step 9__: Now let's build on to the previous model by adding an LSTM layer
+after the `layer_embedding` layer. When feeding an embedding layer into an LSTM
+layer you __do not__ need to flatten the layer. Reference the [Intro to LSTMs notebook](http://bit.ly/dl-lstm-intro#train-an-lstm). For this first LSTM model
+use `units = 32`.
+
+```{r}
+model_lstm <- keras_model_sequential() %>%
+  layer_embedding(
+    input_dim = top_n_words,  # number of words we are considering
+    input_length = max_len,   # length that we have set each review to
+    output_dim = 16            # length of our word embeddings
+    ) %>%  
+  layer_lstm(units = 32) %>%
+  layer_dense(units = 1, activation = "sigmoid") 
+
+model_lstm %>% compile(
+  optimizer = "rmsprop",
+  loss = "binary_crossentropy",
+  metrics = "accuracy"
+)
+
+history_lstm <- model_lstm %>% fit(
+  x_train, y_train,
+  epochs = 20,
+  batch_size = 32,
+  validation_split = 0.3,
+  callbacks = list(
+    callback_early_stopping(patience = 3, restore_best_weights = TRUE)
+    )
+)
+```
+
+Run the following code to check out your optimal loss and corresponding accuracy.
+
+1. How does it compare to the word embedding only model?
+2. Why do you think there is a difference?
+
+```{r}
+best_epoch <- which.min(history_lstm$metrics$val_loss)
+best_loss <- history_lstm$metrics$val_loss[best_epoch] %>% round(3)
+best_acc <- history_lstm$metrics$val_accuracy[best_epoch] %>% round(3)
+
+glue("Our optimal loss is {best_loss} with an accuracy of {best_acc}")
+```
+
+### Search for a better model
+
+__Step 10__: Spend the rest of the time tuning hyperparameters and see if you
+can find a better model. Things you can try:
+
+* Preprocessing hyperparameters
+   - adjust the number of words to retain in the word index (`top_n_words`)
+   - adjust the size of the sequences (`max_len`)
+* Word embedding layer
+   - adjust the `output_dim`
+* LSTM layer
+   - adjust the number of `units`
+   - add dropout (ref http://bit.ly/dl-lstm-intro#your-turn-5min-1)
+   - maybe even add a 2nd LSTM layer
+* Other
+   - adjust the learning rate (or even the optimizer (i.e. try "adam"))
+   - adjust the `batch_size`
+   - add a callback to adjust the learning upon plateauing
