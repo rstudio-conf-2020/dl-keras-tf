@@ -90,6 +90,8 @@ hyperlink to relevant slides (or additional reading).
 |               | &nbsp;&nbsp;&nbsp;Mini project - Non-IMDB reviews 😃 | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-your-turn-lstms.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/08-NLP-LSTMs/02-your-turn-lstms.Rmd) | [Solution](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-your-turn-lstms-solution.nb.html) |
 | 15:00 - 15:30 | *Coffee break*                |   |   |   |
 | 15:30 - 17:00 | Wrap up                       |   |   |   |
+|               | &nbsp;&nbsp;&nbsp;Final words of wisdom 🙄 |   |   |   |
+|               | &nbsp;&nbsp;&nbsp;Final project (time dependent)   |   |   | [Slides](https://rstudio-conf-2020.github.io/dl-keras-tf/09-wrap-up.html) |
 
 ### Extras
 
