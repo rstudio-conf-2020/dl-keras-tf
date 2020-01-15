@@ -28,6 +28,7 @@ pkgs <- c(
   "here",
   "jpeg",
   "keras",
+  "mlbench",
   "plotly",
   "progress",
   "recipes",

@@ -649,8 +649,12 @@ How can a simple semi-linear transformation work so well?
    
 How can a simple semi-linear transformation work so well?
 
-Like an origami, when we combine many simple geometric transformations, we can
-create very complex patterns.
+* Many simple geometric transformations can produce very complex patterns.
+
+* Other benefits (see [Glorot et al. (2011)](http://proceedings.mlr.press/v15/glorot11a/glorot11a.pdf)):
+   - computational simplicity
+   - representational sparcity
+   - linear behavior
 
 ]
 
@@ -670,6 +674,9 @@ network &lt;- keras_model_sequential() %&gt;%
   layer_dense(units = 512, activation = 'relu', input_shape = ncol(train_images)) %&gt;%
 * layer_dense(units = 10, activation = 'softmax')
 ```
+
+&lt;br&gt;&lt;br&gt;
+.center.blue.font120[Completely dependent on the type of prediction you are making]
 
 ---
 # Output layer
@@ -737,7 +744,7 @@ Two primary arguments of concern for the final output layer:
 
 1. number of units
    - regression: `units = 1`:
-   - binary classification: `units = 2`
+   - binary classification: `units = 1`
    - multi-class classification: `units = n`
 
 ]
@@ -1031,8 +1038,8 @@ _Loss function (objective function)_ : the quantity that will be minimized durin
 * log cosine hinge
 * binary cross entropy
 * categorical hinge
-* categorical cross entropy
-* sparse categorical cross entropy
+* categorical crossentropy
+* sparse categorical crossentropy
 * Kullback-Leibler divergence
 * Poisson
 * cosine proximity
@@ -1068,8 +1075,8 @@ _Loss function (objective function)_ : the quantity that will be minimized durin
 * log cosine hinge
 * .blue[binary cross entropy]
 * categorical hinge
-* .blue[categorical cross entropy]
-* sparse categorical cross entropy
+* .blue[categorical crossentropy]
+* sparse categorical crossentropy
 * Kullback-Leibler divergence
 * Poisson
 * cosine proximity
@@ -1108,8 +1115,8 @@ _Loss function (objective function)_ : the quantity that will be minimized durin
 * log cosine hinge
 * .blue[binary cross entropy]
 * categorical hinge
-* .blue[categorical cross entropy]
-* sparse categorical cross entropy
+* .blue[categorical crossentropy]
+* sparse categorical crossentropy
 * Kullback-Leibler divergence
 * Poisson
 * cosine proximity
@@ -1324,8 +1331,7 @@ minimum.
 * The size of the step is called our ___learning rate ( `\(\eta\)` )___ .white[
 
    - Too small: will take forever to converge
-   - Too big: risk never finding the minimum
-   - Defaults are reliable]
+   - Too big: risk never finding the minimum]
    
 `$$-\eta \text{ }\frac{\partial \text{ temperature}}{\partial \text{ shower handle position}}$$`
 
@@ -1353,7 +1359,6 @@ minimum.
 
    - Too small: will take forever to converge
    - Too big: risk jumping over the minimum
-   - Defaults are reliable
    
 `$$-\eta \text{ }\frac{\partial \text{ temperature}}{\partial \text{ shower handle position}}$$`
 
@@ -1411,9 +1416,7 @@ layer as `\(\partial \text{layer}_2 \times \partial \text{layer}_1 \Rightarrow \
 
 .pull-right[
 
-&lt;img src="images/saddle_point_evaluation_optimizers.gif" style="display: block; margin: auto;" /&gt;
-
-.right.font50[[Sebastian Ruder (2016)](https://ruder.io/optimizing-gradient-descent/)]
+&lt;img src="02-hello-dl-world_files/figure-html/unnamed-chunk-76-1.gif" style="display: block; margin: auto;" /&gt;
 
 ]
 
@@ -1436,8 +1439,9 @@ layer as `\(\partial \text{layer}_2 \times \partial \text{layer}_1 \Rightarrow \
 
 .pull-right[
 
-&lt;img src="02-hello-dl-world_files/figure-html/unnamed-chunk-77-1.gif" style="display: block; margin: auto;" /&gt;
+&lt;img src="images/saddle_point_evaluation_optimizers.gif" style="display: block; margin: auto;" /&gt;
 
+.right.font50[[Sebastian Ruder (2016)](https://ruder.io/optimizing-gradient-descent/)]
 ]
 
 
@@ -1474,7 +1478,7 @@ network %&gt;% compile(
 
 ]
 
-.center[.content-box-grey[RMSprop is typically a great default optimizer.]]
+.center[.content-box-grey[RMSprop &amp; Adam are two great default optimizers.]]
 
 ---
 # Tracking additional metrics

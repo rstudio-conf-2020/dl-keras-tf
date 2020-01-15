@@ -219,7 +219,7 @@ network %>% compile(
 
 ## 3. Execute training loop [ℹ️](http://bit.ly/dl-01#79)
 
-```{r train, message=FALSE}
+```{r train}
 history <- network %>% 
   fit(train_images, train_labels, 
       batch_size = 128, epochs = 20, 
@@ -236,10 +236,15 @@ can be modified like any other `ggplot2` plot (as long as `ggplot2` is loaded.
 plot(history) + ggtitle("My first deep learning model!")
 ```
 
-# YOUR TURN!
 
-1. Identify the optimal number of epochs from our previous model
-2. Fill in the blanks below and re-run the model
+# YOUR TURN! 
+
+1. Poke around at the `history` object, what information does it contain?
+2. Try re-running the model with more or less hidden units or add another hidden
+   layer. How do your results change?
+3. Pick a final model structure and using the optimal number of epochs for your
+   model that minimizes the validation loss (`history$metrics$val_loss`)?
+4. Fill in the blanks below and re-run the model with this number of epochs.
 
 ```{r optimal-model}
 network <- keras_model_sequential() %>%
@@ -274,7 +279,7 @@ metrics
 
 ## Predictions
 
-You can predict either the probability of each class. Note that column 1 is for 
+You can predict the probability of each class. Note that column 1 is for
 digit 0, column 2 is for digit 1, ..., column 10 is for digit 9.
 
 ```{r predict-probabilities}
@@ -344,7 +349,7 @@ data.frame(target = mnist$test$y,
 
 # Visualize missed predictions
 
-Lastly, lets check out those mis-predicted digits.
+Lastly, lets check out those mispredicted digits.
 
 ```{r mis-predicted-digits}
 missed <- which(predictions != actual)

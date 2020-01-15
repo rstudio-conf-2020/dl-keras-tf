@@ -714,8 +714,12 @@ ggplot(df, aes(x, y)) +
    
 How can a simple semi-linear transformation work so well?
 
-Like an origami, when we combine many simple geometric transformations, we can
-create very complex patterns.
+* Many simple geometric transformations can produce very complex patterns.
+
+* Other benefits (see [Glorot et al. (2011)](http://proceedings.mlr.press/v15/glorot11a/glorot11a.pdf)):
+   - computational simplicity
+   - representational sparcity
+   - linear behavior
 
 ]
 
@@ -736,6 +740,9 @@ network <- keras_model_sequential() %>%
   layer_dense(units = 512, activation = 'relu', input_shape = ncol(train_images)) %>%
   layer_dense(units = 10, activation = 'softmax') #<<
 ```
+
+<br><br>
+.center.blue.font120[Completely dependent on the type of prediction you are making]
 
 ---
 # Output layer
@@ -804,7 +811,7 @@ Two primary arguments of concern for the final output layer:
 
 1. number of units
    - regression: `units = 1`:
-   - binary classification: `units = 2`
+   - binary classification: `units = 1`
    - multi-class classification: `units = n`
 
 ]
@@ -1119,8 +1126,8 @@ _Loss function (objective function)_ : the quantity that will be minimized durin
 * log cosine hinge
 * binary cross entropy
 * categorical hinge
-* categorical cross entropy
-* sparse categorical cross entropy
+* categorical crossentropy
+* sparse categorical crossentropy
 * Kullback-Leibler divergence
 * Poisson
 * cosine proximity
@@ -1156,8 +1163,8 @@ _Loss function (objective function)_ : the quantity that will be minimized durin
 * log cosine hinge
 * .blue[binary cross entropy]
 * categorical hinge
-* .blue[categorical cross entropy]
-* sparse categorical cross entropy
+* .blue[categorical crossentropy]
+* sparse categorical crossentropy
 * Kullback-Leibler divergence
 * Poisson
 * cosine proximity
@@ -1196,8 +1203,8 @@ _Loss function (objective function)_ : the quantity that will be minimized durin
 * log cosine hinge
 * .blue[binary cross entropy]
 * categorical hinge
-* .blue[categorical cross entropy]
-* sparse categorical cross entropy
+* .blue[categorical crossentropy]
+* sparse categorical crossentropy
 * Kullback-Leibler divergence
 * Poisson
 * cosine proximity
@@ -1511,8 +1518,7 @@ minimum.
 * The size of the step is called our ___learning rate ( $\eta$ )___ .white[
 
    - Too small: will take forever to converge
-   - Too big: risk never finding the minimum
-   - Defaults are reliable]
+   - Too big: risk never finding the minimum]
    
 $$-\eta \text{ }\frac{\partial \text{ temperature}}{\partial \text{ shower handle position}}$$
 
@@ -1570,7 +1576,6 @@ minimum.
 
    - Too small: will take forever to converge
    - Too big: risk jumping over the minimum
-   - Defaults are reliable
    
 $$-\eta \text{ }\frac{\partial \text{ temperature}}{\partial \text{ shower handle position}}$$
 
@@ -1692,33 +1697,6 @@ knitr::include_graphics("images/multi-layer-shower.png")
 
 .pull-right[
 
-```{r, echo=FALSE}
-knitr::include_graphics("images/saddle_point_evaluation_optimizers.gif")
-```
-
-.right.font50[[Sebastian Ruder (2016)](https://ruder.io/optimizing-gradient-descent/)]
-
-]
-
----
-# Backpropagation
-
-.pull-left[
-
-* This updating of our weights is what is called ___backpropagation___.
-
-* This simple example illustrated basic gradient descent backpropagation.
-
-* There have been several algorithms developed that slightly modify and _optimize_ this approach [`r anicon::aia("google-scholar", animate = 'tada', anitype="hover", rtext = "(Sebastian Ruder)")`](http://ruder.io/optimizing-gradient-descent/).
-
-* A main differentiating component is ___momentum___.
-
-
-
-]
-
-.pull-right[
-
 ```{r, echo=FALSE, fig.height=4, message=FALSE, warning=FALSE}
 set.seed(123)  # for reproducibility
 x <- seq(from = 0, to = 4.25 * pi, length = 100)
@@ -1749,6 +1727,32 @@ suppressMessages(suppressWarnings(
 ))
 ```
 
+]
+
+---
+# Backpropagation
+
+.pull-left[
+
+* This updating of our weights is what is called ___backpropagation___.
+
+* This simple example illustrated basic gradient descent backpropagation.
+
+* There have been several algorithms developed that slightly modify and _optimize_ this approach [`r anicon::aia("google-scholar", animate = 'tada', anitype="hover", rtext = "(Sebastian Ruder)")`](http://ruder.io/optimizing-gradient-descent/).
+
+* A main differentiating component is ___momentum___.
+
+
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/saddle_point_evaluation_optimizers.gif")
+```
+
+.right.font50[[Sebastian Ruder (2016)](https://ruder.io/optimizing-gradient-descent/)]
 ]
 
 
@@ -1784,7 +1788,7 @@ network %>% compile(
 
 ]
 
-.center[.content-box-grey[RMSprop is typically a great default optimizer.]]
+.center[.content-box-grey[RMSprop & Adam are two great default optimizers.]]
 
 ---
 # Tracking additional metrics
