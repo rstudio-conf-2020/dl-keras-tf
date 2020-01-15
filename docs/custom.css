@@ -591,6 +591,19 @@ a, a > code {
         margin-left: 00px;
       }
       
+      .sf-title-slide {
+        background-color: #FAFAFA;
+          border-top: 0px solid #FAFAFA;
+        background-image: 
+          linear-gradient(
+            rgba(255, 255, 255, 0), 
+            rgba(231, 85, 60, .1), 
+            rgba(68, 112, 153, 1)
+          ),
+          url(images/robert-bye-678640-unsplash.jpg);
+        background-size: cover;
+      }
+      
       .title-slide {
         background-color: #FAFAFA;
           border-top: 80px solid #FAFAFA;
@@ -616,6 +629,35 @@ a, a > code {
         margin-left: 15px;
       }
       .title-slide > h3  {
+        color: #1A292C;
+          text-shadow: none;
+        font-weight: 300;
+        font-size: 25px;
+        text-align: left;
+        margin-left: 15px;
+        margin-bottom: -30px;
+      }
+      
+      .sf-title-slide > h1  {
+        color: #1A292C;
+          font-size: 40px;
+        text-shadow: none;
+        font-weight: 400;
+        text-align: left;
+        margin-left: 15px;
+        padding-top: 80px;
+      }
+      .sf-title-slide > h2  {
+        margin-top: -25px;
+        padding-bottom: -20px;
+        color: #1A292C;
+          text-shadow: none;
+        font-weight: 300;
+        font-size: 35px;
+        text-align: left;
+        margin-left: 15px;
+      }
+      .sf-title-slide > h3  {
         color: #1A292C;
           text-shadow: none;
         font-weight: 300;

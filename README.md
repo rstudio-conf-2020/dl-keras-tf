@@ -97,10 +97,11 @@ hyperlink to relevant slides (or additional reading).
 
 | Activity                      | Notebook | Source Code |
 | :---------------------------- | :--------: | :-----------: |
-| k-fold cross validation       | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/validation-procedures.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/99-extras/validation-procedures.Rmd) |
+| Improving generalization with k-fold cross validation       | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/validation-procedures.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/99-extras/validation-procedures.Rmd) |
 | Performing a grid search | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/imdb-grid-search.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/99-extras/imdb-grid-search.Rmd) |
 | Linear regression with stochastic gradient descent | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/manual-gradient-descent.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/99-extras/manual-gradient-descent.Rmd) |
 | Diagnosing model performance with learning curves | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/learning-curve-diagnostics.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/99-extras/learning-curve-diagnostics.Rmd) |
+| Save your models for later with serialization | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/save-your-models.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/99-extras/save-your-models.Rmd) |
 
 
 ## Instructor

@@ -1,0 +1,145 @@
+---
+title: "Save your models for later with serialization"
+output: html_notebook
+---
+
+Given that deep learning models can take hours, days and even weeks to train, it is important to know how to save and load them from disk. In this notebook you will discover how you can save your Keras models to file and load them up again to make predictions. After completing this lesson you will know:
+
+* How to save and load Keras model weights to HDF5 formatted files.
+* How to save and load model weights and architecture together.
+
+Keras can separate the concerns of saving your model architecture and saving your model weights. Model weights are saved to HDF5 format. This is a grid format that is ideal for storing multi-dimensional arrays of numbers. The model structure can be described and saved (and loaded) using two different formats: JSON and YAML.
+
+Each example will also demonstrate saving and loading your model weights to HDF5 formatted files. The examples will use a simple network trained on the Pima Indians onset of diabetes binary classification dataset.
+
+## Requirements
+
+```{r}
+library(keras)
+library(mlbench) # for the data
+data(PimaIndiansDiabetes)
+
+head(PimaIndiansDiabetes)
+```
+
+Let's create and evaluate a simple model so we can demonstrate consistency in
+approaches.
+
+```{r}
+# prep data
+X <- PimaIndiansDiabetes[, 1:8] %>% as.matrix()
+Y <- PimaIndiansDiabetes[["diabetes"]]
+Y <- ifelse(Y == "neg", 0, 1)
+
+# create model generating function
+create_model <- function() {
+  model <- keras_model_sequential() %>%
+  layer_dense(units = 12, input_shape = ncol(X), activation = "relu") %>%
+  layer_dense(units = 8, activation = "relu") %>%
+  layer_dense(units = 1, activation = "sigmoid")
+
+model %>% compile(
+  loss = 'binary_crossentropy', 
+  optimizer = 'adam', 
+  metrics = 'accuracy'
+  )
+  return(model)
+}
+
+# build, train and evaluate model
+model <- create_model()
+model %>% fit(X, Y, epochs = 150, batch_size = 10, verbose = 0)
+model %>% evaluate(X, Y, verbose = 0)
+```
+
+
+## Save your model weights to HDF5 format
+
+The Hierarchical Data Format or HDF5 for short is a flexible data storage format and is convenient for storing large arrays of real values, as we have in the weights of neural networks. We can save our model weights to this format as follows.
+
+```{r}
+save_model_weights_hdf5(model, "pima_weights.h5")
+```
+
+Note, this does not save the model architecture. Consequently, we can re-create our model architecture, load our saved weights into this model, and we will get the exact same results as before.
+
+```{r}
+# create new model
+new_model <- create_model()
+
+# load weights
+load_model_weights_hdf5(new_model, "pima_weights.h5")
+
+# evaluate the model
+new_model %>% evaluate(X, Y, verbose = 0)
+```
+
+## Save your model configuration to HDF5 format
+
+We can also save the model configuration along with the weights and optimizer configuration. Saving a fully-functional model configuration is very useful as you can load them in TensorFlow.js and then train and run them in web browsers, or convert them to run on mobile devices using TensorFlow Lite. For example, we can inspect our initial model's architecture:
+
+```{r}
+model
+```
+
+Now we can save it with `save_model_hdf5()`:
+
+```{r}
+model %>% save_model_hdf5("pima_model.h5")
+```
+
+When we reload the model we see that we have the same architecture:
+
+```{r}
+imported_h5_model <- load_model_hdf5("pima_model.h5")
+summary(imported_h5_model)
+```
+
+And it has saved the same weight configuration as we get the same evaluation results.
+
+```{r}
+imported_h5_model %>% evaluate(X, Y, verbose = 0)
+```
+
+Since the optimizer-state is recovered, you can resume training from exactly where you left off. For example, if we wanted to continue training this model by executing 10 more epochs we can and we see that we get some initial improvement.
+
+```{r}
+imported_h5_model %>% fit(X, Y, epochs = 10, batch_size = 10, verbose = 0)
+imported_h5_model %>% evaluate(X, Y, verbose = 0)
+```
+
+
+## Save your model configuration to a serialized TF format
+
+An alternative is saving your model configuration to a serialized TensorFlow file format which is compatible with [TensorFlow Serving](https://www.tensorflow.org/tfx/guide/serving).
+
+```{r}
+model %>% save_model_tf("pima_model")
+```
+
+Using `save_model_tf()` will create a model directory with the model and other assets.
+
+```{r}
+list.files("pima_model")
+```
+
+We can reload the fully configured model:
+
+```{r}
+imported_tf_model <- load_model_tf("pima_model")
+summary(imported_tf_model)
+```
+
+Which provides the same evaluation scores as before. 
+
+```{r}
+imported_tf_model %>% evaluate(X, Y, verbose = 0)
+```
+
+And similar to the HDF5 format, we can pick up where we left off with our training.
+
+```{r}
+imported_tf_model %>% fit(X, Y, epochs = 10, batch_size = 10, verbose = 0)
+imported_tf_model %>% evaluate(X, Y, verbose = 0)
+```
+

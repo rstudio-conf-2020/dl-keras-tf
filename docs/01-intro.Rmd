@@ -39,16 +39,16 @@ thm <- theme_bw()
 theme_set(thm)
 ```
 
-class: title-slide   
+class: sf-title-slide   
 <a href="https://github.com/rstudio-conf-2020/dl-keras-tf"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"></a>
 
 
-<br><br><br><br>
-# .font250[Deep Learning with `r anicon::faa("r-project", animate = 'pulse', speed = 'slow', color = 'steelblue')`]
-# .font120[Using Keras with Tensorflow backend]
+<br><br><br><br><br><br><br>
+# .font250.white[Deep Learning with `r anicon::faa("r-project", animate = 'pulse', speed = 'slow', color = 'steelblue')`]
+# .font120.white[Using Keras with Tensorflow backend]
 
-### Brad Boehmke
-### `rstudio::conf(2020)`
+### .white[Brad Boehmke]
+### .white[`rstudio::conf(2020)`]
 
 ---
 
@@ -119,6 +119,29 @@ knitr::include_graphics("images/r-contributions.png")
 ]
 
 ---
+# About me  <img src="images/about_me_bitmoji.png" height="60" width="60", align="right">
+
+<br>
+
+.pull-left[
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/name-tag.png")
+```
+
+]
+
+.pull-right[
+
+<br><br>
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/8451_logo.jpeg")
+```
+
+]
+
+---
 
 # About me  <img src="images/about_me_bitmoji.png" height="60" width="60", align="right">
 
@@ -158,11 +181,9 @@ class: inverse, center, middle
 
 * Computer vision
 
+* Recommendation systems
+
 * Natural language processing
-
-* Time series analysis
-
-* Anomaly detection
 ]
 ]
 
@@ -177,11 +198,9 @@ class: inverse, center, middle
 
 * Computer vision
 
+* Recommendation systems
+
 * Natural language processing
-
-* Time series analysis
-
-* Anomaly detection
 ]
 
 .pull-right[
@@ -189,11 +208,11 @@ class: inverse, center, middle
 
 * Convolutional neural networks (CNNs)
 
+* Transfer learning
+
 * Recurrent neural networks (RNNs)
 
 * Long-short term memory neural networks (LSTMs)
-
-* Autoencoders
 ]
 ]
 
@@ -330,32 +349,6 @@ knitr::include_graphics("images/material-location.png")
 ]
 
 ---
-# On the shoulder of giants
-
-.pull-left[
-
-.center[Francois Chollet]
-```{r, echo=FALSE, out.height="40%", out.width="40%"}
-knitr::include_graphics("images/francois_challet.jpeg")
-```
-
-.center[J.J. Allaire]
-```{r, echo=FALSE, out.height="40%", out.width="40%"}
-knitr::include_graphics("images/jjallaire.jpg")
-```
-
-
-]
-
-.pull-right[
-
-```{r, echo=FALSE, out.height="75%", out.width="75%"}
-knitr::include_graphics("images/dlwithR.jpeg")
-```
-
-]
-
----
 # Course overview
 
 
@@ -368,9 +361,9 @@ knitr::include_graphics("images/dlwithR.jpeg")
 | Time          | Activity                 |
 | :------------ | :----------------------- |
 | 09:00 - 09:30 | Introduction             |
-| 09:30 - 10:30 | The deep learning engine |
+| 09:30 - 10:30 | Hello [deep learning] world! |
 | 10:30 - 11:00 | *Coffee break*           |
-| 11:00 - 12:30 | 3 case studies           |
+| 11:00 - 12:30 | 2 case studies           |
 | 12:30 - 13:30 | *Lunch break*            |
 | 13:30 - 15:00 | Computer vision & CNNs   |
 | 15:00 - 15:30 | *Coffee break*           |
@@ -389,14 +382,13 @@ knitr::include_graphics("images/dlwithR.jpeg")
  
 | Time          | Activity                 |
 | :------------ | :----------------------- |
-| 09:00 - 09:15 | Recap                    |
-| 09:15 - 10:30 | NLP, RNNs & LSTMs        |
+| 09:00 - 10:30 | Word embeddings          |
 | 10:30 - 11:00 | *Coffee break*           |
-| 11:00 - 12:30 | Time series with LSTMs   |
+| 11:00 - 12:30 | Collaborative filtering  |
 | 12:30 - 13:30 | *Lunch break*            |
-| 13:30 - 15:00 | TBD                      |
+| 13:30 - 15:00 | RNNs & LSTMs             |
 | 15:00 - 15:30 | *Coffee break*           |
-| 15:30 - 17:00 | Project                  |
+| 15:30 - 17:00 | Project & wrap up        |
 
 ]
 ]
@@ -454,19 +446,6 @@ knitr::include_graphics("https://media1.tenor.com/images/82ed88212e7752741e898cd
 ```
 
 ---
-# Help outside of the classroom
-<br><r>
-.font130[
-* https://tensorflow.rstudio.com/
-
-* https://keras.rstudio.com/
-
-* https://community.rstudio.com/
-
-* [Deep Learning with R in Motion](https://www.manning.com/livevideo/deep-learning-with-r-in-motion)
-]
-
----
 # Meet your friendly TAs
 
 .pull-left[
@@ -499,30 +478,70 @@ background-image: url(images/01-ai-ml-dl-landscape.002.jpeg)
 background-size: cover
 
 ---
-# Machine learning
+# Why deep learning?
 
-```{r ML, echo=FALSE}
-knitr::include_graphics("images/01-ai-ml-dl-landscape.003.jpeg")
+.font140.pull-left[
+<br>
+
+* .font120[Automated feature extraction]
+
+]
+
+.pull-right[
+<br><br>
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/auto-feat-extract.png")
 ```
 
+]
+
+.footnote[Image: [Sambit Mahapatra](https://towardsdatascience.com/why-deep-learning-is-needed-over-traditional-machine-learning-1b6a99177063)]
 
 ---
-# .red[Shallow] machine learning 
+# Why deep learning?
 
-<br><br> 
+.font140.pull-left[
+<br>
 
-```{r shallow-ML, echo=FALSE}
-knitr::include_graphics("images/01-ai-ml-dl-landscape.004.jpeg")
+* Automated feature extraction
+
+* Problem solving flexibility
+
+]
+
+.pull-right[
+<br>
+```{r, echo=FALSE}
+knitr::include_graphics("images/prob-solve-flex.png")
 ```
+
+]
 
 ---
-# .red[Deep] machine learning 
+# Why deep learning?
 
-<br><br> 
+.font140.pull-left[
+<br>
 
-```{r deep-ML, echo=FALSE}
-knitr::include_graphics("images/01-ai-ml-dl-landscape.005.jpeg")
+* Automated feature extraction
+
+* Problem solving flexibility
+
+* Scales efficiently 🧐
+]
+
+.pull-right[
+
+<br><br><br>
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/dl-scale.png")
 ```
+
+]
+
+.footnote[Image: [Andrew Ng](https://www.deeplearning.ai/content/uploads/2018/09/Ng-MLY01-12.pdf)]
 
 ---
 class: inverse, center, middle
@@ -544,13 +563,39 @@ knitr::include_graphics("images/dl-framework-rankings.png")
 ```
 
 ---
-# Our preferred DL framework
+# My preferred DL framework
 
 <br><br> 
 
 ```{r preferred-dl-framework, echo=FALSE}
 knitr::include_graphics("images/01-ai-ml-dl-landscape.010.jpeg")
 ```
+
+---
+# On the shoulders of giants
+
+.pull-left[
+
+.center[Francois Chollet]
+```{r, echo=FALSE, out.height="40%", out.width="40%"}
+knitr::include_graphics("images/francois_challet.jpeg")
+```
+
+.center[J.J. Allaire]
+```{r, echo=FALSE, out.height="40%", out.width="40%"}
+knitr::include_graphics("images/jjallaire.jpg")
+```
+
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE, out.height="75%", out.width="75%"}
+knitr::include_graphics("images/dlwithR.jpeg")
+```
+
+]
 
 ---
 class: inverse, center, middle

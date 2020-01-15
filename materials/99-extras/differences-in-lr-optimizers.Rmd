@@ -1,0 +1,736 @@
+---
+title: "Understanding differences in learning rates and optimizers"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+ggplot2::theme_set(ggplot2::theme_bw())
+```
+
+The weights of a neural network cannot be calculated using an analytical method.
+Instead, the weights must be discovered via an empirical optimization procedure
+called stochastic gradient descent (SGD). The optimization problem addressed by
+stochastic gradient descent for neural networks is challenging and the space of
+solutions (sets of weights) may be comprised of many good solutions (called
+global optima) as well as easy to find, but low in skill solutions (called local
+optima). The amount of change to the model during each step of this search
+process, or the step size, is called the ___learning rate___ and provides
+perhaps the most important hyperparameter to tune for your neural network in
+order to achieve good performance on your problem. In this notebook, you will
+discover the learning rate hyperparameter used when training deep learning
+neural networks and gain a better understanding regarding:
+
+* How the learning rate controls how quickly or slowly a neural network model
+  learns a problem.
+* How  momentum and other adaptive learning rate algorithms influence the SGD
+  process.
+* Different ways to use learning rate schedules.
+
+## Requirements
+
+This module leverages the following libraries:
+
+```{r}
+library(keras)
+library(tensorflow)
+library(tfdatasets)
+library(tidyverse)
+```
+
+To illustrate concepts we'll use a simulated dataset that contains two predictive
+features and a 3-class response that is not linearly separable. 
+
+```{r}
+batch_size <- 32
+total_obs <- batch_size*100
+train_obs <- batch_size*70
+
+set.seed(123)
+generated <- mlbench::mlbench.simplex(n = total_obs, d = 2, sd = 0.6)
+X <- generated$x
+y <- generated$classes
+
+ggplot(data.frame(X, y), aes(X1, X2, color = y)) +
+  geom_point(size = 2) +
+  ggtitle("Simulated data containing two predictive features and a 3-class target.")
+```
+
+The following prepares our training and validation sets that we'll use throughout:
+
+```{r}
+X <- generated$x
+y <- to_categorical(generated$classes)[, 2:4]
+
+# random sample
+set.seed(123)
+train_index <- sample(nrow(y), train_obs, replace = FALSE)
+x_train <- X[train_index, ]
+y_train <- y[train_index, ]
+x_test <- X[-train_index, ]
+y_test <- y[-train_index, ]
+```
+
+Also, to make our example more comparable, we'll start our models with the same
+set of initial weights. If we did not do this then each model would start with
+different initialized weights which can cause different learning trajectories.
+By starting each model with the same weights we remove a large amount of the
+randomness in our models.
+
+I create initial weights by training the data for one epoch and then using these
+weights as our initial weights:
+
+```{r}
+model <- keras_model_sequential() %>%
+  layer_dense(units = 8, input_shape = ncol(x_train), activation = "relu", 
+              kernel_initializer = "he_uniform") %>%
+  layer_dense(units = 3, activation = "softmax") %>%
+  compile(
+    optimizer = "sgd",
+    loss = "categorical_crossentropy",
+    metrics = "accuracy"
+  )
+
+history  <- model  %>% 
+  fit(x_train, y_train, 
+      batch_size = batch_size, epochs = 1, 
+      validation_data = list(x_test, y_test),
+      verbose = 0)
+
+initial_wts <- get_weights(model)[1:2]
+```
+
+## Effect of learning rate^[Adapted from Better Deep Learning
+by Jason Brownlee.]
+
+As discussed in these slides ([ℹ️](http://bit.ly/dl-01#58)), neural networks
+attempt to find optimal weights using stochastic gradient descent (SGD). SGD is
+an optimization algorithm that estimates the error gradient for the current
+state of the model using examples from the training dataset, then updates the
+weights of the model using the backpropagation of errors algorithm, referred to
+as simply backpropagation.
+
+The amount that the weights are updated during training is referred to as the
+step size or the _learning rate_. Specifically, the learning rate is a
+hyperparameter that typically ranges from [1e-1, 1e-6] (0.1 - 0.000001).
+
+The learning rate hyperparameter controls the rate or speed at which the model
+learns. Specifically, it controls the amount of apportioned error that the
+weights of the model are updated with each time they are updated, such as at the
+end of each batch of training examples. Given a perfectly configured learning
+rate, the model will learn to best approximate the function given available
+resources (the number of layers and the number of nodes per layer) in a given
+number of training epochs (passes through the training data).
+
+Generally, a large learning rate allows the model to learn faster, at the cost
+of arriving on a sub-optimal final set of weights. A smaller learning rate may
+allow the model to learn a more optimal or even globally optimal set of weights
+but may take significantly longer to train. At extremes, a learning rate that is
+too large will result in weight updates that will be too large and the
+performance of the model (such as its loss on the training dataset) will
+oscillate over training epochs. Oscillating performance is said to be caused by
+weights that diverge (are divergent). A learning rate that is too small may
+never converge or may get stuck on a suboptimal solution.
+
+It is important to find a good value for the learning rate for your model on
+your training dataset. The learning rate may, in fact, be the most important
+hyperparameter to configure for your model. The learning rate will interact with
+many other aspects of the optimization process, and the interactions may be
+nonlinear. Nevertheless, in general, smaller learning rates will require more
+training epochs. Conversely, larger learning rates will require fewer training
+epochs. Further, smaller batch sizes are better suited to smaller learning rates
+given the noisy estimate of the error gradient. A traditional default value for
+the learning rate is 0.1 or 0.01, and this may represent a good starting point
+on your problem.
+
+To demonstrate the effect of learning rate, let's create a function that fits a
+two-layer densely connected neural network that uses a traditional SGD optimizer.
+
+__Note__: In practice, the main code you change to adjust the learning rate is
+`optimizer_xxx(lr = ??)`.
+
+```{r}
+# Create model training function
+train_model <- function(learning_rate, momentum = 0){
+  model <- keras_model_sequential() %>%
+    layer_dense(units = 8, input_shape = ncol(x_train), activation = "relu", 
+                kernel_initializer = "he_uniform") %>%
+    layer_dense(units = 3, activation = "softmax")
+  
+  model %>% compile(
+    optimizer = optimizer_sgd(lr = learning_rate, momentum = momentum),
+    loss = "categorical_crossentropy",
+    metrics = "accuracy"
+  )
+  
+  # set same initial weights
+  get_layer(model, index = 1) %>%
+    set_weights(initial_wts)
+  
+  history <- model %>% 
+    fit(x_train, y_train, 
+        batch_size = batch_size,
+        epochs = 50, 
+        validation_data = list(x_test, y_test),
+        verbose = 0)
+  
+  as.data.frame(history) %>% mutate(lr = learning_rate, m = momentum)
+}
+```
+
+Now we'll iterate over various learning rates on a log scale and apply our model.
+
+```{r}
+# Model different learning rates
+results <- data.frame()
+learning_rates <- c(1e-0, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5)
+for (rate in learning_rates) {
+  cat("Loss for model with learning rate = ", rate, ": ", sep = "")
+  model_results <- train_model(rate)
+  results <- rbind(results, model_results)
+  
+  # report results
+  min_loss <- model_results %>%
+    filter(metric == "loss", data == "validation") %>% 
+    summarize(best_loss = min(value, na.rm = TRUE) %>% round(3)) %>% 
+    pull()
+  cat(min_loss, "\n", append = TRUE)
+}
+```
+
+We can see that although the learning rate of 0.1 has the lowest loss
+score, there are a lot of oscillations in the behavior, which suggests
+an unstable model. We also see that the much smaller learning rates (1e-4, 1e-5)
+are learning at a much slower rate and are performing quite poorly.
+
+```{r}
+results %>%
+  filter(metric == "accuracy") %>%
+  mutate(lr = fct_rev(as.factor(lr))) %>%
+  ggplot(aes(epoch, value, color = data)) +
+  geom_line() +
+  facet_wrap(~ lr, ncol = 2, scales = "free") +
+  ylab("accuracy") +
+  ggtitle("Learning curves for six different learning rates",
+          subtitle = "Based on SGD optimizer")
+```
+
+## Adding momentum
+
+Training a neural network can be made easier by incorporating the history of the
+weight updates when determining the current update being made to the weights.
+Specifically, an exponentially weighted average of the prior updates to the
+weight can be included when the weights are updated. This change to stochastic
+gradient descent is called ___momentum___ and adds inertia to the update
+procedure, causing many past updates in one direction to continue in that
+direction in the future. The amount of inertia of past updates is controlled via
+the addition of a new hyperparameter, often referred to as the _momentum_.
+
+Momentum can accelerate the training process along with smoothing the
+progression of the learning algorithm. We can adapt the example from the
+previous section to evaluate the effect of momentum with a fixed learning rate.
+In this case, we will use the learning rate 0.001.
+
+__Note__: In practice, the main code you change to add momentum is
+`optimizer_sgd(lr = 0.01, momentum = ??)`.
+
+```{r}
+# Model different momentums 
+results <- data.frame()
+momentums <- c(0, 0.25, 0.5, 0.75, 0.9, 0.99)
+for (momentum in momentums) {
+  cat("Loss for model with momentum = ", momentum, ": ", sep = "")
+  model_results <- train_model(0.001, momentum)
+  results <- rbind(results, model_results)
+  
+  # report results
+  min_loss <- model_results %>%
+    filter(metric == "loss", data == "validation") %>% 
+    summarize(best_loss = min(value, na.rm = TRUE) %>% round(3)) %>% 
+    pull()
+  cat(min_loss, "\n", append = TRUE)
+}
+```
+
+We can see that as the momentum increases, less epochs are required to reach
+convergence. In fact, including momentum $>$ 0.5 allows us to reach optimal
+performance in 20 or less epochs. Also, the highest momentum of 0.99 has a loss
+that matches the previous best model. And if you were to zoom into the plot of
+the model with momentum = 0.99, you would see that there is less variability
+than the previous model with a learning rate of 0.1 and no momentum. Consequently,
+adding momentum has allowed us to use a smaller learning rate, which is more
+careful in our loss trajectory, obtain a near-optimal loss and reduce variability
+in our model generalization!
+
+```{r}
+results %>%
+  filter(metric == "accuracy") %>%
+  mutate(m = as.factor(m)) %>%
+  ggplot(aes(epoch, value, color = data)) +
+  geom_line() +
+  facet_wrap(~ m, ncol = 2, scales = "free") +
+  ylab("accuracy") +
+  ggtitle("Learning curve for six different momentum values",
+          subtitle = "Based on SGD optimizer with 0.001 learning rate")
+```
+
+We can also illustrate how momentum impacts the training of our weights. Since
+momentum speeds up the progression of our gradient descent, we should see
+faster updates in changes to the weights of our hidden layer nodes. The following
+code allows us to train a model with and without momentum and extract the
+weights of our first (and only) hidden layer.
+
+```{r}
+# create a model without momentum
+model_no_momentum <- keras_model_sequential() %>%
+  layer_dense(units = 8, input_shape = ncol(x_train), activation = "relu", 
+              kernel_initializer = "he_uniform") %>%
+  layer_dense(units = 3, activation = "softmax") %>%
+  compile(
+    optimizer = optimizer_sgd(lr = 0.001, momentum = 0),
+    loss = "categorical_crossentropy",
+    metrics = "accuracy"
+)
+
+# set same initial weights
+get_layer(model_no_momentum, index = 1) %>%
+  set_weights(initial_wts)
+
+# create a model with momentum
+model_w_momentum <- keras_model_sequential() %>%
+  layer_dense(units = 8, input_shape = ncol(x_train), activation = "relu", 
+              kernel_initializer = "he_uniform") %>%
+  layer_dense(units = 3, activation = "softmax") %>%
+  compile(
+    optimizer = optimizer_sgd(lr = 0.001, momentum = 0.99),
+    loss = "categorical_crossentropy",
+    metrics = "accuracy"
+  )
+
+# set same initial weights
+get_layer(model_w_momentum, index = 1) %>%
+  set_weights(initial_wts)
+
+# a function to extract the weights of the first layer
+get_wts <- function(model, momentum) {
+  get_weights(model)[[1]] %>% 
+    t() %>% 
+    as.data.frame() %>% 
+    mutate(
+      node = row_number(),
+      epochs = counter,
+      momentum = momentum
+    )
+}
+```
+
+We can now iterate over 200 epochs and for each epoch we extract the first layer's
+weights made by the SGD process.
+
+```{r}
+all_wts <- data.frame()
+counter <- 1
+for (i in rep(1, 200)) {
+    
+  history_no_momentum  <- model_no_momentum %>% 
+    fit(x_train, y_train, 
+        batch_size = batch_size, 
+        shuffle = FALSE,
+        epochs = i, 
+        validation_data = list(x_test, y_test),
+        verbose = FALSE)
+  
+  history_w_momentum  <- model_w_momentum  %>% 
+    fit(x_train, y_train, 
+        batch_size = batch_size, 
+        shuffle = FALSE,
+        epochs = i, 
+        validation_data = list(x_test, y_test),
+        verbose = FALSE)
+  
+  wts_no_momentum <- get_wts(model_no_momentum, momentum = FALSE)
+  wts_w_momentum <- get_wts(model_w_momentum, momentum = TRUE)
+  
+  all_wts <- rbind(all_wts, rbind(wts_no_momentum, wts_w_momentum))
+  counter <- counter + 1
+}
+```
+
+We can now plot the progression of the weights over the 200 epochs. Recall that
+this model has 8 nodes in the hidden layer. This example plots the weights for
+feature `V2` for each of these eight nodes. The main thing to notice is that
+momentum allows the weights to react and have larger changes to their weights
+than SGD without momentum.
+
+```{r, fig.width=10, fig.height=4}
+all_wts %>%
+  ggplot(aes(epochs, V2, color = momentum)) +
+  geom_line() +
+  ylab(NULL) +
+  facet_wrap(~ node, scales = "free", ncol = 4) +
+  ggtitle("The progression of 8 weights for a single feature feeding into 8 nodes in the first hidden layer",
+          subtitle = "Based on SGD optimizer with 0 vs. 0.99 momentum")
+```
+
+## Alternative optimizers
+
+Adding momentum to traditional SGD provides an alternative to the most basic
+SGD optimizer. The idea of momentum dates back to 1964^[https://www.researchgate.net/publication/243648538_Some_methods_of_speeding_up_the_convergence_of_iteration_methods]; however, in more recent years there has been significant research
+that has identified other, useful gradient descent optimizers. This section will
+briefly discuss the main differences in these optimizers but for a robust and
+technical discussion regarding their difference I would check out [Sebastian
+Ruders article](https://ruder.io/optimizing-gradient-descent/index.html).
+
+In addition to SGD and SGD with momentum, the most common optimizers that you
+will see are RMSprop (Root mean square prop) and Adam (Adaptive moment
+estimation).
+
+__RMSprop__ ([Hinton et al., 2012](http://www.cs.toronto.edu/~tijmen/csc321/slides/lecture_slides_lec6.pdf)) 
+adapts the learning rate by dividing the learning rate for a weight by a running
+average of the magnitudes of recent gradients for that weight. Note that large
+fluctuations in gradients can cause exploding gradients and very small changes
+can cause vanishing gradients - both leading to unstable updates to the weights.
+RMSprop helps by reducing large and small oscilliations in updates to the
+weights by balancing changes in gradients via averaging recent gradients.
+
+__Adam__ is very similar to RMSprop in that it incorporates weighted average of
+recent gradients^[More specifically, the exponentially decaying average of past
+squared gradients]. However, it also includes an additional parameter that,
+essentially acts like momentum. So at its most basic, you can think of Adam as
+RMSprop + momentum.
+
+There are other optimizers such as Adadelta, AdaMax, Nadam, AMSGrad - see 
+https://keras.rstudio.com/reference/index.html#section-optimizers for all those
+available. However, SGD + momentum, RMSprop, and Adam are by far the most common
+and typically report the best performance.
+
+The following are two GIFs from Sebastian Ruder's blog post that provide a nice
+visual comparison of these different optimizers navigating a multi-dimensional
+loss surface.
+
+![](https://ruder.io/content/images/2016/09/contours_evaluation_optimizers.gif) ![](https://ruder.io/content/images/2016/09/saddle_point_evaluation_optimizers.gif)
+
+Let's go ahead and compare SGD, SGD+momentum, RMSprop, and Adam on our toy data
+problem. Here, we create code that uses each optimizer and also extracts the
+weights of the first layer for each model (we'll use this for a visual later on).
+
+__Note__: In practice, the main code you change to adjust the gradient descent
+optimizer used is `optimizer_xxx()`.
+
+```{r}
+all_wts <- data.frame()
+all_results <- data.frame()
+optimizers <- c("sgd", "sgd_momentum", "rmsprop", "adam")
+
+for (opt in optimizers) {
+  
+  # make sure all optimizers use the same learning rate
+  if (opt == "sgd") {
+    current_optimizer <- optimizer_sgd(lr = 0.001)
+  } else if (opt == "sgd_momentum") {
+    current_optimizer <- optimizer_sgd(lr = 0.001, momentum = 0.9)
+  } else {
+    current_optimizer <- opt
+  }
+  
+  # create model architecture
+  model <- keras_model_sequential() %>%
+    layer_dense(units = 8, input_shape = ncol(x_train), activation = "relu", 
+                kernel_initializer = "he_uniform") %>%
+    layer_dense(units = 3, activation = "softmax") %>%
+    compile(
+      optimizer = current_optimizer,
+      loss = "categorical_crossentropy",
+      metrics = "accuracy"
+    )
+  
+  # same initial weights
+  get_layer(model, index = 1) %>%
+    set_weights(initial_wts)
+
+  # iterate over each epoch and extract weights and results
+  counter <- 1
+  for (i in rep(1, 50)) {
+    # train 1 epoch at a time
+    history  <- model  %>% 
+      fit(x_train, y_train, 
+          batch_size = batch_size,
+          shuffle = FALSE,
+          epochs = i, 
+          validation_data = list(x_test, y_test),
+          verbose = 0)
+    
+    # extract first layer weights
+    model_wts <- get_weights(model)[[1]] %>% 
+      t() %>% 
+      as.data.frame() %>% 
+      mutate(
+        node = row_number(),
+        epochs = counter,
+        optimizer = opt
+      )
+    
+    # extract each epochs results
+    model_results <- data.frame(history) %>%
+      mutate(
+        optimizer = opt,
+        epoch = counter
+        )
+    
+    all_wts <- rbind(all_wts, model_wts)
+    all_results <- rbind(all_results, model_results)
+    counter <- counter + 1
+  }
+}
+```
+
+We can see that SGD+momentum, RMSprop, and Adam all work comparatively well in
+this example. They all reach an optimal solution within 10-20 epochs compared to
+SGD taking all 50 to reach similar performance.
+
+```{r}
+all_results %>%
+  filter(metric == "accuracy") %>%
+  ggplot(aes(epoch, value, color = data)) +
+  geom_line() +
+  facet_wrap(~ optimizer, ncol = 2) +
+  ggtitle("Loss learning curve for different optimizers") +
+  ylab("loss")
+```
+
+If we plot the changes in weights for the 8 hidden layer units we will see that
+SGD+momentum, RMSprop, and Adam all tend to change much quicker than SGD. We also
+see that in most cases, we see at least 2 of these optimizers (SGD+momentum,
+RMSprop, and Adam) have very similar patterns which highlights the similarity in
+nature of how these optimizers behave.
+
+```{r, fig.width=10, fig.height=4}
+all_wts %>%
+  ggplot(aes(epochs, V2, color = optimizer)) +
+  geom_line() +
+  facet_wrap(~ node, scales = "free", ncol = 4) +
+  ggtitle("The progression of 8 weights for a single feature feeding into 8 nodes in the first hidden layer",
+          subtitle = "Based on a learning rate of 0.001")
+```
+
+## Common learning rate schedules
+
+Rarely does a single, fixed learning rate achieve optimal performance. Instead,
+allowing the learning rate to vary over the training process often improves your
+model's performance. The way in which the learning rate changes over time is
+referred to as the learning rate schedule or learning rate decay.
+
+### Pre-specified learning rate decay
+
+Perhaps the simplest learning rate schedule is to decrease the learning rate
+linearly from a large initial value to a small value. This allows large weight
+changes in the beginning of the learning process and small changes or fine-tuning
+towards the end of the learning process. This is most common for SGD optimizers,
+but all the keras optimizer functions have a built in `decay` argument. With
+learning rate decay, the learning rate is calculated each update (e.g. end of
+each mini-batch) as follows:
+
+$$\text{lr} = \text{initial_lr} \times \frac{1}{1 + \text{decay} \times \text{iteration}}$$
+
+Where `lr` is the learning rate for the current epoch, `initial_lr` is the
+initial learning rate specified as an argument to the SGD optimizer, `decay` is
+the decay rate which is greater than zero and iteration is the current update
+number.
+
+Say we wanted to train a model with a learning rate of 0.01 for 50 epochs. The
+following illustrates how decay impacts the learning rate. Larger decay obviously
+results in larger learing rate reductions over time.
+
+```{r}
+decay_rates <- c(1e-1, 1e-2, 1e-3, 1e-4)
+initial_rate <- 0.01
+epoch <- 1:50
+
+# function to compute decayed learning rate
+compute_decay <- function(initial_rate, decay_rate, epoch) {
+  initial_rate * 1 / (1 + decay_rate * epoch)
+}
+
+map_dfc(decay_rates, ~ compute_decay(initial_rate, ., epoch)) %>%
+  rename(`1e-1` = "V1", `1e-2` = "V2", `1e-3` = "V3", `1e-4` = "V4") %>%
+  mutate(epoch = epoch) %>%
+  gather(key, value, -epoch) %>%
+  ggplot(aes(epoch, value, color = key)) +
+  geom_line() +
+  ggtitle("Decay learning rates") +
+  ylab("learning rate value")
+```
+
+Let's illustrate the effect of decay using SGD+momentum. We'll use an initial
+learning rate of 0.1. 
+
+```{r}
+all_results <- data.frame()
+
+for (decay_rate in c(1e-1, 1e-2, 1e-3, 1e-4)) {
+  cat("Loss for model with decay = ", decay_rate, ": ", sep = "")
+  
+  # Create model training function
+  model <- keras_model_sequential() %>%
+    layer_dense(units = 8, input_shape = ncol(x_train), activation = "relu",
+                kernel_initializer = "he_uniform") %>%
+    layer_dense(units = 3, activation = "softmax")
+  
+  model %>% compile(
+    optimizer = optimizer_sgd(lr = 0.01, momentum = 0.9, decay = decay_rate),
+    loss = "categorical_crossentropy",
+    metrics = "accuracy"
+    )
+    
+  # set same initial weights
+  get_layer(model, index = 1) %>%
+    set_weights(initial_wts)
+    
+  history <- model %>% 
+    fit(x_train, y_train, 
+        batch_size = batch_size,
+        epochs = 50, 
+        validation_data = list(x_test, y_test),
+        verbose = 0)
+  
+  model_results <- data.frame(history) %>%
+    mutate(decay = as.factor(decay_rate))
+  
+  all_results <- rbind(all_results, model_results)
+  
+  # report results
+  min_loss <- model_results %>%
+    filter(metric == "loss", data == "validation") %>% 
+    summarize(best_loss = min(value, na.rm = TRUE) %>% round(3)) %>% 
+    pull()
+  cat(min_loss, "\n", append = TRUE)
+}
+```
+
+Recall, that in the first section a learning rate of 0.1 had the optimal loss
+but the accuracy learning curve had a lot of variability. As you can see, as we
+add larger decay values the variability reduces. In this example we see a
+reduction in model performance from our original model; however, in some scenarios
+we can see performance improvements.
+
+```{r}
+all_results %>%
+  filter(metric == "accuracy") %>%
+  ggplot(aes(epoch, value, color = data)) +
+  geom_line() +
+  facet_wrap(~ decay, ncol = 2) +
+  ggtitle("Loss curve for different decay rates") +
+  ylab("loss")
+```
+
+### Automated learning rate decay
+
+However, rather than pre-specify when the learning rate should reduce, automated
+learning rate decay can allow the data to tell your training process when to
+reduce. As demonstrated in https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-ames.nb.html
+we use callbacks automatically reduce the learning rate upon plateaus and we can
+specify the amount of reduction (`factor`) and how long to wait with no model
+improvement before reducing (`patience`). This also allows us to apply this
+method to any of the gradient descent optimizers.
+
+```{r}
+model <- keras_model_sequential() %>%
+  layer_dense(units = 8, input_shape = ncol(x_train), activation = "relu",
+              kernel_initializer = "he_uniform") %>%
+  layer_dense(units = 3, activation = "softmax")
+
+model %>% compile(
+  optimizer = optimizer_sgd(lr = 0.01, momentum = 0.9),
+  loss = "categorical_crossentropy",
+  metrics = "accuracy"
+  )
+
+  # set same initial weights
+get_layer(model, index = 1) %>%
+  set_weights(initial_wts)
+
+history <- model %>% 
+  fit(x_train, y_train, 
+      batch_size = batch_size,
+      epochs = 50, 
+      validation_data = list(x_test, y_test),
+      callback = callback_reduce_lr_on_plateau(factor = 0.1, patience = 3),
+      verbose = 0)
+```
+
+When using callbacks, our model's history results will track the changes in
+learning rate so we can see the progression.
+
+```{r}
+data.frame(history$metrics) %>%
+  mutate(epochs = row_number()) %>%
+  ggplot(aes(epochs, lr)) +
+  geom_step() +
+  ggtitle("Learning rate progression using reduce on plateau callback")
+```
+
+The factor to reduce by and the patience can have varying effects on performance.
+If you reduce by a factor too large and/or too early then you risk slowing down
+the gradient descent progression and the model may never find an optimal loss. If
+you reduce by a factor too small or too late then you run the risk of maintaining
+a learing rate that is too large and having an unstable model.
+
+```{r}
+all_results <- data.frame()
+
+for (patience in c(2, 5, 15, 30)) {
+  cat("Loss for model with patience value = ", patience, ": ", sep = "")
+  
+  # Create model training function
+  model <- keras_model_sequential() %>%
+    layer_dense(units = 8, input_shape = ncol(x_train), activation = "relu",
+                kernel_initializer = "he_uniform") %>%
+    layer_dense(units = 3, activation = "softmax")
+  
+  model %>% compile(
+    optimizer = optimizer_sgd(lr = 0.01, momentum = .9),
+    loss = "categorical_crossentropy",
+    metrics = "accuracy"
+    )
+    
+  # set same initial weights
+  get_layer(model, index = 1) %>%
+    set_weights(initial_wts)
+    
+  history <- model %>% 
+    fit(x_train, y_train, 
+        batch_size = batch_size,
+        epochs = 50, 
+        validation_data = list(x_test, y_test),
+        callback = callback_reduce_lr_on_plateau(factor = 0.1, patience = patience),
+        verbose = 0)
+  
+  model_results <- data.frame(history) %>%
+    mutate(patience = as.factor(patience))
+  
+  all_results <- rbind(all_results, model_results)
+  
+  # report results
+  min_loss <- model_results %>%
+    filter(metric == "loss", data == "validation") %>% 
+    summarize(best_loss = min(value, na.rm = TRUE) %>% round(3)) %>% 
+    pull()
+  cat(min_loss, "\n", append = TRUE)
+}
+```
+
+The results illustrate the effect of various patience periods on accuracy.
+
+```{r}
+all_results %>%
+  filter(metric == "accuracy") %>%
+  ggplot(aes(epoch, value, color = data)) +
+  geom_line() +
+  facet_wrap(~ patience, ncol = 2) +
+  ggtitle("Effect of patience values for reduce on plateau callback")
+```
+
+### Cyclical learning rate
+
+
+

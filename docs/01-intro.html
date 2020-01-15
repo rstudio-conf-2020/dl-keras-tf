@@ -15,16 +15,16 @@
 
 
 
-class: title-slide   
+class: sf-title-slide   
 &lt;a href="https://github.com/rstudio-conf-2020/dl-keras-tf"&gt;&lt;img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"&gt;&lt;/a&gt;
 
 
-&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;
-# .font250[Deep Learning with <span>&lt;i class="fab  fa-r-project faa-pulse animated faa-slow " style=" color:steelblue;"&gt;&lt;/i&gt;</span>]
-# .font120[Using Keras with Tensorflow backend]
+&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;
+# .font250.white[Deep Learning with <span>&lt;i class="fab  fa-r-project faa-pulse animated faa-slow " style=" color:steelblue;"&gt;&lt;/i&gt;</span>]
+# .font120.white[Using Keras with Tensorflow backend]
 
-### Brad Boehmke
-### `rstudio::conf(2020)`
+### .white[Brad Boehmke]
+### .white[`rstudio::conf(2020)`]
 
 ---
 
@@ -83,6 +83,25 @@ class: title-slide
 ]
 
 ---
+# About me  &lt;img src="images/about_me_bitmoji.png" height="60" width="60", align="right"&gt;
+
+&lt;br&gt;
+
+.pull-left[
+
+&lt;img src="images/name-tag.png" width="1360" style="display: block; margin: auto;" /&gt;
+
+]
+
+.pull-right[
+
+&lt;br&gt;&lt;br&gt;
+
+&lt;img src="images/8451_logo.jpeg" width="533" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
 
 # About me  &lt;img src="images/about_me_bitmoji.png" height="60" width="60", align="right"&gt;
 
@@ -120,11 +139,9 @@ class: inverse, center, middle
 
 * Computer vision
 
+* Recommendation systems
+
 * Natural language processing
-
-* Time series analysis
-
-* Anomaly detection
 ]
 ]
 
@@ -139,11 +156,9 @@ class: inverse, center, middle
 
 * Computer vision
 
+* Recommendation systems
+
 * Natural language processing
-
-* Time series analysis
-
-* Anomaly detection
 ]
 
 .pull-right[
@@ -151,11 +166,11 @@ class: inverse, center, middle
 
 * Convolutional neural networks (CNNs)
 
+* Transfer learning
+
 * Recurrent neural networks (RNNs)
 
 * Long-short term memory neural networks (LSTMs)
-
-* Autoencoders
 ]
 ]
 
@@ -288,26 +303,6 @@ https://github.com/rstudio-conf-2020/dl-keras-tf
 ]
 
 ---
-# On the shoulder of giants
-
-.pull-left[
-
-.center[Francois Chollet]
-&lt;img src="images/francois_challet.jpeg" width="40%" height="40%" style="display: block; margin: auto;" /&gt;
-
-.center[J.J. Allaire]
-&lt;img src="images/jjallaire.jpg" width="40%" height="40%" style="display: block; margin: auto;" /&gt;
-
-
-]
-
-.pull-right[
-
-&lt;img src="images/dlwithR.jpeg" width="75%" height="75%" style="display: block; margin: auto;" /&gt;
-
-]
-
----
 # Course overview
 
 
@@ -320,9 +315,9 @@ https://github.com/rstudio-conf-2020/dl-keras-tf
 | Time          | Activity                 |
 | :------------ | :----------------------- |
 | 09:00 - 09:30 | Introduction             |
-| 09:30 - 10:30 | The deep learning engine |
+| 09:30 - 10:30 | Hello [deep learning] world! |
 | 10:30 - 11:00 | *Coffee break*           |
-| 11:00 - 12:30 | 3 case studies           |
+| 11:00 - 12:30 | 2 case studies           |
 | 12:30 - 13:30 | *Lunch break*            |
 | 13:30 - 15:00 | Computer vision &amp; CNNs   |
 | 15:00 - 15:30 | *Coffee break*           |
@@ -341,14 +336,13 @@ https://github.com/rstudio-conf-2020/dl-keras-tf
  
 | Time          | Activity                 |
 | :------------ | :----------------------- |
-| 09:00 - 09:15 | Recap                    |
-| 09:15 - 10:30 | NLP, RNNs &amp; LSTMs        |
+| 09:00 - 10:30 | Word embeddings          |
 | 10:30 - 11:00 | *Coffee break*           |
-| 11:00 - 12:30 | Time series with LSTMs   |
+| 11:00 - 12:30 | Collaborative filtering  |
 | 12:30 - 13:30 | *Lunch break*            |
-| 13:30 - 15:00 | TBD                      |
+| 13:30 - 15:00 | RNNs &amp; LSTMs             |
 | 15:00 - 15:30 | *Coffee break*           |
-| 15:30 - 17:00 | Project                  |
+| 15:30 - 17:00 | Project &amp; wrap up        |
 
 ]
 ]
@@ -400,19 +394,6 @@ class: yourturn
 &lt;img src="https://media1.tenor.com/images/82ed88212e7752741e898cdd0fba7824/tenor.gif?itemid=3426841" width="85%" height="85%" style="display: block; margin: auto;" /&gt;
 
 ---
-# Help outside of the classroom
-&lt;br&gt;&lt;r&gt;
-.font130[
-* https://tensorflow.rstudio.com/
-
-* https://keras.rstudio.com/
-
-* https://community.rstudio.com/
-
-* [Deep Learning with R in Motion](https://www.manning.com/livevideo/deep-learning-with-r-in-motion)
-]
-
----
 # Meet your friendly TAs
 
 .pull-left[
@@ -441,24 +422,64 @@ background-image: url(images/01-ai-ml-dl-landscape.002.jpeg)
 background-size: cover
 
 ---
-# Machine learning
+# Why deep learning?
 
-&lt;img src="images/01-ai-ml-dl-landscape.003.jpeg" width="2548" style="display: block; margin: auto;" /&gt;
+.font140.pull-left[
+&lt;br&gt;
 
+* .font120[Automated feature extraction]
+
+]
+
+.pull-right[
+&lt;br&gt;&lt;br&gt;
+
+&lt;img src="images/auto-feat-extract.png" width="924" style="display: block; margin: auto;" /&gt;
+
+]
+
+.footnote[Image: [Sambit Mahapatra](https://towardsdatascience.com/why-deep-learning-is-needed-over-traditional-machine-learning-1b6a99177063)]
 
 ---
-# .red[Shallow] machine learning 
+# Why deep learning?
 
-&lt;br&gt;&lt;br&gt; 
+.font140.pull-left[
+&lt;br&gt;
 
-&lt;img src="images/01-ai-ml-dl-landscape.004.jpeg" width="2549" style="display: block; margin: auto;" /&gt;
+* Automated feature extraction
+
+* Problem solving flexibility
+
+]
+
+.pull-right[
+&lt;br&gt;
+&lt;img src="images/prob-solve-flex.png" width="313" style="display: block; margin: auto;" /&gt;
+
+]
 
 ---
-# .red[Deep] machine learning 
+# Why deep learning?
 
-&lt;br&gt;&lt;br&gt; 
+.font140.pull-left[
+&lt;br&gt;
 
-&lt;img src="images/01-ai-ml-dl-landscape.005.jpeg" width="2553" style="display: block; margin: auto;" /&gt;
+* Automated feature extraction
+
+* Problem solving flexibility
+
+* Scales efficiently 🧐
+]
+
+.pull-right[
+
+&lt;br&gt;&lt;br&gt;&lt;br&gt;
+
+&lt;img src="images/dl-scale.png" width="367" style="display: block; margin: auto;" /&gt;
+
+]
+
+.footnote[Image: [Andrew Ng](https://www.deeplearning.ai/content/uploads/2018/09/Ng-MLY01-12.pdf)]
 
 ---
 class: inverse, center, middle
@@ -476,11 +497,31 @@ class: inverse, center, middle
 &lt;img src="images/dl-framework-rankings.png" width="933" style="display: block; margin: auto;" /&gt;
 
 ---
-# Our preferred DL framework
+# My preferred DL framework
 
 &lt;br&gt;&lt;br&gt; 
 
 &lt;img src="images/01-ai-ml-dl-landscape.010.jpeg" width="2553" style="display: block; margin: auto;" /&gt;
+
+---
+# On the shoulders of giants
+
+.pull-left[
+
+.center[Francois Chollet]
+&lt;img src="images/francois_challet.jpeg" width="40%" height="40%" style="display: block; margin: auto;" /&gt;
+
+.center[J.J. Allaire]
+&lt;img src="images/jjallaire.jpg" width="40%" height="40%" style="display: block; margin: auto;" /&gt;
+
+
+]
+
+.pull-right[
+
+&lt;img src="images/dlwithR.jpeg" width="75%" height="75%" style="display: block; margin: auto;" /&gt;
+
+]
 
 ---
 class: inverse, center, middle
