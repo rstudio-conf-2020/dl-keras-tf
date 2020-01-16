@@ -20,7 +20,6 @@ the RStudio workshop, this has already been taken care of for you.
 pkgs <- c(
   "AmesHousing",
   "caret",
-  "crayon",
   "data.table",
   "flexdashboard",
   "fs",
@@ -35,6 +34,7 @@ pkgs <- c(
   "ROCR",
   "Rtsne",
   "rsample",
+  "scales",
   "testthat",
   "text2vec",
   "tfruns",

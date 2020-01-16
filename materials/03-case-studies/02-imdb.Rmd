@@ -4,7 +4,7 @@ output: html_notebook
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ggplot2::theme_set(ggplot2::theme_minimal())
 ```
 
@@ -24,7 +24,7 @@ Throughout this case study you will learn a few new concepts:
 
 # Package requirements
 
-```{r load-pkgs, warning=FALSE, message=FALSE}
+```{r load-pkgs}
 library(keras)     # for deep learning
 library(tidyverse) # for dplyr, ggplot2, etc.
 library(testthat)  # unit testing
@@ -34,12 +34,12 @@ library(glue)      # easy print statements
 # The IMDB dataset
 
 Our data consists of 50,000 movie reviews from [IMDB](https://www.imdb.com/).
-This data has been currated and supplied to us via keras; however, tomorrow we
+This data has been curated and supplied to us via keras; however, tomorrow we
 will go through the process of preprocessing the original data on our own. First,
 let's grab our data and unpack them into training vs test and features vs labels.
 
-```{r get-data, warning = FALSE}
-imdb <- dataset_imdb(num_words = 10001)
+```{r get-data}
+imdb <- dataset_imdb(num_words = 10000)
 c(c(reviews_train, y_train), c(reviews_test, y_test)) %<-% imdb
 
 length(reviews_train)   # 25K reviews in our training data
@@ -59,7 +59,6 @@ identify:
 3. padding
 
 the integer "14" represents the $14 - 3 = 11$th most frequent word.
-
 
 ```{r first-review}
 reviews_train[[1]]
@@ -92,7 +91,6 @@ str(y_train)
 # reviews
 table(y_train)
 ```
-
 
 # Preparing the features
 
@@ -182,7 +180,7 @@ We're going to use _binary crossentropy_ since we only have two possible classes
 network %>% compile(
   optimizer = "rmsprop",
   loss = "binary_crossentropy",
-  metrics = c("accuracy")
+  metrics = "accuracy"
 )
 ```
 
@@ -303,7 +301,7 @@ history <- network %>% fit(
 ```
 
 Our results show decrease in overfitting and improvement in our loss score and
-accuracy.
+(possibly) accuracy.
 
 ```{r regularize-lr-results}
 best_epoch <- which.min(history$metrics$val_loss)
@@ -642,7 +640,9 @@ Unfortunately, many of these hyperparameters interact so changing one can impact
 the performance of another. Performing a grid search can help you identify the
 optimal combination; however, as your data gets larger or as you start using
 more complex models such as CNNs and LSTMs, you often constrained by compute to
-adequately execute a sizable grid search.
+adequately execute a sizable grid search. Here is a great paper on how to
+practically approach hyperparameter tuning for neural networks
+(https://arxiv.org/abs/1803.09820).
 
 To see the performance of a grid search on this data set and the parameters
 discussed here, check out [this notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/imdb-grid-search.nb.html).

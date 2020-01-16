@@ -4,7 +4,7 @@ output: html_notebook
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 ggplot2::theme_set(ggplot2::theme_minimal())
 ```
 
@@ -24,7 +24,7 @@ Throughout this case study you will learn a few new concepts:
 
 # Package requirements
 
-```{r load-pkgs, warning=FALSE, message=FALSE}
+```{r load-pkgs}
 library(keras)     # for deep learning
 library(testthat)  # unit testing
 library(tidyverse) # for dplyr, ggplot2, etc.
@@ -38,7 +38,7 @@ library(recipes)   # for feature engineering
 For this case study we will use the [Ames housing dataset](http://jse.amstat.org/v19n3/decock.pdf) 
 provided by the __AmesHousing__ package.
 
-```{r get-data, warning=FALSE}
+```{r get-data}
 ames <- AmesHousing::make_ames()
 dim(ames)
 ```
@@ -60,7 +60,7 @@ str(ames)
 
 The numeric variables are on different scales. For example:
 
-```{r numeric-ranges, message=FALSE, warning=FALSE}
+```{r numeric-ranges}
 ames %>%
   select(Lot_Area, Lot_Frontage, Year_Built, Gr_Liv_Area, Garage_Cars, Mo_Sold) %>%
   gather(feature, value) %>%
@@ -104,7 +104,6 @@ ames_test <- assessment(ames_split)
 dim(ames_train)
 dim(ames_test)
 ```
-
 
 # Preparing the data
 
@@ -228,7 +227,7 @@ history <- network %>% fit(
 Our results below show two things:
 
 1. Our validation loss score has not reached a minimum.
-2. It appears that we may be underfitting (validation loss is below training loss).
+2. There are no signs of overfitting.
 
 ```{r}
 plot(history) + scale_y_log10()
@@ -245,7 +244,7 @@ basic guidelines:
 
 - batch sizes commonly take on values of $2^s$ (i.e. 32, 64, 128, 256, 512),
    - smaller batch sizes...
-      - can have more variability; however, this variabiliy can help us stay out
+      - can have more variability; however, this variability can help us stay out
         of local minimumns 
       - can decrease learning time
    - larger batch sizes...
@@ -266,7 +265,7 @@ Here are some good articles discussing the impacts of batch size:
    - [Deep Learning book, Section 8.1.3](http://www.deeplearningbook.org/contents/optimization.html)
    - [Impact of Training Set Batch Size on the Performance](http://bit.ly/35VWM7e)
 
-# YOUR TURN! (3 min)
+# YOUR TURN! (5 min)
 
 Try different batch sizes and epochs and see how model performance changes. 
 Remember, batch sizes are typically powers of 2 (i.e. 16, 32, 64, 128, 256, 512).
@@ -390,13 +389,13 @@ cat("\nThe minimum loss score is", min(history$metrics$val_loss) %>% round(4),
 ```
 
 
-```{r adj-learning-rate-plot, message=FALSE}
+```{r adj-learning-rate-plot}
 plot(history) + 
   scale_y_log10() +
   scale_x_continuous(limits = c(0, length(history$metrics$val_loss)))
 ```
 
-# YOUR TURN! (3 min)
+# YOUR TURN! (5 min)
 
 Try different variations of learning rate, patience parameters, and learning 
 rate reduction factor.  Here are a couple of things to keep in mind:
@@ -447,7 +446,7 @@ In the next module, we'll look at how to dynamically assess these inputs but for
 now, spend the next 3 minutes adjusting the number of units in each hidden layer
 and/or adjusting the number of hidden layers.
 
-## YOUR TURN! (3 min)
+## YOUR TURN! (5 min)
 
 Try different batch sizes and epochs and see how model performance changes. 
 Remember, batch sizes are typically powers of 2 (i.e. 16, 32, 64, 128, 256, 512).
@@ -484,17 +483,19 @@ Typically, I add units and layers until I see significant overfitting or start
 to see high variability in our loss score or metrics and then constrain the model
 from there. 
 
-For example, the following model with 3 hidden layers consisting of 1024, 512, 
-and 256 units overfits at the minimum validation loss score (but not much) and
-shows signs of loss and metric variability. From here, I would start to remove
-layers and/or reduce the number of units in each layer until I find a happy
+For example, the following model with 5 hidden layers consisting of 1024 units
+each overfits at the minimum validation loss score (but not much) and
+shows signs of loss and metric variability. From here, I would start to
+regularize the model by removing layers, reduce the number of units in each
+layer, or using an alternative regularization method until I find a happy
 compromise between model capacity, loss minimization & stability.
 
 ```{r overfit-model}
 network <- keras_model_sequential() %>% 
   layer_dense(units = 1024, activation = "relu", input_shape = ncol(x_train)) %>%
-  layer_dense(units = 512, activation = "relu") %>%
-  layer_dense(units = 256, activation = "relu") %>%
+  layer_dense(units = 1024, activation = "relu") %>%
+  layer_dense(units = 1024, activation = "relu") %>%
+  layer_dense(units = 1024, activation = "relu") %>%
   layer_dense(units = 1)
 
 network %>%
@@ -533,9 +534,9 @@ plot(history) +
 # Generalizing to small datasets
 
 Note that finding an optimal model that generalizes well based on our validation
-approach will be difficult. This is because our validation data (via
-`validation_split = 0.2`) only consists of 616 samples. Consequently, model
-performance will be highly dependent on these 616 samples.
+approach may be difficult. This is because our validation data (via
+`validation_split = 0.2`) only consists of 800+ samples. Consequently, model
+performance will be highly dependent on these 800+ samples.
 
 In general, the fewer observations in our validation set, the greater variance
 in our loss score.  As the number of observations in our validation data 
@@ -556,10 +557,12 @@ for an example of performing k-fold cross validation.
    - Smaller batch sizes tend to perform best (speed and loss minimization)
    - However, this is a hyperparameter you can adjust and evaluate
    - Make sure you include enough epochs to reach a minimum loss
+* Learning rate
+   - The most important hyperparameter to tune
+   - Typically you want to tune the learning rate and batch size together
 * Callbacks
    - Use early stopping to automate model training and stopping after loss has
      been minimized
-   - The optimizer learning rate is a hyperparameter you can and should adjust
    - Use `callback_reduce_lr_on_plateau()` for more control over the learning 
      rate.
 * Knowing when to adjust model capacity
