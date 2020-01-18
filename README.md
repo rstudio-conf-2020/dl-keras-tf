@@ -130,6 +130,14 @@ __Rick Scavetta__
 
 __Omayma Said__
 
+<img src="https://avatars3.githubusercontent.com/u/5878305?s=460&v=4" width="100"/>
+
+__Doug Ashton__
+
+<img src="https://avatars3.githubusercontent.com/u/1580714?s=460&v=4" width="100"/>
+
+__Daniel Rodriguez__
+
 -----
 
 ![](https://i.creativecommons.org/l/by/4.0/88x31.png) This work is

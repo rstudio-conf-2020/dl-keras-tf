@@ -18,7 +18,7 @@ output:
 
 ```{r setup, include=FALSE, cache=FALSE}
 # set working directory to docs folder
-setwd(here::here("docs"))
+#setwd(here::here("docs"))
 
 # Set global R options
 options(htmltools.dir.version = FALSE, servr.daemon = TRUE)
@@ -451,8 +451,13 @@ knitr::include_graphics("https://media1.tenor.com/images/82ed88212e7752741e898cd
 .pull-left[
 
 .center[[Rick Scavetta](https://github.com/Scavetta)]
-```{r ta1, echo=FALSE, out.height="83%", out.width="83%"}
+```{r ta1, echo=FALSE, out.height="40%", out.width="40%"}
 knitr::include_graphics("images/rick_scavetta.jpeg")
+```
+
+.center[[Doug Ashton](https://github.com/dougmet)]
+```{r ta3, echo=FALSE, out.height="40%", out.width="40%"}
+knitr::include_graphics("https://avatars3.githubusercontent.com/u/5878305?s=460&v=4")
 ```
 
 ]
@@ -461,8 +466,13 @@ knitr::include_graphics("images/rick_scavetta.jpeg")
 .pull-right[
 
 .center[[Omayma Said](https://www.onceupondata.com/)]
-```{r ta2, echo=FALSE}
+```{r ta2, echo=FALSE, out.height="40%", out.width="40%"}
 knitr::include_graphics("images/omayma_said.jpg")
+```
+
+.center[[Daniel Rodriguez](https://github.com/danielfrg)]
+```{r ta4, echo=FALSE, out.height="40%", out.width="40%"}
+knitr::include_graphics("https://avatars3.githubusercontent.com/u/1580714?s=460&v=4")
 ```
 
 ]
