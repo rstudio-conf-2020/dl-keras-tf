@@ -4,7 +4,7 @@ output: html_notebook
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ggplot2::theme_set(ggplot2::theme_bw())
 ```
 
@@ -19,7 +19,7 @@ Learning objectives:
 
 # Required packages
 
-```{r, message=FALSE, warning=FALSE}
+```{r}
 library(keras)
 library(glue)
 library(tidyverse)
@@ -238,7 +238,7 @@ glue("Our optimal loss is {best_loss} with an accuracy of {best_acc}")
 ```
 
 
-```{r plot-history, message=FALSE}
+```{r plot-history}
 plot(history) + 
   scale_x_continuous(limits = c(0, length(history$metrics$val_loss)))
 ```
@@ -407,7 +407,7 @@ glue("Our optimal loss is {best_loss} with an accuracy of {best_acc}")
 ```
 
 
-```{r second-model-plot, message=FALSE}
+```{r second-model-plot}
 plot(history) + 
   scale_x_continuous(limits = c(0, length(history$metrics$val_loss)))
 ```

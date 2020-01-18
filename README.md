@@ -102,6 +102,7 @@ hyperlink to relevant slides (or additional reading).
 | Linear regression with stochastic gradient descent | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/manual-gradient-descent.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/99-extras/manual-gradient-descent.Rmd) |
 | Diagnosing model performance with learning curves | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/learning-curve-diagnostics.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/99-extras/learning-curve-diagnostics.Rmd) |
 | Save your models for later with serialization | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/save-your-models.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/99-extras/save-your-models.Rmd) |
+| Visualizing what CNNs learn | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/visualizing-what-cnns-learn.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/99-extras/visualizing-what-cnns-learn.Rmd) |
 
 
 ## Instructor

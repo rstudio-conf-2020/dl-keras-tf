@@ -4,7 +4,7 @@ output: html_notebook
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ggplot2::theme_set(ggplot2::theme_bw())
 ```
 
@@ -19,7 +19,7 @@ Learning objectives:
 
 # Required packages
 
-```{r, message=FALSE, warning=FALSE}
+```{r}
 library(keras)
 library(glue)
 library(ggplot2)
@@ -84,7 +84,6 @@ conv_base <- application_vgg16(
   include_top = FALSE,
   input_shape = c(150, 150, 3)
 )
-
 ```
 
 ```{r vgg16-model-structure}
@@ -228,7 +227,7 @@ glue("Our optimal loss is {best_loss} with an accuracy of {best_acc}")
 
 # Plot results:
 
-```{r plot-model1-history, message=FALSE}
+```{r plot-model1-history}
 plot(history1) + 
   scale_x_continuous(limits = c(0, length(history1$metrics$val_loss)))
 ```

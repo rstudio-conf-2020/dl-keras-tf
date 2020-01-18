@@ -19,24 +19,30 @@ you.
 pkgs <- c(
   "AmesHousing",
   "caret",
-  "crayon",
   "data.table",
   "flexdashboard",
   "fs",
   "glue",
+  "grid",
+  "gridExtra",
   "here",
   "jpeg",
   "keras",
+  "lime",
+  "magick",
+  "mlbench",
   "plotly",
   "progress",
   "recipes",
   "ROCR",
   "Rtsne",
   "rsample",
+  "scales",
   "testthat",
   "text2vec",
   "tfruns",
-  "tidyverse"
+  "tidyverse",
+  "viridis"
 )
 
 missing_pkgs <- pkgs[!(pkgs %in% installed.packages()[, "Package"])]
@@ -86,6 +92,12 @@ you will need to following these steps:
     Token”. This will download a JSON file with your access token.
 4.  Move the JSON token file to the `/Users/your_id/.kaggle` folder
     ([reference](https://github.com/Kaggle/kaggle-api/issues/15))
+
+**Note**: if you experience the following error `bash: kaggle: command
+not found` you may need to explicitly state the kaggle path in your
+.bash\_profile. See this related
+[issue](https://github.com/rstudio-conf-2020/dl-keras-tf/issues/4) for
+more details.
 
 Now you should be able to execute the following code to download the
 data. This will download all the data but only place a fraction of the
