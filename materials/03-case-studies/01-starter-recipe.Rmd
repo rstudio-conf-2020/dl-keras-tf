@@ -853,3 +853,32 @@ for (i in missed[1:16]) {
   title(main = paste("Predicted:", predictions[i]))
 }
 ```
+
+# Key takeaways
+
+Follow these steps and guidelines when tuning your DL model:
+
+1. Prepare data
+   - data needs to be shaped into the right tensor dimensions
+   - data should be scaled so they don't trigger exploding gradients
+2. Balance batch size with a default learning rate so that...
+   - your learning curve is not too noisy
+   - the training compute time is sufficient
+3. Tune the adaptive learning rate optimizer
+   - compare SGD+momentum with RMSprop & Adam
+   - assess learning rates on log scale between [1e-1, 1e-7]
+4. Add callbacks to control training
+   - use early stopping for more efficient training
+   - use an adaptive learning rate callback to have more control of the learning
+     rate
+5. Explore model capacity
+   - compare adding width vs depth (consider loss vs. training time)
+   - be smart with your experiments (use tensorboard callback!)
+6. Regularize overfitting
+   - weight decay controls magnitude of weights; start by assessing values btwn
+     0.1, 0.01, …, 0.0001
+   - dropout minimizes happenstance patterns from noise; typical values range
+     from 0.2-0.5.
+7. Iterate, iterate, iterate!
+
+[🏠](https://github.com/rstudio-conf-2020/dl-keras-tf)

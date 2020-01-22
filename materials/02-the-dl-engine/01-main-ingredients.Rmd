@@ -1017,3 +1017,5 @@ training a basic MLP model. However, as the mini-project probably demonstrated,
 it didn't do much to help you understand how to put these ingredients together
 in a methodolical approach to maximize model performance. The next module aims
 to fill this gap and provide some best practices for training a model.
+
+[🏠](https://github.com/rstudio-conf-2020/dl-keras-tf)

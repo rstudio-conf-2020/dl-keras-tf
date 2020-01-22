@@ -34,7 +34,11 @@ test directories.
 
 ```{r image-file-paths}
 # define the directories:
-image_dir <- here::here("materials", "data", "natural_images")
+if (stringr::str_detect(here::here(), "conf-2020-user")) {
+  image_dir <- "/home/conf-2020-user/data/natural_images"
+} else {
+  image_dir <- here::here("materials", "data", "natural_images")
+}
 train_dir <- file.path(image_dir, "train")
 valid_dir <- file.path(image_dir, "validation")
 test_dir <- file.path(image_dir, "test")
@@ -90,9 +94,10 @@ There are two approaches you could take to model this data:
 
 1. End-to-end trained CNN with your own custom convolutional layer (reference 
    the 04-computer-vision-CNNs/02-cats-vs-dogs.Rmd file). This solution requires
-   less code but takes 1-2 hours without GPUs. Using the same model structure
-   in this [notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-cats-vs-dogs.nb.html)
-   should net you about 89-90% accuracy.
+   less code but takes 1-2 hours without GPUs and about 10-15 minutes with GPUS.
+   Using the same model structure in this
+   [notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-cats-vs-dogs.nb.html)
+   should net you about ~90% accuracy.
 2. Apply a pre-trained model (reference the 04-computer-vision-CNNs/03-transfer-
    learning.Rmd file). This solution is much quicker to train but requires more
    code. Using the feature extraction model structure in this [notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/03-transfer-learning.nb.html)

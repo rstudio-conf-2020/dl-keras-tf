@@ -57,7 +57,7 @@ review and
 
 ```{r}
 training_files <- file.path(imdb_dir, "train") %>%
-  dir_ls() %>%
+  dir_ls(type = "directory") %>%
   map(dir_ls) %>%
   set_names(basename) %>%
   plyr::ldply(data_frame) %>%
