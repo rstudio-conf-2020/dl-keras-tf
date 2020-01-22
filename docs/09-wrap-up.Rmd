@@ -158,6 +158,10 @@ knitr::include_graphics("images/quora_icon.png")
 
 .bold[Check out some of the extra notebooks]
 
+```{r, echo=FALSE}
+knitr::include_graphics("images/extra-notebooks.png")
+```
+
 ]
 
 ---
@@ -230,6 +234,14 @@ class: inverse
 [`r fontawesome::fa("envelope", fill = "white")`](mailto:bradleyboehmke@gmail.com) bradleyboehmke@gmail.com  
 
 ]
+
+---
+# .center.font120[[rstd.io/ws-survey](http://rstd.io/ws-survey)]
+
+```{r, echo=FALSE, out.height="45%", out.width="45%", fig.align='center'}
+knitr::include_graphics("https://d2dfxqxblmblx4.cloudfront.net/wp-content/uploads/2016/03/18151100/Survey-2-1024x1024.jpg")
+```
+
 
 ---
 # Back home
