@@ -44,10 +44,10 @@ I make a few assumptions of your established knowledge regarding your programmin
 
 You will require several packages and datasets throughout this workshop. If you are attending the workshop these will be preinstalled for you so you do not need to worry about your OS differing from mine. However, after you leave the workshop, the first notebook below will allow you to reproduce the work you did in the workshop. Also, at the conference workshop, we will all use the RStudio Cloud platform. The second notebook below will get you set up so that we can hit the ground running on day 1!
 
-| Description                       | Notebook      | Source Code
-| --------------------------------- | ------------- | ------------- |
-| Pre-installing necessary packages and datasets | [Github Doc](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/01-intro/01-requirements.md) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/01-intro/01-requirements.Rmd) |
-| Setting up RStudio Cloud environment | TBD | TBD |
+| Description                       | Resource
+| --------------------------------- | :-------------: |
+| Pre-installing necessary packages and datasets (already pre-installed for workshop!) | [Instructions](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/01-intro/01-requirements.md) <br> [Source Code](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/01-intro/01-requirements.Rmd) |
+| Setting up RStudio Cloud environment | [Instructions](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/01-intro/02-server-instructions.md) |
 
 ## Schedule
 
