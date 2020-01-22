@@ -1,6 +1,9 @@
 ---
 title: "Main Ingredients"
-output: html_notebook
+output:
+  html_notebook:
+    toc: yes
+    toc_float: true
 ---
 
 ```{r setup, include=FALSE}
@@ -20,7 +23,19 @@ this module you will learn about:
 * Learning curves
 * Batch size
 
-# Package Requirements
+# Package Requirements {.tabset .tabset-fade}
+
+## Loading
+
+Let's load the `keras` package along with a couple other packages we'll use.
+
+```{r}
+library(keras)       # for modeling
+library(tidyverse)   # for wrangling & visualization
+library(glue)        # for string literals
+```
+
+## Installation
 
 Normally, you will be starting out from scratch and need to install and set up
 keras on your own laptop. First, you need to install keras from CRAN. Once the
@@ -49,14 +64,6 @@ For this workshop we will be using a cloud environment to ensure we are all
 operating in common environment and Keras and TensorFlow have already been 
 installed.
 
-Let's load the `keras` package along with a couple other packages we'll use.
-
-```{r}
-library(keras)       # for modeling
-library(tidyverse)   # for wrangling & visualization
-library(glue)        # for string literals
-```
-
 # Simple Linear Regression
 
 For our first example, let's look at a very simple linear problem based on data
@@ -78,6 +85,8 @@ set.seed(123)
   y = b + a*x + rnorm(n)
 ))
 ```
+
+## Simple regression with OLS
 
 I'm assuming we're all familiar with the OLS methodology for linear regression
 modeling where our objective function (aka ___loss___) is:
@@ -106,7 +115,7 @@ ggplot(df, aes(x, y)) +
   ggtitle(glue("MSE = {mse}"))
 ```
 
-## Simple Regression with a Perceptron
+## Simple regression with a perceptron
 
 Now, let's illustrate performing a similar process but with a basic building
 block of neural networks -- the perceptron.
@@ -153,8 +162,11 @@ model <- keras_model_sequential() %>%
 ### 2. Define how our model is going to learn
 
 The whole goal of training a neural network is to find the optimal set of
-parameter weights (aka coefficients in OLS-speak). We define how our model is
-going to learn with `compile()`:
+parameter weights (aka coefficients in OLS-speak). 
+
+> ___Our goal is to find weights that minimize the loss score___
+
+We define how our model is going to learn with `compile()`:
 
 ```{}
 model %>% compile(

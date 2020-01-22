@@ -5,6 +5,7 @@
 .DS_Store
 *.pptx
 docs/data/
+materials/03-case-studies/mnist
 materials/99-extras/dog_activations
 materials/99-extras/dog_heatmap.png
 materials/99-extras/dog_overlay.png
