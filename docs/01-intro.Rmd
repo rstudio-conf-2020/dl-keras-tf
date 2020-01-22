@@ -45,10 +45,39 @@ class: sf-title-slide
 
 <br><br><br><br><br><br><br>
 # .font250.white[Deep Learning with `r anicon::faa("r-project", animate = 'pulse', speed = 'slow', color = 'steelblue')`]
-# .font120.white[Using Keras with Tensorflow backend]
+## .font120.white[Using Keras with Tensorflow backend]
 
-### .white[Brad Boehmke]
-### .white[`rstudio::conf(2020)`]
+.white[Brad Boehmke]  
+.white[rstudio::conf(2020)]  
+.white[rstd.io/conf20-dl]
+
+---
+# Workshop policies
+
+.pull-left[
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/sf.png")
+```
+
+
+]
+
+.pull-right.font90[
+
+* Identify the exits closest to you in case of emergency 
+
+* Please review the rstudio::conf code of conduct that applies to all workshops. Issues can be addressed three ways:
+   - In person: contact any rstudio::conf staff member or the conference registration desk
+   - By email: send a message to conf@rstudio.com
+   - By phone: call 844-448-1212
+
+* Please do not photograph people wearing red lanyards
+
+* A chill-out room is available for neurologically diverse attendees on the 4th floor of tower 1
+
+
+]
 
 ---
 
@@ -473,6 +502,29 @@ knitr::include_graphics("images/omayma_said.jpg")
 .center[[Daniel Rodriguez](https://github.com/danielfrg)]
 ```{r ta4, echo=FALSE, out.height="40%", out.width="40%"}
 knitr::include_graphics("https://avatars3.githubusercontent.com/u/1580714?s=460&v=4")
+```
+
+]
+
+---
+# Asking Questions
+
+.pull-left[
+
+.center.font140[Deep learning]
+
+```{r, echo=FALSE, out.height="80%", out.width="80%"}
+knitr::include_graphics("images/yellow-sticky.png")
+```
+
+]
+
+.pull-right[
+
+.center.font140[Code, server, logistics, admin]
+
+```{r, echo=FALSE, out.height="80%", out.width="80%"}
+knitr::include_graphics("images/blue-sticky.png")
 ```
 
 ]
