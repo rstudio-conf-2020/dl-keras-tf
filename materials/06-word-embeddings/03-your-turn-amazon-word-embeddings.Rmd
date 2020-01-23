@@ -4,7 +4,7 @@ output: html_notebook
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, cache = FALSE)
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
 ```
 
 This project is designed to test your current knowledge on applying word
@@ -20,7 +20,7 @@ ___Good luck!___
 
 # Requirements
 
-```{r, message=FALSE, warning=FALSE}
+```{r}
 library(keras)     # provides deep learning procedures
 library(tidyverse) # provides basic data wrangling and visualization
 library(glue)      # provides efficient print statements
@@ -34,7 +34,13 @@ already been downloaded and unzipped for you. All reviews are contained in a
 single .txt file.
 
 ```{r}
-amazon_reviews <- here::here("materials", "data", "amazon-food", "finefoods.txt")
+# get path to data
+if (stringr::str_detect(here::here(), "conf-2020-user")) {
+  amazon_reviews <- "/home/conf-2020-user/data/amazon-food/finefoods.txt"
+} else {
+  amazon_reviews <- here::here("materials", "data", "amazon-food", "finefoods.txt")
+}
+
 reviews <- read_lines(amazon_reviews)
 ```
 

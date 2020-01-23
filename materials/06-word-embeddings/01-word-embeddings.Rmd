@@ -42,7 +42,11 @@ download instructions [here](http://bit.ly/dl-rqmts). For those in the workshop
 we have already downloaded this data for you.
 
 ```{r}
-imdb_dir <- here::here("materials", "data", "imdb")
+if (stringr::str_detect(here::here(), "conf-2020-user")) {
+  imdb_dir <- "/home/conf-2020-user/data/imdb"
+} else {
+  imdb_dir <- here::here("materials", "data", "imdb")
+}
 fs::dir_tree(imdb_dir, type = "directory")
 ```
 

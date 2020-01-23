@@ -42,7 +42,13 @@ you into the `"/materials/data/cornell_reviews"` directory. Outside of the
 workshop, you can find the download instructions [here](http://bit.ly/dl-rqmts).
 
 ```{r}
-movie_dir <- here::here("materials", "data", "cornell_reviews", "data")
+# get path to data
+if (stringr::str_detect(here::here(), "conf-2020-user")) {
+  movie_dir <- "/home/conf-2020-user/data/cornell_reviews/data"
+} else {
+  movie_dir <- here::here("materials", "data", "cornell_reviews", "data")
+}
+
 fs::dir_tree(movie_dir, recurse = FALSE)
 ```
 

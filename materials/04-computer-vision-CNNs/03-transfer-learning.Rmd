@@ -33,7 +33,11 @@ We are working with the same dogs and cats images as before.
 
 ```{r image-file-paths}
 # define the directories:
-image_dir <- here::here("materials", "data", "dogs-vs-cats")
+if (stringr::str_detect(here::here(), "conf-2020-user")) {
+  image_dir <- "/home/conf-2020-user/data/dogs-vs-cats"
+} else {
+  image_dir <- here::here("materials", "data", "dogs-vs-cats")
+}
 train_dir <- file.path(image_dir, "train")
 valid_dir <- file.path(image_dir, "validation")
 test_dir <- file.path(image_dir, "test")
@@ -376,7 +380,7 @@ unfreeze_weights(conv_base, from = "block3_conv1")
 ```
 
 
-### Jointly  train both these layers and the part you added
+### Jointly train both these layers and the part you added
 
 ```{r fine-tune-model}
 model %>% compile(

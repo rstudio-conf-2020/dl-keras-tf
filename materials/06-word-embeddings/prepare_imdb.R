@@ -1,14 +1,18 @@
 library(fs)
 library(tidyverse)
 
-imdb_dir <- here::here("materials", "data", "imdb")
+if (stringr::str_detect(here::here(), "conf-2020-user")) {
+  imdb_dir <- "/home/conf-2020-user/data/imdb"
+} else {
+  imdb_dir <- here::here("materials", "data", "imdb")
+}
   
 
 # Import reviews and labels -----------------------------------------------
 cat("Importing reviews and labels...")
 
 training_files <- file.path(imdb_dir, "train") %>%
-  dir_ls() %>%
+  dir_ls(type = "directory") %>%
   map(dir_ls) %>%
   set_names(basename) %>%
   plyr::ldply(data_frame) %>%

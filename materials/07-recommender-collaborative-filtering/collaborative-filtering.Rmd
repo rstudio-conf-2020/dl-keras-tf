@@ -4,7 +4,7 @@ output: html_notebook
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ggplot2::theme_set(ggplot2::theme_bw())
 ```
 
@@ -23,7 +23,7 @@ Learning objectives:
 
 # Requirements
 
-```{r, message=FALSE, warning=FALSE}
+```{r}
 library(keras)
 library(tidyverse)
 library(glue)
@@ -36,8 +36,14 @@ which provides user rating information for movies. There are multiple dataset
 sizes; however, for efficiency we will use the smaller dataset that contains
 100,836 ratings of 9,724 movies rated by 610 users.
 
-```{r, message=FALSE, warning=FALSE}
-data_dir <- here::here("materials", "data", "ml-latest-small")
+```{r}
+# get path to data
+if (stringr::str_detect(here::here(), "conf-2020-user")) {
+  data_dir <- "/home/conf-2020-user/data/ml-latest-small"
+} else {
+  data_dir <- here::here("materials", "data", "ml-latest-small")
+}
+
 movies <- read_csv(file.path(data_dir, "movies.csv"))
 ratings <- read_csv(file.path(data_dir, "ratings.csv"))
 ```

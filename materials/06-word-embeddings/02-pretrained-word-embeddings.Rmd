@@ -4,7 +4,7 @@ output: html_notebook
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ```
 
 In this example, we are going to learn how to apply pre-trained word embeddings.
@@ -21,7 +21,7 @@ Learning objectives:
 
 # Requirements
 
-```{r, message=FALSE}
+```{r}
 library(keras)     # deep learning modeling
 library(tidyverse) # various data wrangling & visualization tasks
 library(progress)  # provides progress bar for status updates during long loops
@@ -56,8 +56,14 @@ been saved for you in the data directory.
 
 ___See the [requirements set-up notebook](http://bit.ly/dl-rqmts) for download instructions.___
 
-```{r, message=FALSE, warning=FALSE}
-path <- here::here("materials", "data", "glove", "glove.6B.100d.txt")
+```{r}
+# get path to downloaded data
+if (stringr::str_detect(here::here(), "conf-2020-user")) {
+  path <- "/home/conf-2020-user/data/glove/glove.6B.100d.txt"
+} else {
+  path <- here::here("materials", "data", "glove", "glove.6B.100d.txt")
+}
+
 glove_wts <- data.table::fread(path, quote = "", data.table = FALSE) %>% 
   as_tibble()
 
