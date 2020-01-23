@@ -88,7 +88,7 @@ And some of the categorical features have many levels:
 ```{r}
 ames %>%
   select_if(~ is.factor(.) & length(levels(.)) > 8) %>%
-  str()
+  glimpse()
 ```
 
 Consequently, our first challenge is transforming this dataset into numeric
@@ -198,37 +198,346 @@ dim(x_train)
 dim(x_test)
 ```
 
-
 # Step 2: Balance batch size with a default learning rate
+
+To get started, let's build a simple model with...
+
+- a single layer model with 128 units in the hidden layer. We have 188 features
+  and 1 response node so a good starting point is mean(c(188, 1)) and then round
+  up to the nearest value in the $2^s$ range (i.e. 32, 64, 128, 256, 512).
+- a basic SGD optimizer
+- use a mean square logarithmic error ("msle")
+- also track the mean absolute error metric ("mae")
+- 20% validation split
+
+Now, start with the default batch size of 32 and then compare with smaller
+values (i.e. 16) and larger values (i.e. 128). You're looking to balance the
+progression of the loss learning curve and the training spead.
+
+__Comment__: The default batch size of 32 performs pretty well in this case but
+you could've easily have choosen lower (8 or 16) or higher (64, 128) without
+negative impacts. We can see that the loss is still trending downward so we
+should have lots of room for improvement.
 
 ```{r}
 n_feat <- ncol(x_train)
 
-network <- keras_model_sequential() %>% 
-  layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>% 
-  layer_dense(units = 128, activation = "relu") %>%
+model <- keras_model_sequential() %>% 
+  layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>%
   layer_dense(units = 1)
 
-network %>% compile(
-    optimizer = "rmsprop",
+model %>% compile(
+    optimizer = "sgd",
     loss = "msle",
-    metrics = c("mae")
+    metrics = "mae"
   )
-``` 
 
-```{r model-summary}
-summary(network)
-```  
+history <- model %>% fit(
+  x_train,
+  y_train,
+  batch_size = 32,
+  validation_split = 0.2
+)
+```
+
+```{r}
+history
+```
+
+```{r}
+plot(history)
+```
 
 # Step 3: Tune the adaptive learning rate optimizer
 
+Now go head and start assessing different adaptive learning rates such as:
+
+- SGD+momentum
+- RMSprop
+- Adamp
+
+Try a variety of learning rates. Recall that we typically start assessing rates
+on a logarithmic scale (i.e. 0.1, 0.01, ..., 0.0001).
+
+__Comment__: The default learning rates on the common adaptive learning rate
+optimizers show a slow progression down the loss curve so we can afford to use
+a larger learning rate. I found that the RMSprop tended to provide the best
+results at this point.
+
+```{r]}
+model <- keras_model_sequential() %>% 
+  layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>%
+  layer_dense(units = 1)
+
+model %>% compile(
+    optimizer = optimizer_rmsprop(lr = 0.1),
+    loss = "msle",
+    metrics = "mae"
+  )
+
+history <- model %>% fit(
+  x_train,
+  y_train,
+  batch_size = 32,
+  validation_split = 0.2
+)
+```
+
+```{r}
+history
+```
+
+```{r}
+plot(history)
+```
+
 # Step 4: Add callbacks to control training
+
+Add the following callbacks and see if your performance improves:
+
+- early stopping with `patience = 3` and `min_delta = 0.00001`
+- learning rate reduction upon a plateau with `patience = 1`
+
+__Comment__: Adding early stopping improves performance because we can increase
+the epochs but stop when necessary. Most of my optimal models were stopping at
+around 15 epochs at this point. Also, adding `callback_reduce_lr_on_plateau()`
+also improves. I plot the learning rates by epoch below and we can see that
+they reduce multiple times which allows our model to eek out a little more
+performance improvements.
+
+```{r]}
+model <- keras_model_sequential() %>% 
+  layer_dense(units = 128, activation = "relu", input_shape = ncol(x_train)) %>%
+  layer_dense(units = 1)
+
+model %>% compile(
+    optimizer = optimizer_rmsprop(lr = 0.1),
+    loss = "msle",
+    metrics = "mae"
+  )
+
+history <- model %>% fit(
+  x_train,
+  y_train,
+  batch_size = 32,
+  epochs = 30,
+  validation_split = 0.2,
+  callbacks = list(
+    callback_early_stopping(patience = 3, min_delta = 0.00001),
+    callback_reduce_lr_on_plateau(patience = 1)
+  )
+)
+```
+
+```{r}
+history
+```
+
+```{r}
+plot(history)
+```
+
+Plotting the learning rate shows that it reduced multiple times during training:
+
+```{r}
+plot(history$metrics$lr)
+```
+
 
 # Step 5: Explore model capacity
 
+Now start to explore different widths and depths to your model.
+
+- Assess a single layer with 128, 256, 512, and 1024 nodes
+- Assess 1, 2, and 3 hidden layers
+
+__Comment__: I follow the same approach we used in the previous module to 
+assess combinations of different nodes and hidden layers. I used the tensorboard
+callback to save my model runs and analyze them.
+
+```{r}
+train_model <- function(n_units, n_layers, log_to) {
+  
+  # Create a model with a single hidden input layer
+  model <- keras_model_sequential() %>%
+    layer_dense(units = n_units, activation = "relu", input_shape = n_feat)
+  
+  # Add additional hidden layers based on input
+  if (n_layers > 1) {
+    for (i in seq_along(n_layers - 1)) {
+      model %>% layer_dense(units = n_units, activation = "relu")
+    }
+  }
+  
+  # Add final output layer
+  model %>% layer_dense(units = 1)
+  
+  # compile model
+  model %>% compile(
+    optimizer = optimizer_rmsprop(lr = 0.1),
+    loss = "msle",
+    metrics = "mae"
+  )
+  
+  # train model and store results with callback_tensorboard()
+  history <- model %>% fit(
+  x_train,
+  y_train,
+  batch_size = 32,
+  epochs = 30,
+  validation_split = 0.2,
+  callbacks = list(
+    callback_early_stopping(patience = 3, min_delta = 0.00001),
+    callback_reduce_lr_on_plateau(patience = 1),
+    callback_tensorboard(log_dir = log_to)
+  ),
+  verbose = FALSE
+  )
+  
+  return(history)
+}
+```
+
+```{r}
+grid <- expand_grid(
+  units = c(128, 256, 512, 1024),
+  layers = c(1:3)
+) %>%
+  mutate(id = paste0("mlp_", layers, "_layers_", units, "_units"))
+grid
+```
+
+The initial results don't show any glaring trends. All our models have loss
+scores ranging from 0.0135-0.015.
+
+```{r}
+for (row in seq_len(nrow(grid))) {
+  # get parameters
+  units <- grid[[row, "units"]]
+  layers <- grid[[row, "layers"]]
+  file_path <- paste0("ames/", grid[[row, "id"]])
+  
+  # provide status update
+  cat(layers, "hidden layer(s) with", units, "neurons: ")
+  
+  # train model
+  m <- train_model(n_units = units, n_layers = layers, log_to = file_path)
+  min_loss <- min(m$metrics$val_loss, na.rm = TRUE)
+  
+  # update status with loss
+  cat(min_loss, "\n", append = TRUE)
+}
+```
+
+Looking at the tensorboard shows that, really, any of the models are decent
+choices as they all have relatively similar results, low variance which means
+they all are stable models, they all have minimal overfitting, and compute time
+is definitely not a problem.
+
+```{r}
+tensorboard("ames")
+```
+
+__Comment__: After a little more experimenting I found a funnel shaped approached tended to
+produce a little more improvement in performance:
+
+```{r}
+model <- keras_model_sequential() %>% 
+  layer_dense(units = 1024, activation = "relu", input_shape = n_feat) %>%
+  layer_dense(units = 512, activation = "relu") %>%
+  layer_dense(units = 256, activation = "relu") %>%
+  layer_dense(units = 1)
+
+model %>% compile(
+    optimizer = optimizer_rmsprop(lr = 0.1),
+    loss = "msle",
+    metrics = "mae"
+  )
+
+history <- model %>% fit(
+  x_train,
+  y_train,
+  batch_size = 32,
+  epochs = 30,
+  validation_split = 0.2,
+  callbacks = list(
+    callback_early_stopping(patience = 3, min_delta = 0.00001),
+    callback_reduce_lr_on_plateau(patience = 1)
+  )
+)
+```
+
+```{r}
+history
+```
+
+```{r}
+plot(history) + scale_y_log10()
+```
+
 # Step 6: Regularize overfitting
+
+If your model is overfitting, try to add...
+
+- weight decay (i.e. `kernel_regularizer = regularizer_l2(l = xxx)`). Remember,
+  we typically start by assessing values on logarithmic scale [0.1, 0.00001].
+- dropout (`layer_dropout()`) between each layer. Remember, dropout rates
+  typically range from 20-50%.
+  
+__Comment__: Pretty much any weight regularizer hurt model performance. In this
+case, since our validation loss has minimal overfitting we can probably disregard
+any additional regularization.
+  
+```{r}
+model <- keras_model_sequential() %>% 
+  layer_dense(units = 1024, activation = "relu", input_shape = n_feat) %>%
+  layer_dropout(0.2) %>%
+  layer_dense(units = 512, activation = "relu") %>%
+  layer_dropout(0.2) %>%
+  layer_dense(units = 256, activation = "relu") %>%
+  layer_dropout(0.2) %>%
+  layer_dense(units = 1)
+
+model %>% compile(
+    optimizer = optimizer_rmsprop(lr = 0.1),
+    loss = "msle",
+    metrics = "mae"
+  )
+
+history <- model %>% fit(
+  x_train,
+  y_train,
+  batch_size = 32,
+  epochs = 30,
+  validation_split = 0.2,
+  callbacks = list(
+    callback_early_stopping(patience = 3, min_delta = 0.00001),
+    callback_reduce_lr_on_plateau(patience = 1)
+  )
+)
+```
+
+```{r}
+history
+```
 
 # Step 7: Repeat steps 1-6
 
+As this point we could repeat the process and...
+
+1. Prepare data
+   - try to find additional data to add
+   - try new feature engineering approaches
+2. Balance batch size with a default learning rate
+   - reassess batch size
+3. Tune the adaptive learning rate optimizer
+   - fine tune our learning rate
+   - see if the current optimizer still outperforms others
+4. Add callbacks to control training
+   - maybe assess more sophisticated learning rate schedulers (i.e. cyclical
+     learning rates)
+5. Explore model capacity
+   - after some tweaks we may want to reassess model capacity combinations
+6. Regularize overfitting
 
 [🏠](https://github.com/rstudio-conf-2020/dl-keras-tf)
