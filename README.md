@@ -9,7 +9,7 @@ by Bradley Boehmke
 
 :spiral_calendar: January 27 and 28, 2020  
 :alarm_clock:     09:00 - 17:00  
-:hotel:           \[ADD ROOM\]  
+:hotel:           Ballroom Level, Imperial A  
 :writing_hand:    [rstd.io/conf](http://rstd.io/conf)
 
 -----
@@ -54,18 +54,18 @@ You will require several packages and datasets throughout this workshop. If you 
 This workshop is notebook-focused. Consequently, most of our time will be spent
 in R notebooks; however, I will also jump to slides to explain certain concepts
 in further detail. Throughout the notebooks, you will see ℹ️ icons that will
-hyperlink to relevant slides (or additional reading).
+hyperlink to relevant slides (or additional resources).
 
 ### Day 1
 
 | Time          | Activity                             | Notebook      | Source Code   | Other    |
 | :------------ | :----------------------------------- | :-----------: | :-----------: | :------: |
 | 09:00 - 09:30 | Introduction                  |          |             | [Slides](https://rstudio-conf-2020.github.io/dl-keras-tf/01-intro.html#1) |
-| 09:30 - 10:30 | Hello [Deep Learning] World!  | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-hello-DL-world.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/02-the-dl-engine/01-hello-DL-world.Rmd) | [Slides](http://bit.ly/dl-01) |
+| 09:30 - 10:30 | Deep learning ingredients  | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-main-ingredients.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/02-main-ingredients/01-main-ingredients.Rmd) | [Slides](http://bit.ly/dl-01) |
 | 10:30 - 11:00 | *Coffee break*                |   |   |   |
-| 11:00 - 12:30 | Case studies                  |   |   |   |
-|               | &nbsp;&nbsp;&nbsp;Regression - sales prices | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-ames.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/03-case-studies/01-ames.Rmd) | [Slides](http://bit.ly/dl-02) |
-|               | &nbsp;&nbsp;&nbsp;Binary classification - movie reviews | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-imdb.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/03-case-studies/02-imdb.Rmd) | [Slides](http://bit.ly/dl-02#20) |
+| 11:00 - 12:30 | Deep learning recipe |   |   |   | 
+|               | &nbsp;&nbsp;&nbsp;Training your model |[Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-starter-recipe.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/03-recipe/01-starter-recipe.Rmd) |   |
+|               | &nbsp;&nbsp;&nbsp;Mini-project: Predicting Ames, IA home sales prices | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-mini-project-ames.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/03-recipe/02-mini-project-ames.Rmd) |  |
 | 12:30 - 13:30 | *Lunch break*                 |   |   |   |
 | 13:30 - 15:00 | Computer vision & CNNs        |   |   |   |
 |               | &nbsp;&nbsp;&nbsp;MNIST revisted | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-mnist-revisited.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/04-computer-vision-CNNs/01-mnist-revisited.Rmd) | [Slides](http://bit.ly/dl-03#12) |
@@ -79,18 +79,18 @@ hyperlink to relevant slides (or additional reading).
 | Time          | Activity                             | Notebook      | Source Code   | Other    |
 | :------------ | :----------------------------------- | :-----------: | :-----------: | :------: |
 | 09:00 - 10:30 | Word embeddings               |   |   |   |
-|               | &nbsp;&nbsp;&nbsp;IMDB revisted | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-word-embeddings.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/06-word-embeddings/01-word-embeddings.Rmd) | [Slides](http://bit.ly/dl-06) |
+|               | &nbsp;&nbsp;&nbsp;The original IMDB | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-word-embeddings.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/06-word-embeddings/01-word-embeddings.Rmd) | [Slides](http://bit.ly/dl-06) |
 |               | &nbsp;&nbsp;&nbsp;Pre-trained embeddings | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-pretrained-word-embeddings.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/06-word-embeddings/02-pretrained-word-embeddings.Rmd) | [Slides](http://bit.ly/dl-06) |
 |               | &nbsp;&nbsp;&nbsp;Mini project - Amazon reviews | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/03-your-turn-amazon-word-embeddings.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/06-word-embeddings/03-your-turn-amazon-word-embeddings.Rmd) | [Solution](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/project-embeddings-amazon-reviews.nb.html) |
 | 10:30 - 11:00 | *Coffee break*                |   |   |   |
 | 11:00 - 12:30 | Collaborative filtering       | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/collaborative-filtering.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/07-recommender-collaborative-filtering/collaborative-filtering.Rmd) | [Excel file](http://bit.ly/dl-07-Excel) |
 | 12:30 - 13:30 | *Lunch break*                 |   |   |   |
 | 13:30 - 15:00 | RNNs & LSTMs             |   |   |   |
-|               | &nbsp;&nbsp;&nbsp;IMDB revisted...again! 😒 | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-intro-to-lstms.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/08-NLP-LSTMs/01-intro-to-lstms.Rmd) | [Slides](http://bit.ly/dl-08) |
-|               | &nbsp;&nbsp;&nbsp;Mini project - Non-IMDB reviews 😃 | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-your-turn-lstms.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/08-NLP-LSTMs/02-your-turn-lstms.Rmd) | [Solution](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-your-turn-lstms-solution.nb.html) |
+|               | &nbsp;&nbsp;&nbsp;IMDB revisted | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-intro-to-lstms.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/08-NLP-LSTMs/01-intro-to-lstms.Rmd) | [Slides](http://bit.ly/dl-08) |
+|               | &nbsp;&nbsp;&nbsp;Mini project - Non-IMDB reviews | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-your-turn-lstms.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/08-NLP-LSTMs/02-your-turn-lstms.Rmd) | [Solution](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-your-turn-lstms-solution.nb.html) |
 | 15:00 - 15:30 | *Coffee break*                |   |   |   |
 | 15:30 - 17:00 | Wrap up                       |   |   |   |
-|               | &nbsp;&nbsp;&nbsp;Final words of wisdom 🙄 |   |   | [Slides](https://rstudio-conf-2020.github.io/dl-keras-tf/09-wrap-up.html) |
+|               | &nbsp;&nbsp;&nbsp;Final words of wisdom |   |   | [Slides](https://rstudio-conf-2020.github.io/dl-keras-tf/09-wrap-up.html) |
 |               | &nbsp;&nbsp;&nbsp;Final project (time dependent)   |   |   |  |
 
 ### Extras

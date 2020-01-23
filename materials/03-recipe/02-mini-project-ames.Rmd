@@ -1,0 +1,429 @@
+---
+title: "Mini-project: Ames -- Regression to predict Ames, IA Home Sales Prices"
+output:
+  html_notebook:
+    toc: yes
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+ggplot2::theme_set(ggplot2::theme_minimal())
+```
+
+In this case study, our objective is to predict the sales price of a home. This 
+is a _regression_ problem since the goal is to predict any real number across
+some spectrum (\$119,201, \$168,594, \$301,446, etc). To predict the sales 
+price, we will use numeric and categorical features of the home.
+
+As you proceed, you'll work through the steps we discussed in the last module:
+
+1. Prepare data
+2. Balance batch size with a default learning rate
+3. Tune the adaptive learning rate optimizer
+4. Add callbacks to control training
+5. Explore model capacity
+6. Regularize overfitting
+7. Repeat steps 1-6
+8. Evaluate final model results
+
+# Package Requirements
+
+```{r load-pkgs}
+library(keras)     # for deep learning
+library(testthat)  # unit testing
+library(tidyverse) # for dplyr, ggplot2, etc.
+library(rsample)   # for data splitting
+library(recipes)   # for feature engineering
+```
+
+# Step 0: Our Data
+
+## The Ames housing dataset
+
+For this case study we will use the [Ames housing dataset](http://jse.amstat.org/v19n3/decock.pdf) 
+provided by the __AmesHousing__ package.
+
+```{r get-data}
+ames <- AmesHousing::make_ames()
+dim(ames)
+```
+
+## Understanding our data
+
+This data has been partially cleaned up and has no missing data:
+
+```{r}
+sum(is.na(ames))
+```
+
+But this tabular data is a combination of numeric and categorical data that we
+need to address.
+
+```{r ames-structure}
+str(ames)
+```
+
+The numeric variables are on different scales. For example:
+
+```{r numeric-ranges}
+ames %>%
+  select(Lot_Area, Lot_Frontage, Year_Built, Gr_Liv_Area, Garage_Cars, Mo_Sold) %>%
+  gather(feature, value) %>%
+  ggplot(aes(feature, value)) +
+  geom_boxplot() +
+  scale_y_log10(labels = scales::comma)
+```
+
+There are categorical features that could be ordered:
+
+```{r numeric-categories}
+ames %>%
+  select(matches("(Qual|Cond|QC|Qu)$")) %>%
+  str()
+```
+
+And some of the categorical features have many levels:
+
+```{r}
+ames %>%
+  select_if(~ is.factor(.) & length(levels(.)) > 8) %>%
+  glimpse()
+```
+
+Consequently, our first challenge is transforming this dataset into numeric
+tensors that our model can use.
+
+# Step 1: Prep the Data
+
+## Create train & test splits
+
+One of the first things we want to do is create a train and test set as you
+probably noticed that we do not have a train and test set similar to how MNIST 
+was already set up for us. We can use the __rsample__ package to create our
+train and test datasets.
+
+__Note__: This will randomly select the 70/30 split so we are randomizing our
+data with this process.
+
+```{r}
+set.seed(123)
+ames_split <- initial_split(ames, prop = 0.7)
+ames_train <- analysis(ames_split)
+ames_test <- assessment(ames_split)
+
+dim(ames_train)
+dim(ames_test)
+```
+
+## Vectorize and scaling
+
+All inputs and response values in a neural network must be tensors of either 
+floating-point or integer data. Moreover, our feature values should not be
+relatively large compared to the randomized initial weights _and_ all our 
+features should take values in roughly the same range.
+
+Consequently, we need to ___vectorize___ our data into a format conducive to neural 
+networks [ℹ️](http://bit.ly/dl-02#3). For this data set, we'll transform our
+data by:
+
+1. removing any zero-variance (or near zero-variance) features
+2. condensing unique levels of categorical features to "other"
+3. ordinal encoding the quality features
+4. normalize numeric feature distributions
+5. standardizing numeric features to mean = 0, std dev = 1
+6. one-hot encoding remaining categorical features
+
+__Note__: we're using the recipes package (https://tidymodels.github.io/recipes)
+
+```{r}
+blueprint <- recipe(Sale_Price ~ ., data = ames_train) %>%
+  step_nzv(all_nominal()) %>%                                       # step #1
+  step_other(all_nominal(), threshold = .01, other = "other") %>%   # step #2
+  step_integer(matches("(Qual|Cond|QC|Qu)$")) %>%                   # step #3
+  step_YeoJohnson(all_numeric(), -all_outcomes()) %>%               # step #4
+  step_center(all_numeric(), -all_outcomes()) %>%                   # step #5
+  step_scale(all_numeric(), -all_outcomes()) %>%                    # step #5
+  step_dummy(all_nominal(), -all_outcomes(), one_hot = TRUE)        # step #6
+
+blueprint
+```
+
+This next step computes any relavent information (mean and std deviation of
+numeric features, names of one-hot encoded features) on the training data so
+there is no information leakage from the test data.
+
+```{r}
+prepare <- prep(blueprint, training = ames_train)
+prepare
+```
+
+We can now vectorize our training and test data. If you scroll through the data
+you will notice that all features are now numeric and are either 0/1 (one hot
+encoded features) or have mean 0 and generally range between -3 and 3.
+
+```{r}
+baked_train <- bake(prepare, new_data = ames_train)
+baked_test <- bake(prepare, new_data = ames_test)
+
+# unit testing to ensure all columns are numeric
+expect_equal(map_lgl(baked_train, ~ !is.numeric(.)) %>% sum(), 0)
+expect_equal(map_lgl(baked_test, ~ !is.numeric(.)) %>% sum(), 0)
+
+baked_train
+```
+
+Lastly, we need to create the final feature and response objects for train and 
+test data. Since __keras__ and __tensorflow__ require our features & labels to be 
+seperate objects we need to separate them. In doing so, our features need to be 
+a 2D tensor which is why we apply `as.matrix` and our response needs to be a 
+vector which is why we apply `pull`.
+
+```{r}
+x_train <- select(baked_train, -Sale_Price) %>% as.matrix()
+y_train <- baked_train %>% pull(Sale_Price)
+
+x_test <- select(baked_test, -Sale_Price) %>% as.matrix()
+y_test <- baked_test %>% pull(Sale_Price)
+
+# unit testing to x & y tensors have same number of observations
+expect_equal(nrow(x_train), length(y_train))
+expect_equal(nrow(x_test), length(y_test))
+```
+
+Our final feature set now has 188 input variables:
+
+```{r}
+dim(x_train)
+dim(x_test)
+```
+
+# Step 2: Balance batch size with a default learning rate
+
+To get started, let's build a simple model with...
+
+- a single layer model with 128 units in the hidden layer. We have 188 features
+  and 1 response node so a good starting point is mean(c(188, 1)) and then round
+  up to the nearest value in the $2^s$ range (i.e. 32, 64, 128, 256, 512).
+- a basic SGD optimizer
+- use a mean square logarithmic error ("msle")
+- also track the mean absolute error metric ("mae")
+- 20% validation split
+
+Now, start with the default batch size of 32 and then compare with smaller
+values (i.e. 16) and larger values (i.e. 128). You're looking to balance the
+progression of the loss learning curve and the training spead.
+
+```{r}
+n_feat <- ncol(x_train)
+
+model <- keras_model_sequential() %>% 
+  layer_dense(units = ____, activation = "relu", input_shape = ____) %>%
+  layer_dense(units = ____)
+
+model %>% compile(
+    optimizer = ____,
+    loss = ____,
+    metrics = ____
+  )
+
+history <- model %>% fit(
+  x_train,
+  y_train,
+  ____ ,
+  validation_split = 0.2
+)
+```
+
+```{r}
+history
+```
+
+```{r}
+plot(history)
+```
+
+# Step 3: Tune the adaptive learning rate optimizer
+
+Now go head and start assessing different adaptive learning rates such as:
+
+- SGD+momentum
+- RMSprop
+- Adamp
+
+Try a variety of learning rates. Recall that we typically start assessing rates
+on a logarithmic scale (i.e. 0.1, 0.01, ..., 0.0001).
+
+
+```{r]}
+model <- keras_model_sequential() %>% 
+  layer_dense(units = ____, activation = ____, input_shape = ____) %>%
+  layer_dense(units = 1)
+
+model %>% compile(
+    optimizer = ____,
+    loss = "msle",
+    metrics = "mae"
+  )
+
+history <- model %>% fit(
+  x_train,
+  y_train,
+  batch_size = ____,
+  validation_split = 0.2
+)
+```
+
+```{r}
+history
+```
+
+```{r}
+plot(history)
+```
+
+# Step 4: Add callbacks to control training
+
+Add the following callbacks and see if your performance improves:
+
+- early stopping with `patience = 3` and `min_delta = 0.00001`
+- learning rate reduction upon a plateau with `patience = 1`
+
+
+```{r]}
+model <- keras_model_sequential() %>% 
+  layer_dense(units = 128, activation = "relu", input_shape = ____) %>%
+  layer_dense(units = 1)
+
+model %>% compile(
+    optimizer = ____,
+    loss = "msle",
+    metrics = "mae"
+  )
+
+history <- model %>% fit(
+  x_train,
+  y_train,
+  batch_size = ____,
+  epochs = ____,
+  validation_split = 0.2,
+  callbacks = list(
+    # <add early stopping callback>,
+    # <add learning rate reduction callback>
+  )
+)
+```
+
+```{r}
+history
+```
+
+```{r}
+plot(history)
+```
+
+Plotting the learning rate shows that it reduced multiple times during training:
+
+```{r}
+plot(history$metrics$lr)
+```
+
+
+# Step 5: Explore model capacity
+
+Now start to explore different widths and depths to your model.
+
+- Assess a single layer with 128, 256, 512, and 1024 nodes
+- Assess 1, 2, and 3 hidden layers
+
+```{r}
+model <- keras_model_sequential() %>% 
+  layer_dense(units = ____, activation = "relu", input_shape = n_feat) %>%
+  # <add more layers>
+  layer_dense(units = 1)
+
+model %>% compile(
+    optimizer = ____,
+    loss = "msle",
+    metrics = "mae"
+  )
+
+history <- model %>% fit(
+  x_train,
+  y_train,
+  batch_size = ____,
+  epochs = ____,
+  validation_split = 0.2,
+  callbacks = list(
+    callback_early_stopping(patience = ____, min_delta = _____),
+    callback_reduce_lr_on_plateau(patience = ____)
+  )
+)
+```
+
+```{r}
+history
+```
+
+```{r}
+plot(history) + scale_y_log10()
+```
+
+# Step 6: Regularize overfitting
+
+If your model is overfitting, try to add...
+
+- weight decay (i.e. `kernel_regularizer = regularizer_l2(l = xxx)`). Remember,
+  we typically start by assessing values on logarithmic scale [0.1, 0.00001].
+- dropout (`layer_dropout()`) between each layer. Remember, dropout rates
+  typically range from 20-50%.
+  
+```{r}
+model <- ____() %>% 
+  layer_dense() %>%
+  # <add more layers to match your last model>
+  layer_dense(units = 1)
+
+model %>% ____(
+    optimizer = ____,
+    loss = ____,
+    metrics = ____
+  )
+
+history <- model %>% ____(
+  x_train,
+  y_train,
+  batch_size = ____,
+  epochs = ____,
+  validation_split = 0.2,
+  callbacks = list(
+    callback_____,
+    callback_____
+  )
+)
+```
+
+```{r}
+history
+```
+
+# Step 7: Repeat steps 1-6
+
+As this point we could repeat the process and...
+
+1. Prepare data
+   - try to find additional data to add
+   - try new feature engineering approaches
+2. Balance batch size with a default learning rate
+   - reassess batch size
+3. Tune the adaptive learning rate optimizer
+   - fine tune our learning rate
+   - see if the current optimizer still outperforms others
+4. Add callbacks to control training
+   - maybe assess more sophisticated learning rate schedulers (i.e. cyclical
+     learning rates)
+5. Explore model capacity
+   - after some tweaks we may want to reassess model capacity combinations
+6. Regularize overfitting
+
+[🏠](https://github.com/rstudio-conf-2020/dl-keras-tf)

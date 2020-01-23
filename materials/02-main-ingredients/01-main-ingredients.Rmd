@@ -1,0 +1,1021 @@
+---
+title: "Main Ingredients"
+output:
+  html_notebook:
+    toc: yes
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+ggplot2::theme_set(ggplot2::theme_minimal())
+```
+
+This module is designed to provide you an introduction to the keras API, deep
+learning and some of the key components that make DL algorithms run. Throughout
+this module you will learn about:
+
+* Perceptrons
+* Gradient descent
+* Activation functions
+* Learning rate & momentum
+* Model capacity (width vs. depth)
+* Learning curves
+* Batch size
+
+# Package Requirements {.tabset .tabset-fade}
+
+## Loading
+
+Let's load the `keras` package along with a couple other packages we'll use.
+
+```{r}
+library(keras)       # for modeling
+library(tidyverse)   # for wrangling & visualization
+library(glue)        # for string literals
+```
+
+## Installation
+
+Normally, you will be starting out from scratch and need to install and set up
+keras on your own laptop. First, you need to install keras from CRAN. Once the
+package is installed, you need to install the Keras and TensorFlow Python
+packages, which is what the R Keras and TensorFlow packages communicate
+with. keras simplifies this with `install_keras()` which allows for:
+
+* both GPU & CPU options setups
+* installation in a virtual or conda environment
+* setup for Theano & CNTK backends rather than TensorFlow
+
+See https://keras.rstudio.com/ for details.
+
+```{r install, eval = FALSE}
+# install keras if necessary
+# install.packages("keras")
+
+# default CPU-based installations of Keras and TensorFlow
+# install_keras()
+
+# for GPU installation
+# install_keras(tensorflow = "gpu")
+```
+
+For this workshop we will be using a cloud environment to ensure we are all 
+operating in common environment and Keras and TensorFlow have already been 
+installed.
+
+# Simple Linear Regression
+
+For our first example, let's look at a very simple linear problem based on data
+with:
+
+* obs = 1,000
+* intercept = 30
+* slope = 5
+* with a little bit of random noise
+
+```{r}
+n <- 1000   # n observations
+b <- 30     # intercept
+a <- 5      # slope
+
+set.seed(123)
+(df <- tibble(
+  x = runif(n, min = -1, max = 1),
+  y = b + a*x + rnorm(n)
+))
+```
+
+## Simple regression with OLS
+
+I'm assuming we're all familiar with the OLS methodology for linear regression
+modeling where our objective function (aka ___loss___) is:
+
+$$loss = MSE = \frac{1}{n}\sum^n_{i-1}(Y_i - \hat Y_i)^2$$
+
+If we apply OLS to our data, we get:
+
+* estimated intercept = 30.01
+* estimated slope = 4.97
+* loss score (MSE) = 1.002
+
+```{r}
+lm_model <- summary(lm(y ~ x, data = df))
+lm_model
+```
+
+We can illustrate this model fit to our data:
+
+```{r}
+mse <- lm_model[["sigma"]]
+
+ggplot(df, aes(x, y)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = FALSE) +
+  ggtitle(glue("MSE = {mse}"))
+```
+
+## Simple regression with a perceptron
+
+Now, let's illustrate performing a similar process but with a basic building
+block of neural networks -- the perceptron.
+
+To model with keras we need our data to be in ___tensors___. We'll discuss
+tensors more later but for now just realize that:
+
+* 1D tensor = vector
+* 2D tensor = matrix
+
+```{r}
+x <- as.matrix(df$x)
+y <- df$y
+```
+
+Training a neural network model consists of 3 steps:
+
+1. Define model architecture
+2. Define how our model is going to learn
+3. Train our model
+
+### 1. Define model architecture
+
+Defining an architecture includes defining the type of model and the arrangement
+of layers:
+
+```{}
+model <- keras_model_sequential() %>%
+  layer_dense(units = 1, input_shape = ncol(x))
+```
+
+* Define structure of model
+    - Sequential: linear layers (i.e. MLP, CNN, RNN, LSTM)
+    - Functional: adds more flexibility (i.e. combining CNN & LSTM to predict
+      probability of cancer)
+* Define arrangement and shape of layers
+    - `layer_dense`: a single layer of nodes
+    - `units = 1`: a single perceptron unit in our layer
+    - `input_shape`: we need to tell our first layer how many inputs to expect
+
+![](images/perceptron.png)
+
+
+### 2. Define how our model is going to learn
+
+The whole goal of training a neural network is to find the optimal set of
+parameter weights (aka coefficients in OLS-speak). 
+
+> ___Our goal is to find weights that minimize the loss score___
+
+We define how our model is going to learn with `compile()`:
+
+```{}
+model %>% compile(
+  optimizer = "sgd",
+  loss = "mse"
+)
+```
+
+- __Optimizer__: neural networks learn via ___backpropagation___. There are
+  various ___backpropagation___ algorithms but we'll start with the most basic...
+  stochastic gradient descent (SGD).
+  
+- __loss__: how do we want to measure our model's error. keras comes with many
+  built-in loss functions and we can even create custom loss functions. Here,
+  we'll use MSE.
+
+![](images/sgd.png)
+
+
+### 3. Train our model
+
+The last thing we need is how to train our model, which we do with `fit()`:
+
+```{}
+history <- model %>% fit(x, y, batch_size = 32, epochs = 10)
+```
+
+* `x`: feature tensor
+* `y`: target tensor
+* `batch_size`: pick observations from our training data, perform forward pass,
+   compute loss score, compute gradient, perform backward pass, update our
+   weight (default = 32).
+* `epoch`: 1 epoch = one forward pass and one backward pass of all the training
+   examples. We're repeating that 10 times (default = 10).
+
+
+### Putting it all together
+
+Let's put all three steps together and train our model. Here's a visual
+depiction:
+
+![](images/put_together.png)
+
+And here's the code:
+
+```{r}
+# 1. Define model architecture
+model <- keras_model_sequential() %>%
+  layer_dense(units = 1, input_shape = ncol(x))
+
+# 2. Define how our model is going to learn
+model %>% compile(
+  optimizer = "sgd",
+  loss = "mse"
+)
+
+# 3. Train our model
+history <- model %>% fit(x, y, epochs = 10)
+```
+
+Whereas in OLS we call the intercept and slope parameters "coefficients", in
+neural networks we call them ___weights___. We can see that after 10 epochs our
+weights are getting close to the underlying "truth" values (slope = 5,
+intercept = 30) but also notice that our MSE loss score is still decreasing
+after 10 epochs.
+
+```{r}
+get_weights(model)
+```
+
+### Models are object oriented
+
+Note that modeling with keras/tensorflow in R may feel a bit different than
+other modeling packages you've used in R. Since keras/tensorflow are reticulated
+from Python, the model is an ___object oriented___ object with Python attributes.
+
+1. Object oriented - our model object changes without assignment:
+   - `model %>% compile()` changed our model object by adding the optimizer and
+     loss parameter arguments
+   - `model %>% fit()` will continue to build onto our existing model
+   
+```{r}
+# let's execute one more epoch. Note how our loss decreases from the last epoch
+# above
+model %>% fit(x, y, epoch = 1)
+
+# our model weights get updated from this last epoch and continue to get closer
+# to the underlying true values
+get_weights(model)
+```
+
+2. Our model is a Python object - there will be things you can not directly
+   access because they are Python objects. However, for most things that you want
+   to access there will be a function to export them:
+   
+```{r}
+# the model weights are held in Python numpy arrays
+model$weights
+
+# we use helper functions to export these kinds of objects
+get_weights(model)
+```
+
+
+## Your Turn (3 min)
+
+1. Fill in the blanks below and train the model for 25 epochs.
+2. Explore the `history` object.
+3. What are the final weights for this model? How do they compare to the
+   underlying intercept (30) and slope (5)?
+
+```{r}
+# 1. Define model architecture
+model <- keras_model_sequential() %>%
+  layer_dense(units = ___, input_shape = ____)
+
+# 2. Define how our model is going to learn
+model %>% compile(
+  optimizer = "sgd",
+  loss = ____
+)
+
+# 3. Train our model
+history <- model %>% fit(x, y, epochs = ____)
+```
+
+## Gradient descent
+
+We can see the progression of the gradient descent process by examining the
+weights our model produces after each epoch. This is not something you will
+do often but, rather, helps make the gradient descent process more concrete.
+
+```{r}
+# data frame to dump our results
+model_est <- expand_grid(
+  epoch = 1:25,
+  a_sgd = NA,
+  b_sgd = NA
+)
+
+# 1. Define model architecture
+model <- keras_model_sequential() %>%
+  layer_dense(units = 1, input_shape = ncol(x))
+
+# 2. Define how our model is going to learn
+model %>% compile(
+  optimizer = "sgd",
+  loss = "mse"
+)
+
+# 3. Train our model for 25 epochs and record the weights after each epoch
+for (row in seq_len(nrow(model_est))) {
+  
+  history <- model %>% fit(x, y, epoch = 1, verbose = FALSE)
+  
+  current_wts <- get_weights(model)
+
+  model_est[row, "a_sgd"] <- current_wts[[1]]
+  model_est[row, "b_sgd"] <- current_wts[[2]]
+}
+```
+
+The following table shows the estimate slope (`a_sgd`) and intercept (`b_sgd`)
+produced by SGD after each epoch.
+
+```{r}
+model_est
+```
+
+```{r}
+history
+```
+
+We can visualize our linear model after each epoch with the following. Note how
+each epoch results in a linear prediction (dotted) that gets closer to the truth
+(blue line). After 25 epochs our model basically converges to the same results
+(yellow dotted line).
+
+We can see this with our loss (MSE) that nearly equates the OLS MSE (1.00187).
+
+```{r}
+epoch_pred <- merge(df, model_est, all = TRUE) %>%
+  mutate(pred = b_sgd + a_sgd*x)
+
+last_epoch <- filter(epoch_pred, epoch == max(epoch))
+
+ggplot(data = df, aes(x, y)) +
+  geom_point(alpha = 0.1) +
+  geom_smooth(method = "lm", se = FALSE, size = 1.5) +
+  geom_line(data = epoch_pred, aes(x, pred, group = epoch), lty = "dotted") +
+  geom_line(data = last_epoch, aes(x, pred, group = epoch), 
+            lty = "dotted", color = "yellow", size = 2) +
+  ggtitle(glue("MSE = {history$metrics$loss}"))
+```
+
+## Key Takeaways
+
+* A basic single perceptron computes the same transformation as OLS:
+
+$$\hat y = bias + weight_1 \times x_1 + weight_2 \times x_2 + \dots + weight_n \times x_n$$
+
+* Neural networks learn via gradient descent - an iterative approach of predicting
+  with a forward pass, measuring the gradient of the error, and performing a
+  backward pass to update the weights based on the gradient.
+
+
+# Binary Classification
+
+Let's do the same process but now we'll do so with a binary classification
+problem (i.e. predicting yes vs. no response).
+
+```{r}
+set.seed(123)
+generated <- mlbench::mlbench.simplex(n = 1000, d = 1, sd = .3)
+x <- generated$x
+y <- ifelse(generated$classes == 1, 0, 1)
+
+(df <- tibble(x = as.vector(x), y = y))
+```
+
+Our generated data has some overlap so there is no linear seperation without
+having some error. Note than when discussing binary classification problems, we
+will mainly use the crossentropy (aka log loss) loss function.
+
+```{r}
+glm_model <- glm(y ~ x, family = binomial(link = "logit"), data = df)
+crossentropy <- MLmetrics::LogLoss(glm_model$fitted.values, df$y)
+
+ggplot(df, aes(x, y)) +
+  geom_point(aes(color = as.factor(y)), size = 2, show.legend = FALSE) +
+  geom_smooth(method = "glm", method.args = list(family = "binomial"), se = FALSE) +
+  ggtitle(glue("crossentropy = {crossentropy}")) +
+  ylab("probability y = 1")
+```
+
+## Sigmoid Activation Function
+
+When predicting a binary response, we typically want to predict a real value
+between 0-1 representing the probability of the positive binary class.
+Unfortunately our regular perceptron creates a linear transformation. However,
+we can apply an ___activation function___ to transform this linear transformation
+to a non-linear transformation.
+
+When predicting a binary response, we use a ___sigmoid___ activation to convert
+our linear transformation to a 0-1 probability of the positive class.
+
+$$sigmoid(y) = \frac{1}{1+e^{-y}}$$
+
+![](images/sigmoid.jpg)
+
+When predicting a binary response, we need to make the following changes to our
+code:
+
+* Add `activation = "sigmoid"` to the layer that is predicting the output.
+* Note that since we are predicting the probability from 0-1 for our response,
+  we keep `units = 1`.
+* loss - we change `loss = "binary_crossentropy"` to use the crossentropy / log
+  loss objective function.
+
+```{r}
+model <- keras_model_sequential() %>%
+  layer_dense(units = 1, input_shape = ncol(x), activation = "sigmoid")
+
+model %>% compile(
+  optimizer = "sgd",
+  loss = "binary_crossentropy"
+)
+
+(history <- model %>% fit(x, y, epochs = 50, verbose = FALSE))
+```
+
+We see that our loss is quite a bit off from our logistic regression model.
+
+```{r}
+df %>%
+  mutate(pred = predict(model, x) %>% as.vector()) %>%
+  ggplot(aes(x, y)) +
+  geom_point(aes(color = as.factor(y)), size = 2, show.legend = FALSE) +
+  geom_smooth(method = "glm", method.args = list(family = "binomial"), se = FALSE) +
+  geom_line(aes(y = pred), lty = "dashed") +
+  ggtitle(glue("crossentropy = {min(history$metrics$loss)}")) +
+  ylab("probability of y = 1")
+```
+
+However, if we look at our loss scores, we see that they are still improving,
+its just taking a long time. Plus, it looks like there is more improvement that
+can be made to our loss.
+
+```{r}
+plot(history)
+```
+
+## Learning rate and momentum
+
+An important parameter in gradient descent is the size of the steps which is
+controlled by the ___learning rate___. If the learning rate is...
+
+* too small: the algorithm will take many iterations (steps) to find the minimum
+* too large: you might jump across the minimum and end up further away than when
+  you started
+  
+![](images/lr.png)
+
+The default learning rate for SGD is 0.01. Unfortunately with this rate, it will
+take over 1,000 epochs to reach a loss score comparable to logistic regression.
+However, we can customize our optimizer with `optimizer_sdg()`:
+
+```{r}
+model <- keras_model_sequential() %>%
+  layer_dense(units = 1, input_shape = ncol(x), activation = "sigmoid")
+
+model %>% compile(
+  optimizer = optimizer_sgd(lr = 0.1),
+  loss = "binary_crossentropy"
+)
+
+(history <- model %>% fit(x, y, epochs = 50, verbose = FALSE))
+```
+
+Another common approach to adjust our learning rate is to add ___momentum___.
+Adding momentum allows our learning rate to adapt. Momentum simply adds a
+fraction of the previous weight update to the current one.
+
+![](images/momentum.gif)
+
+Let's add some momentum to our learning rate. We see that our loss improves
+even more within the same number of epochs.
+
+```{r}
+model <- keras_model_sequential() %>%
+  layer_dense(units = 1, input_shape = ncol(x), activation = "sigmoid")
+
+model %>% compile(
+  optimizer = optimizer_sgd(lr = 0.1, momentum = 0.5),
+  loss = "binary_crossentropy"
+)
+
+(history <- model %>% fit(x, y, epochs = 50, verbose = FALSE))
+```
+
+## Your Turn (3 min)
+
+1. Try different combinations of learning rate and momentum. A few rules of 👍:
+   * Typically, we start assessing learning rates in log values ranges of [1e-1, 1e-7]
+     (i.e. 0.1, 0.01, ..., 0.0000001).
+   * Momentum is typically > 0.5 and often in the 0.9-0.99 range.
+2. Plot the loss learning curve.
+3. How does your final loss compare to logistic regression?
+
+```{r}
+model <- keras_model_sequential() %>%
+  layer_dense(units = 1, input_shape = ncol(x), activation = ____)
+
+model %>% compile(
+  optimizer = ____,
+  loss = "binary_crossentropy"
+)
+
+history <- model %>% fit(x, y, epochs = 50, verbose = FALSE)
+```
+
+
+## Key takeaways
+
+* Activation functions:
+   - We use activation functions to transform the perceptron's linear equation
+     to a non-linear form.
+   - For binary classification problems we use the "sigmoid" activation to
+     convert our predictions to a 0-1 probability.
+* Learning rate:
+   - We can control the rate of learning by increasing & decreasing the learning
+     rate.
+   - We can make this learning rate adaptive to the curvature of our loss
+     gradient by incorporating momentum.
+
+
+# Non-linear Patterns
+
+As our datasets get larger or include non-linearities, our model needs to become
+more sophisticated. For this example, we'll stick with one predictor variable
+but we'll add a non-linearity component:
+
+```{r}
+set.seed(123)
+df <- tibble(
+  x = seq(from = -1, to = 2 * pi, length = n),
+  e = rnorm(n, sd = 0.2),
+  y = sin(x) + e
+)
+
+ggplot(df, aes(x, y)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(se = FALSE)
+```
+
+Again, let's extract our feature and target tensors:
+
+```{r}
+x <- as.matrix(df$x)
+y <- df$y
+```
+
+As our underlying model has more complexity, we add hidden layers to capture
+non-linearities and interactions. We call these neural network models 
+___multi-layer perceptrons___ (MLPs); also referred to as ___densely connected
+feed forward___ networks.
+
+![](images/basic_mlp.png)
+
+We can add a hidden layers by adding additional `layer_dense()` functions to our
+model architecture. For example, the following code would create an MLP with:
+
+* 3 hidden layers: 
+   - each hidden layer has 16 nodes
+   - only the first hidden layer requires `input_shape`
+   - each hidden layer uses a ReLU activation function (we'll discuss shortly)
+* the last `layer_dense()` is always the output layer
+   - activation function for output layer is always dependent on the problem
+      - regression: NULL
+      - binary classification: `activation = "signmoid"`
+      - multi-class classification: `activation = "softmax"`
+
+```{}
+model <- keras_model_sequential() %>%
+  layer_dense(units = 16, input_shape = ncol(x), activation = "relu") %>%
+  layer_dense(units = 16, activation = "relu") %>%
+  layer_dense(units = 16, activation = "relu") %>%
+  layer_dense(units = 1)
+```
+
+## Why ReLU
+
+The rectified linear activation function is very simple; if the linear
+transformation within the perceptron results in a negative number then the
+output is 0. If its positive then its that value.
+
+$$ReLU = max(0, z)$$
+
+![](images/ReLU.png)
+
+Benefits (see http://proceedings.mlr.press/v15/glorot11a/glorot11a.pdf):
+
+- Simple geometric transformations can produce very complex patterns.
+- Computational simplicity (easy to compute the gradient)
+- Representational sparcity (forcing 0s results in sparse outputs)
+- Linearity (reduces vanishing gradient descent - discussed later)
+
+![](images/origami.gif)
+
+Let's see this in action:
+
+```{r}
+model <- keras_model_sequential() %>%
+  layer_dense(units = 16, input_shape = ncol(x), activation = "relu") %>%
+  layer_dense(units = 1)
+
+model %>% compile(
+  optimizer = optimizer_sgd(lr = 0.01, momentum = .9),
+  loss = "mse"
+)
+
+(history <- model %>% fit(x, y, epochs = 50, verbose = FALSE))
+```
+
+```{r}
+df %>%
+  mutate(pred = predict(model, x) %>% as.vector()) %>%
+  ggplot(aes(x, y)) +
+  geom_point(alpha = 0.25) +
+  geom_smooth(se = FALSE) +
+  geom_line(aes(y = pred), lty = "dashed", color = "red", size = 1)
+```
+
+## Model capacity
+
+___Model capacity___ determines the extend to which our model can capture
+underlying relationships and patterns. We control model capacity with:
+
+1. __width__: number of units in a layer
+   - Rule of 👍: typically use powers of 2 (i.e. 16, 32, 64, 128, 256, 512)
+2. __depth__: number of hidden layers
+   - Rule of 👍: we often see better performance (accuracy & compute efficiency)
+     by increasing the number of layers moreso than nodes. 
+     
+Let's add 2 hidden layers, each with 16 units:
+
+```{r}
+model <- keras_model_sequential() %>%
+  layer_dense(units = 16, input_shape = ncol(x), activation = "relu") %>%
+  layer_dense(units = 16, activation = "relu") %>%
+  layer_dense(units = 1)
+
+model %>% compile(
+  optimizer = optimizer_sgd(lr = 0.01, momentum = .9),
+  loss = "mse"
+)
+
+(history <- model %>% fit(x, y, epochs = 50, verbose = FALSE))
+```
+
+Looking at how our predicted values fit the true underlying model:
+
+```{r}
+df %>%
+  mutate(pred = predict(model, x) %>% as.vector()) %>%
+  ggplot(aes(x, y)) +
+  geom_point(alpha = 0.25) +
+  geom_smooth(se = FALSE) +
+  geom_line(aes(y = pred), lty = "dashed", color = "red", size = 1)
+```
+
+## Your Turn (3 min)
+
+1. Try using only one hidden layer and increase the width to 32, 64, 128, 256
+2. Try adding a second layer and increase the width of each layer progressively
+   - Rule of 👍: when we add more layers we typically have the following patterns:
+      - tunnel shaped: each hidden layer has the same number of units
+      - funnel shaped: hidden layers progressively get smaller
+
+```{r}
+model <- keras_model_sequential() %>%
+  layer_dense(units = ____, input_shape = ____, activation = ____) %>%
+  layer_dense(units = 1)
+
+model %>% compile(
+  optimizer = optimizer_sgd(lr = 0.01, momentum = .9),
+  loss = "mse"
+)
+
+(history <- model %>% fit(x, y, epochs = 50, verbose = FALSE))
+```
+
+Run the following to see how your adjusted model fits the actual data:
+
+```{r}
+df %>%
+  mutate(pred = predict(model, x) %>% as.vector()) %>%
+  ggplot(aes(x, y)) +
+  geom_point(alpha = 0.25) +
+  geom_smooth(se = FALSE) +
+  geom_line(aes(y = pred), lty = "dashed", color = "red", size = 1)
+```
+
+## Key Takeaways
+
+* Hidden layers almost always use the ReLU activation function (this should be
+  your default).
+* Control model capacity by width and depth (adding depth typically outperforms
+  simply focusing on width).
+
+# Multi-predictor Multi-class Classification
+
+Let's get a little more complicated now and look at a dataset that has:
+
+- 3 predictor variables
+- 4 response classes
+
+```{r}
+set.seed(123)
+generated <- mlbench::mlbench.simplex(n = n*2, d = 3, sd = 0.3)
+
+plot(generated)
+```
+
+```{r}
+# 3 features
+head(generated$x)
+
+# 4 response categories
+head(generated$classes)
+```
+
+Preparing our data takes a little more effort in this case:
+
+- __features__: our features are already a matrix so we're good
+- __response__: our response is a factor which we are going to convert to a matrix:
+   - `to_categorical` dummy encodes our classes. This allows us to compute the
+      predicted probability for each class
+   - `to_categorical` expects a zero-based input from 0-n (Python 😒)
+
+```{r}
+x <- generated$x
+y <- generated$classes %>% as.numeric()
+y <- to_categorical(y - 1)
+n_classes <- ncol(y)
+
+# our preprocesses response
+head(y)
+```
+
+## Fit model using validation
+
+In practice we are unable to visualize the fit of our data to understand
+variance-bias tradeoff (i.e. are we over or underfitting our data). Consequently,
+we rely on using a validation set and what we call learning curves.
+
+- __validation_split__: will train model on first 80% of data and use the last
+  20% of data to see assess performance.
+- __metrics__: often we want to assess alternative metrics along with our loss
+  score.
+
+```{r}
+model <- keras_model_sequential() %>%
+  layer_dense(units = 16, input_shape = ncol(x), activation = "relu") %>%
+  layer_dense(units = n_classes, activation = "softmax")
+
+model %>% compile(
+  optimizer = optimizer_sgd(lr = 0.01, momentum = .9),
+  loss = "categorical_crossentropy",
+  metrics = "accuracy"
+)
+
+history <- model %>% fit(
+  x, y, 
+  batch_size = 32, 
+  epochs = 20, 
+  validation_split = 0.2
+  )
+```
+
+Our learning curve shows some unique behavior. We can learn a lot about our
+model by paying attention to learning curves (see this extra notebook:
+https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/learning-curve-diagnostics.nb.html)
+
+```{r}
+history
+
+plot(history)
+```
+
+In this case, the problem is that our data is ordered so the last 20% of our
+data contains only one class. So we always want to make sure we are randomizing
+our data.
+
+```{r}
+set.seed(123)
+randomize <- sample(seq_len(n), size = n, replace = FALSE)
+x <- x[randomize, ]
+y <- y[randomize, ]
+```
+
+Now let's try the same model again.
+
+```{r}
+model <- keras_model_sequential() %>%
+  layer_dense(units = 16, input_shape = ncol(x), activation = "relu") %>%
+  layer_dense(units = n_classes, activation = "softmax")
+
+model %>% compile(
+  optimizer = optimizer_sgd(lr = 0.01, momentum = .9),
+  loss = "categorical_crossentropy",
+  metrics = "accuracy"
+)
+
+history <- model %>% fit(
+  x, y, 
+  batch_size = 32, 
+  epochs = 20, 
+  validation_split = 0.2
+  )
+```
+
+Our results look much better. Our loss curve shows a few things that we always
+want to strive for:
+
+* The training and validation loss curves are very close to one another. Typically,
+  there will be a gap between the two but our goal should be to minimize this
+  gap. This leads to a more stable model that generalizes better
+* We prefer that our validation loss is above the training loss (when our metric
+  is designed for "lower-is-better"). If our validation loss below (better)
+  then the training loss then that typically means we are underfitting and we
+  should increase capacity.
+* Our validation loss has stopped improving, which means we have trained it for
+  enough epochs.
+* We want our validation loss to be as smooth as possible (iratic behavior means
+  unstable generalization).
+
+```{r}
+history
+
+plot(history)
+```
+
+## Effects of batch size
+
+So far we've just been using the default batch size of 32. However, there are
+other options:
+
+- __Batch gradient descent__: computes the derivative of the gradient based on
+  the entire dataset (all observations).
+     - provides more accurate and smooth gradient descent but...
+     - scales horribly to large data
+
+- __Stochastic gradient descent__: randomly selects an individual observations,
+  computes gradients and updates model weights after this single observation has
+  been evaluated.
+     - provides quick feedback so the model learns quickly and...
+     - results in noisy gradient descent which helps avoid local minimums but...
+     - noisy gradient descent makes it hard to converge on global minimum and...
+     - can result in unstable generalization
+
+- __Mini-batch gradient descent__: randomly selects a subset of observations,
+  computes gradients and updates model weights after this subset has been
+  evaluated.
+     - Balances efficiencies of batch vs. stochastic
+     - Balances robust convergence of batch with some stochastic nature to
+       minimize local minima.
+     - But one more hyperparameter to think about.
+     - Most common: $2^s$: 32, 64, 128, 256, 512
+
+Go ahead and try:
+
+1. `batch_size = 1` (stochastic gradient descent)
+2. `batch_size = nrow(x)` (batch gradient descent)
+3. `batch_size = b` where `b` equals 16, 32, 64, 128
+
+__Note__: batch size and learning rate often interact and should be tuned
+together.
+
+```{r}
+model <- keras_model_sequential() %>%
+  layer_dense(units = 16, input_shape = ncol(x), activation = "relu") %>%
+  layer_dense(units = n_classes, activation = "softmax")
+
+model %>% compile(
+  optimizer = optimizer_sgd(lr = 0.01, momentum = .9),
+  loss = "categorical_crossentropy",
+  metrics = "accuracy"
+)
+
+history <- model %>% fit(
+  x, y, 
+  batch_size = ____, 
+  epochs = 20, 
+  validation_split = 0.2
+  )
+```
+
+## Making predictions
+
+When predicting with classification models we can either predict the class
+(based on probability > 0.5) or predict the probabilities for each class:
+
+```{r}
+# predicting probabilities
+model %>% predict(x) %>% head()
+
+# predicting classes
+model %>% predict_classes(x) %>% head()
+```
+
+## Key Takeaways
+
+* Monitor the learning curves to diagnose model performance.
+* Batch size effects our learning curve. Mini-batch sizes of 32, 64, 128, 256
+  tend to perform best.
+
+
+# Mini-Project (time dependent)
+
+Time to work with some real (although unexciting) data - `iris`. This data
+contains:
+
+* 4 features (`Sepal.Length`, `Sepal.Width`, `Petal.Length`, `Petal.Width`)
+* 3 response classes (`Species` = setosa, versicolor, verginica)
+
+```{r}
+head(iris)
+```
+
+## Data prep
+
+First step is to prepare our data. This involves converting our features to a
+tensor (aka matrix). Also, since our response variable is multi-class, we want
+to convert it to a 2D tensor (aka matrix). We also need to randomize the data.
+
+These steps are provided for you:
+
+```{r}
+# convert features to a tensor (aka matrix)
+x <- iris[1:4] %>% as.matrix()
+
+# convert response to a multi-class tensor (aka matrix)
+y <- iris$Species %>% as.numeric()
+y <- to_categorical(y - 1)
+
+# randomize data
+set.seed(123)
+total_obs <- nrow(x)
+randomize <- sample(seq_len(total_obs), size =  total_obs, replace = TRUE)
+x <- x[randomize, ]
+y <- y[randomize, ]
+```
+
+Note that our response tensor (`y`) has 3 colums. These columns relate
+alphabetically to our response classes:
+
+- column 1 = setosa
+- column 2 = versicolor
+- column 3 = virginica
+
+```{r}
+head(y)
+```
+
+## Modeling
+
+Start with the following:
+
+- 1 hidden layer with 16 units
+- learning rate of 0.01 and no momentum
+- 20 epochs with batch sizes of 32
+- validation split of 20%
+
+Then start adjusting the following:
+
+- learning rate (maybe add momentum)
+- model capacity (try wider and/or deeper capacity)
+- batch size (do larger or smaller batch sizes help performance)
+- epochs (do you need more or less epochs to reach a minimum validation loss)
+
+```{r}
+# define architecture
+model <- keras_model_sequential() %>%
+  layer_dense(units = ____, input_shape = ____, activation = ____) %>%
+  layer_dense(units = ____, activation = ____)
+
+# define learning procedure
+model %>% compile(
+  optimizer = optimizer_sgd(lr = ____),
+  loss = "categorical_crossentropy",
+  metrics = "accuracy"
+)
+
+# train model
+history <- model %>% fit(
+  x, y, 
+  batch_size = ____, 
+  epochs = ____, 
+  validation_split = ____
+  )
+```
+
+# Summary
+
+This module is meant to only introduce some of the key ingredients involved in
+training a basic MLP model. However, as the mini-project probably demonstrated,
+it didn't do much to help you understand how to put these ingredients together
+in a methodolical approach to maximize model performance. The next module aims
+to fill this gap and provide some best practices for training a model.
+
+[🏠](https://github.com/rstudio-conf-2020/dl-keras-tf)
