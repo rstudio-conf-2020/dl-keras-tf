@@ -65,7 +65,7 @@ hyperlink to relevant slides (or additional resources).
 | 10:30 - 11:00 | *Coffee break*                |   |   |   |
 | 11:00 - 12:30 | Deep learning recipe |   |   |   | 
 |               | &nbsp;&nbsp;&nbsp;Training your model |[Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-starter-recipe.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/03-recipe/01-starter-recipe.Rmd) |   |
-|               | &nbsp;&nbsp;&nbsp;Mini-project: Predicting Ames, IA home sales prices | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-mini-project-ames.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/03-recipe/02-mini-project-ames.Rmd) |  |
+|               | &nbsp;&nbsp;&nbsp;Mini-project: Predicting Ames, IA home sales prices | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/02-mini-project-ames.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/03-recipe/02-mini-project-ames.Rmd) | [Solution](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/ames-mini-project-solution.nb.html)  |
 | 12:30 - 13:30 | *Lunch break*                 |   |   |   |
 | 13:30 - 15:00 | Computer vision & CNNs        |   |   |   |
 |               | &nbsp;&nbsp;&nbsp;MNIST revisted | [Notebook](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/01-mnist-revisited.nb.html) | [.Rmd](https://github.com/rstudio-conf-2020/dl-keras-tf/blob/master/materials/04-computer-vision-CNNs/01-mnist-revisited.Rmd) | [Slides](http://bit.ly/dl-03#12) |
