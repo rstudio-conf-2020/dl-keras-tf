@@ -1,6 +1,9 @@
 ---
 title: "Computer vision & CNNs: Cats vs. Dogs"
-output: html_notebook
+output:
+  html_notebook:
+    toc: yes
+    toc_float: true
 ---
 
 ```{r setup, include=FALSE}
@@ -25,7 +28,7 @@ library(glue)
 library(tidyverse)
 ```
 
-# Part 1: Data Preparation
+# Data Preparation
 
 ## Image location
 
@@ -107,7 +110,7 @@ for (i in 1:10) {
 par(op)
 ```
 
-# Part 2: Model 1
+# CNN with image generator
 
 ## Define and compile model
 
@@ -121,6 +124,8 @@ previous module. This CNN includes:
 
 ```{r cnn-architecture}
 model <- keras_model_sequential() %>%
+  
+  # feature detector portion of model
   layer_conv_2d(filters = 32, kernel_size = c(3, 3), activation = "relu", 
                 input_shape = c(150, 150, 3)) %>%
   layer_max_pooling_2d(pool_size = c(2, 2)) %>%
@@ -134,8 +139,8 @@ model <- keras_model_sequential() %>%
   layer_conv_2d(filters = 128, kernel_size = c(3, 3), activation = "relu") %>% 
   layer_max_pooling_2d(pool_size = c(2, 2)) %>%
   
+  # classifier portion of model
   layer_flatten() %>%
-  
   layer_dense(units = 512, activation = "relu") %>%
   layer_dense(units = 1, activation = "sigmoid")
 
@@ -247,18 +252,8 @@ plot(history) +
   scale_x_continuous(limits = c(0, length(history$metrics$val_loss)))
 ```
 
-# Save the model
 
-We can always save our models as h5 files. Let's save this initial model as we
-will use it one of the "extras" notebooks to illustrate how we can visualize
-CNNs.
-
-```{r save-model}
-model %>% save_model_hdf5("cats_and_dogs_small_1.h5")
-```
-
-
-# Part 3: Model 2 with image augmentation
+# CNN with Image Augmentation
 
 ## Image Augmentation
 
@@ -312,7 +307,7 @@ for (i in 1:10) {
 par(op)
 ```
 
-## Model 2
+## Build & train model
 
 Let's create a new model that includes image augmentation and we'll apply the 
 dropout regularization method. The following creates a CNN architecture with:
@@ -326,7 +321,8 @@ All of which you are familiary with by now.
 
 ```{r cnn-structure2}
 model <- keras_model_sequential() %>%
-  layer_conv_2d(filters = 32, kernel_size = c(3, 3), activation = "relu", input_shape = c(150, 150, 3)) %>%
+  layer_conv_2d(filters = 32, kernel_size = c(3, 3), activation = "relu", 
+                input_shape = c(150, 150, 3)) %>%
   layer_max_pooling_2d(pool_size = c(2, 2)) %>%
   layer_conv_2d(filters = 64, kernel_size = c(3, 3), activation = "relu") %>% 
   layer_max_pooling_2d(pool_size = c(2, 2)) %>%
@@ -416,8 +412,14 @@ plot(history) +
   scale_x_continuous(limits = c(0, length(history$metrics$val_loss)))
 ```
 
-```{r save-augmented-model}
-model %>% save_model_hdf5("cats_and_dogs_small_2.h5")
+## Save the model
+
+We can always save our models as h5 files. Let's save this model as we will use
+it one of the "extras" notebooks to illustrate how we can visualize CNNs (see
+this notebook https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/visualizing-what-cnns-learn.nb.html).
+
+```{r save-model}
+model %>% save_model_hdf5("cats_and_dogs_small_1.h5")
 ```
 
 However, we still have room for improvement because we are only using a small
@@ -425,6 +427,7 @@ subset of the available data. We have two options to improve our model:
 
 1. Use more data. We are only using 2,000 of the 25,000 available images.
    However, this would have a significant impact on compute time.
+   
 2. Use transfer learning. This is much quicker than the first option so in the
    next module I demonstrate how to use transfer learning for CNNs.
 
@@ -435,6 +438,9 @@ subset of the available data. We have two options to improve our model:
      to a tensor, rescale, and perform image augmentation.
    - use `flow_images_from_directory` import batches of our images, apply the
      `image_data_generator`, resize, and infer training labels.
+     
 * Image augmentation such as zooming, flipping, rotating, shearing, etc. helps
   with image variance, provides free additional data, and generally improves
   model performance.
+  
+[🏠](https://github.com/rstudio-conf-2020/dl-keras-tf)
