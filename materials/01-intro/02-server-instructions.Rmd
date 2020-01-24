@@ -7,9 +7,11 @@ output: github_document
 
 2. Workshop identifier: "deep_learn"
 
-3. Click on the provided URL (i.e. http://ec2......)
+3. A new page will open that provides you with:
+   a. A URL to your RStudio server instance (i.e. http://ec2......)
+   b. A username and password (they will look very generic)
 
-4. Log in with provided username and password
+4. Click on the provided URL and log in with username and password
 
 5. Click on "New Session" - use default settings:
    - Session Name: RStudio Session

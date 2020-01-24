@@ -5,9 +5,12 @@ Setting up RStudio Cloud environment
 
 2.  Workshop identifier: “deep\_learn”
 
-3.  Click on the provided URL (i.e. <http://ec2>……)
+3.  A new page will open that provides you with:
+    
+    1.  A URL to your RStudio server instance (i.e. <http://ec2>……)
+    2.  A username and password (they will look very generic)
 
-4.  Log in with provided username and password
+4.  Click on the provided URL and log in with username and password
 
 5.  Click on “New Session” - use default settings:
     
