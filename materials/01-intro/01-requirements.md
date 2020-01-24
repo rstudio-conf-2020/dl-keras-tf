@@ -31,6 +31,7 @@ pkgs <- c(
   "lime",
   "magick",
   "mlbench",
+  "MLmetrics",
   "plotly",
   "progress",
   "recipes",
@@ -93,11 +94,14 @@ you will need to following these steps:
 4.  Move the JSON token file to the `/Users/your_id/.kaggle` folder
     ([reference](https://github.com/Kaggle/kaggle-api/issues/15))
 
-**Note**: if you experience the following error `bash: kaggle: command
+**Note**: If you experience the following error `bash: kaggle: command
 not found` you may need to explicitly state the kaggle path in your
 .bash\_profile. See this related
 [issue](https://github.com/rstudio-conf-2020/dl-keras-tf/issues/4) for
-more details.
+more details. If you get a `403 Forbidden` error from the kaggle API
+call then you may need to go to the [competition rules
+page](https://www.kaggle.com/c/dogs-vs-cats/rules) and accept the
+competition terms.
 
 Now you should be able to execute the following code to download the
 data. This will download all the data but only place a fraction of the
