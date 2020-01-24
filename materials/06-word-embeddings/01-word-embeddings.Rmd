@@ -1,10 +1,13 @@
 ---
 title: "NLP: Word embeddings"
-output: html_notebook
+output:
+  html_notebook:
+    toc: yes
+    toc_float: true
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ```
 
 In this example, we are going to learn about an alternative method to encode 
@@ -21,7 +24,7 @@ Learning objectives:
 
 # Requirements
 
-```{r, message=FALSE}
+```{r}
 # Initialize package
 library(keras)
 library(fs)
@@ -35,11 +38,13 @@ source("helper_functions.R")
 
 # The "real" IMDB dataset
 
-So far, we've been using the built-in IMBD dataset. Here, we are going to use 
-the original IMDB movie review files which can be found at
-http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz. You can find the
-download instructions [here](http://bit.ly/dl-rqmts). For those in the workshop
-we have already downloaded this data for you.
+Keras provides a built-in IMBD dataset `dataset_imdb()`. However, we are going
+to use the original IMDB movie review files which can be found at
+http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz. This tends to
+help students to better understand the entire data prep required for text.
+
+You can find the download instructions [here](http://bit.ly/dl-rqmts). For those
+in the workshop we have already downloaded this data for you.
 
 ```{r}
 if (stringr::str_detect(here::here(), "conf-2020-user")) {
@@ -205,14 +210,22 @@ unique words. The most common words include:
 head(tokenizer$word_index)
 ```
 
-Next, we extract our vectorized review data as a list. This looks familiar from 
-the earlier modules.
+Next, we extract our vectorized review data as a list. Each review is encoded as
+a sequence of word indexes (integers).
 
 ```{r}
 sequences <- texts_to_sequences(tokenizer, texts)
 
 # The vectorized first instance:
 sequences[[1]]
+```
+
+We can map the integer values back to the word index. The integer number
+corresponds to the position in the word count list and the name of the vector is
+the actual word.
+
+```{r}
+paste(unlist(tokenizer$index_word)[sequences[[1]]] , collapse = " ")
 ```
 
 We can see how our tokenizer converted our original text to a cleaned up 
@@ -228,8 +241,10 @@ paste(unlist(tokenizer$index_word)[sequences[[1]]] , collapse = " ")
 
 Next, since each review is a different length, we need to limit ourselves to a
 certain number of words so that all our features (reviews) are the same length.
-This should be viewed as a tuning parameter. I typically start with values
-around the 25%, 50% (median), and 75% percentile of the word distribution.
+This should be viewed as a tuning parameter. 
+
+__Tip__: I typically start with values around the 50% (median) but then explore
+values that represent 25% & 75% percentile of the word distribution when tuning.
 
 Note (`?pad_sequences`):
 
@@ -249,8 +264,13 @@ alternative padding options).
 features[1,]
 ```
 
+So, in essence, we have created an input that is a numeric representation of
+this:
+
 ```{r}
-paste(unlist(tokenizer$index_word)[features[1,]], collapse = " ")
+features[1,] %>% 
+  map_chr(~ ifelse(.x == 0, "<pad>", unlist(tokenizer$index_word[.x]))) %>%
+  cat()
 ```
 
 ### Your Turn!
@@ -269,7 +289,9 @@ cat(crayon::blue("\nRevised text:\n"))
 paste(unlist(tokenizer$index_word)[features[which_review ,]] , collapse = " ")
 
 cat(crayon::blue("\nEncoded text:\n"))
-features[which_review ,]
+features[which_review,] %>% 
+  map_chr(~ ifelse(.x == 0, "<pad>", unlist(tokenizer$index_word[.x]))) %>%
+  cat()
 ```
 
 
@@ -280,7 +302,7 @@ order that they appear.
 
 ```{r}
 dim(features)
-dim(labels)
+length(labels)
 ```
 
 
@@ -300,14 +322,18 @@ x_train <- features[index, ]
 y_train <- labels[index]
 ```
 
-To create our network architecture that includes word embeddings, need to 
+To create our network architecture that includes word embeddings, we need to 
 include two things:
 
 1. `layer_embedding` layer that creates the embeddings,
 2. `layer_flatten` to flatten our embeddings to a 2D tensor for our densely 
     connected portion of our model
     
-___The `output_dim` is our primary hyperparameter unique to word embeddings.___
+__Note__:
+
+* `input_dim` & `input_length` are considered pre-processing hyperparameters.
+* `output_dim` is our word embeddings hyperparameter.
+* They all have interaction effects
 
 ```{r}
 model <- keras_model_sequential() %>%
@@ -390,7 +416,7 @@ yourturn_results <- yourturn_model %>% fit(
 )
 ```
 
-## Comparing embeddings
+# Comparing embeddings
 
 Recall that the word embeddings we found for natural language modeling created 
 results like:
@@ -453,7 +479,7 @@ p <- tsne$Y %>%
 plotly::ggplotly(p)
 ```
  
-## Key takeaways
+# Key takeaways
  
 * Word embeddings
    - Commonly used for language modeling and prediction tasks.
