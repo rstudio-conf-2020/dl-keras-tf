@@ -1,6 +1,9 @@
 ---
 title: "NLP: Transfer learning for Amazon review word embeddings"
-output: html_notebook
+output:
+  html_notebook:
+    toc: yes
+    toc_float: true
 ---
 
 ```{r setup, include=FALSE}
@@ -132,7 +135,7 @@ expect_equal(
 glue("There are {sum(num_index)} observations with 10 or more reviews.")
 ```
 
-Our labels is going to be the fraction provided by helpfulness converted to a
+Our labels are going to be the fraction provided by helpfulness converted to a
 percentage.
 
 ```{r}
@@ -275,7 +278,7 @@ expect_equal(nrow(features), length(labels))
 ```
 
 
-## Model training
+# Model training
 
 Before we train our model, let's go ahead and randomize our review data so that
 our training and validation data properly represent a mixture of products and
@@ -391,4 +394,9 @@ tibble(
 You may be wondering how I chose my hyperparameters (i.e. embedding layer output
 dimension, number of hidden layers and units, learning rate)? Well, unlike you
 I had the luxery of time to run a grid search. You can check it out
-[here](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/amazon-embeddings-grid-search.nb.html).
+[here](https://rstudio-conf-2020.github.io/dl-keras-tf/notebooks/amazon-embeddings-grid-search.nb.html). 
+
+However, realize this is not necessarily an optimized solution so you could
+continue improve upon it!
+
+[🏠](https://github.com/rstudio-conf-2020/dl-keras-tf)

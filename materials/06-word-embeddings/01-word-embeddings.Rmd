@@ -490,6 +490,7 @@ plotly::ggplotly(p)
       are also used).
    - See http://bit.ly/dl-06#12 for list of resources to go deeping into word
      embeddings.
+
 * Data prep
    - Use `text_tokenizer()` to define the text preprocessing we desire (defaults
      are good).
@@ -499,9 +500,12 @@ plotly::ggplotly(p)
      representation of word index.
    - Use `pad_sequences()` to make all text sequences the same length. This
      length can be adjusted to improve performance.
+
 * Model training
    - Fit word embeddings with `layer_embedding()`.
    - Tune `output_dim`ension of the embeddings.
    - Apply `layer_flatten()` to convert embeddings to a 2D tensor and use
      `layer_dense()` for classification (there are alternatives which we will
      cover later).
+
+[🏠](https://github.com/rstudio-conf-2020/dl-keras-tf)

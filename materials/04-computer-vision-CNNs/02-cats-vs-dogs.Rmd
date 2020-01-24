@@ -222,7 +222,10 @@ validation data.  Plus, we need to specify:
   Our generator supplies batches of 20 and we have 1,000 validation images so we
   need 50 steps.
   
-**Without a GPU this will take approximately 20 minutes to train**  
+__Note__:
+
+* Without a GPU this will take approximately 20 minutes to train
+* With GPUs this will take approximately 5 minutes
 
 ```{r cnn-train}
 history <- model %>% fit_generator(
@@ -343,11 +346,12 @@ model %>% compile(
 ```
 
 Now we can add image augmentation to our `image_data_generator()`. The rest of 
-the inputs remain the same; however, we use larger batch size (32) and we do not 
-need to worry about `batch_size` x `steps_per_epoch` equaling the number of 
-training images since we are doing image augmentation.
+the inputs remain the same.
 
-**Without a GPU this will take approximately 60 minutes to train**
+__Note__:
+
+* Without a GPU this will take approximately 60 minutes to train
+* With GPUs this will take approximately 20-30 minutes
 
 ```{r augment-and-train}
 # only augment training data
@@ -369,7 +373,7 @@ train_generator <- flow_images_from_directory(
   train_dir,
   train_datagen,
   target_size = c(150, 150),
-  batch_size = 32,
+  batch_size = 20,
   class_mode = "binary"
 )
 
@@ -378,7 +382,7 @@ validation_generator <- flow_images_from_directory(
   valid_dir,
   test_datagen,
   target_size = c(150, 150),
-  batch_size = 32,
+  batch_size = 20,
   class_mode = "binary"
 )
 

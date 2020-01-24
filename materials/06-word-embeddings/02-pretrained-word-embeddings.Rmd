@@ -1,6 +1,9 @@
 ---
 title: "NLP: Transfer learning with GloVe word embeddings"
-output: html_notebook
+output:
+  html_notebook:
+    toc: yes
+    toc_float: true
 ---
 
 ```{r setup, include=FALSE}
@@ -151,7 +154,7 @@ Now we're ready to train our model.
 
 # Create and train our model
 
-### Define a model
+## Define a model
 
 We will be using the same model architecture as we did in the IMDB word 
 embeddings [notebook](http://bit.ly/dl-imdb-embeddings). The `top_n_words` and
@@ -168,7 +171,7 @@ model <- keras_model_sequential() %>%
 summary(model)
 ```
 
-### Load the GloVe embeddings in the model
+## Load the GloVe embeddings in the model
 
 To set the weights of our embedding layer to our pretrained embedding matrix, 
 we:
@@ -183,7 +186,7 @@ get_layer(model, index = 1) %>%
   freeze_weights()
 ```
 
-### Train and evaluate
+## Train and evaluate
 
 Let's compile our model and train it.
 
@@ -228,13 +231,17 @@ Things to consider:
 - When you have very little text data, you often cannot produce reliable
   embeddings. Pre-trained embeddings can sometimes provide performance
   improvements in these situations.
+
 - Even better, when you have very little data, find alternative data sources
-  that aligns with yours (i.e. use Amazon product reviews as an alternative
+  that aligns with your (i.e. use Amazon product reviews as an alternative
   data source to your company's product reviews). You can then train word
   embeddings on this alternative data source and use those embeddings for your
   own problem.
+
 - Some language models (i.e. [ULMFiT](http://nlp.fast.ai/category/classification.html))
   can be transferred for classification purposes much like VGG16, Resnet50, etc.
   within the CNNs context. Consequently, you can use these models, freeze and
   unfreeze layer weights, and re-train only part of the model to be specific to
   your task.
+
+[🏠](https://github.com/rstudio-conf-2020/dl-keras-tf)
