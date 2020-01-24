@@ -38,10 +38,12 @@ source("helper_functions.R")
 
 # The "real" IMDB dataset
 
-Keras provides a built-in IMBD dataset `dataset_imdb()`. However, we are going
-to use the original IMDB movie review files which can be found at
-http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz. This tends to
-help students to better understand the entire data prep required for text.
+Keras provides a built-in IMBD dataset `dataset_imdb()`, which contains the
+text of 25,000 movie reviews that have been classified as net positive or net
+negative. However, we are going to use the original IMDB movie review files which
+can be found at http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz.
+This tends to help students better understand the entire data prep required for
+text.
 
 You can find the download instructions [here](http://bit.ly/dl-rqmts). For those
 in the workshop we have already downloaded this data for you.
