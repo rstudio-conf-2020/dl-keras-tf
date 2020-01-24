@@ -1,6 +1,9 @@
 ---
 title: "Computer vision & CNNs: Transfer Learning"
-output: html_notebook
+output:
+  html_notebook:
+    toc: yes
+    toc_float: true
 ---
 
 ```{r setup, include=FALSE}
@@ -17,7 +20,7 @@ Learning objectives:
 - How to perform feature extraction with pretrained models.
 - How you can fine tune a pretrained model and run end-to-end.
 
-# Required packages
+# Requirements
 
 ```{r}
 library(keras)
@@ -25,11 +28,9 @@ library(glue)
 library(ggplot2)
 ```
 
-# Part 1: Data Preparation
+# Data
 
 We are working with the same dogs and cats images as before.
-
-## Image location
 
 ```{r image-file-paths}
 # define the directories:
@@ -43,25 +44,31 @@ valid_dir <- file.path(image_dir, "validation")
 test_dir <- file.path(image_dir, "test")
 ```
 
-# Applying a pretrained CNN model
+# Transfer Learning
 
 There are _two main_ ways we can apply a pretrained model to perform a CNN
-[ℹ️](http://bit.ly/dl-03#46):
 
-1. Feature extraction
+1. __Feature extraction__: Use the convolutional base to do feature engineering
+   on our images and then feed into a new densely connected classifier.
    - Most efficient
    - Does not require GPUs
    - Does not "personalize" feature extraction to the problem at hand
    - Likely leaves room for improvement
-2. Fine tune a pretrained model and run end-to-end
+   
+2. __Fine tune a pretrained model and run end-to-end__: Build a full sequential
+   model with the convolutional base and a new densely connected classifier and
+   train the entire model with some or all of the convolutional base layers
+   frozen.
    - Computationally demanding
    - Often requires GPUs
    - Tweaks pretrained convolution layers to extract problem-specific features
    - Maximize performance
+   
+![](images/swapping_fc_classifier.png)
 
-##  Option 1: Feature extraction
+#  Transfer Learning: Feature Extraction
 
-### Get our pretrained model
+## Get our pretrained model
 
 There are several pretrained models available via keras; they all start with 
 `application_`. Here we'll use the VGG16 model; it is intuitive to understand 
@@ -82,6 +89,10 @@ Applying pretrained models that are already supplied by keras is simple:
   we want the classifier to be specific to our problem.
 - `input_shape`: The shape of our nputs (150x150 pixel images w/3 color channels).
 
+__Tip__: Check out the [tfhub](https://github.com/rstudio/tfhub) package which
+makes it easy to interact with [TensorFlow Hub](https://www.tensorflow.org/hub),
+a libarry for publication, discovery, and consumption of resusable models.
+
 ```{r pretrained-model}
 conv_base <- application_vgg16(
   weights = "imagenet",
@@ -94,7 +105,7 @@ conv_base <- application_vgg16(
 summary(conv_base)
 ```
 
-### Extracting features using the pretrained convolutional base
+## Extracting features using the pretrained convolutional base
 
 This seems a little daunting to understand but this is just implementing more of 
 a manual approach to what you already have been doing. Here we create a function 
@@ -160,7 +171,7 @@ validation <- extract_features(valid_dir, 1000)
 test <- extract_features(test_dir, 1000)
 ```
 
-### Reshape features
+## Reshape features
 
 The extracted features will be a 4D tensor (samples, 4, 4, 512).  We can see this 
 in the last layer of our `conv_base` model above (`block5_pool (MaxPooling2D)`). 
@@ -181,7 +192,7 @@ test$features <- reshape_features(test$features)
 dim(train$features)
 ```
 
-### Define densely connected classifier model
+## Define densely connected classifier
 
 We've extracted and flattened our features from the convolution layers so now
 we only need to build the densely connected classifier portion of our model.
@@ -229,16 +240,15 @@ best_acc <- history1$metrics$val_accuracy[best_epoch] %>% round(3)
 glue("Our optimal loss is {best_loss} with an accuracy of {best_acc}")
 ```
 
-# Plot results:
-
 ```{r plot-model1-history}
 plot(history1) + 
   scale_x_continuous(limits = c(0, length(history1$metrics$val_loss)))
 ```
 
 
+#  Transfer Learning: End-to-End
 
-# ⚠️⚠️ ONLY RUN ON GPU!! ⚠️⚠️
+⚠️⚠️ ONLY RUN ON GPU!! ⚠️⚠️
 
 The above approach performed pretty well. However, we can see that we are still 
 overfitting, which may be reducing model performance. An alternative approach is 
@@ -250,12 +260,10 @@ adjusting the pretrained model because it lets you:
    performance).
 2. fine tune parts of the pretrained model.
 
-##  Option 2a: Run end-to-end with data augmentation
-
 The following approach simply plugs the pretrained convolution base into a 
 sequential model but ___freezes___ the convolution base weights.
 
-### Combining a densely-connected neural network with the convolutional base
+## Combining a densely-connected neural network with the convolutional base
 
 In this case we can literally plug in our `conv_base` within our model 
 architecture. 
@@ -271,7 +279,7 @@ model <- keras_model_sequential() %>%
 model
 ```
 
-### Freezing
+## Freezing layers
 
 Before you compile and train the model, it's important to freeze the convolutional 
 base weights. This prevents the weights from being updated during training. If 
@@ -286,7 +294,7 @@ freeze_weights(conv_base)
 cat(length(model$trainable_weights), "trainable weight tensors before freezing.\n")
 ```
 
-#### Training the model end-to-end with a frozen convolutional base
+## Training the model end-to-end with a frozen convolutional base
 
 The following trains the model end-to-end using all CNN logic that you have seen 
 before:
@@ -343,14 +351,12 @@ history2 <- model %>% fit_generator(
 
 ```
 
-#### View history
-
 ```{r plot-model2-history}
 plot(history2)
 ```
 
 
-##  Option 2a: Fine tune Run end-to-end
+#  Transfer Learning: Fine Tune
 
 Another widely used technique for using pretrained models, is to unfreeze a few 
 of the convolutional base and allow those weights to be updated. Recall that 
@@ -373,14 +379,14 @@ To fine-tune a pretrained model you:
 
 We already did steps 1-3. The following executes steps 4 and 5.
 
-### Unfreeze some layers in the base network
+## Unfreeze some layers in the base network
 
 ```{r unfreeze-some-layers}
 unfreeze_weights(conv_base, from = "block3_conv1")
 ```
 
 
-### Jointly train both these layers and the part you added
+## Jointly train both these layers and the part you added
 
 ```{r fine-tune-model}
 model %>% compile(
@@ -398,3 +404,22 @@ history2 <- model %>% fit_generator(
 )
 ```
 
+```{r plot-model3-history}
+plot(history2)
+```
+
+# Takeways
+
+* Pre-trained models can be efficient and effective for problems that align to
+common computer vision (and other) tasks.
+
+* Many pre-existing models exist on [TensorFlow Hub](https://www.tensorflow.org/hub)
+  and are worth researching.
+
+* Three main approaches exists for transfer learning; the decision depends on
+  your desire to maximize efficiency (compute time) vs effectiveness (accuracy):
+   - feature extraction
+   - end-to-end training with existing CNN weights
+   - end-toend training while fine-tuning latter CNN layer weights
+
+[🏠](https://github.com/rstudio-conf-2020/dl-keras-tf)
