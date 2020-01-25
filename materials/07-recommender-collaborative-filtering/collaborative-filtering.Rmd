@@ -1,6 +1,9 @@
 ---
 title: "Movie recommendations with collaborative filtering"
-output: html_notebook
+output:
+  html_notebook:
+    toc: yes
+    toc_float: true
 ---
 
 ```{r setup, include=FALSE}
@@ -49,18 +52,22 @@ ratings <- read_csv(file.path(data_dir, "ratings.csv"))
 ```
 
 Currently our datasets are separate and movie ID ranges from 1 to 193,609 even
-though our data only contains 9,724 unique movie IDs. Consequently, the following
-creates a `dense_movie_id` so there are no gaps, which makes future mapping of
-our word vector to embeddings simpler, and also joins our datasets and
-cleans up our column names.
+though our data only contains 9,724 unique movie IDs. Consequently, the following:
 
-```{r, message=FALSE}
+1. creates a `dense_movie_id` so there are no gaps, which makes future mapping
+   of our word vector to embeddings simpler,
+2. joins our datasets,
+3. cleans up our column names,
+4. and converts our IDs to be zero-based (makes things easier).
+
+```{r}
 movie_data <- ratings %>% 
   distinct(movieId) %>%
   rowid_to_column(var = "dense_movie_id") %>%
   inner_join(ratings) %>%
   inner_join(movies) %>%
-  select(user_id = userId, movie_id = movieId, dense_movie_id, rating, everything())
+  select(user_id = userId, movie_id = movieId, dense_movie_id, rating, everything()) %>%
+  mutate(user_id = user_id - 1, dense_movie_id = dense_movie_id - 1)
 
 movie_data
 ```
@@ -114,11 +121,12 @@ embedding_dim <- 64
 ## Basic model
 
 To build our model, we need to take a different approach than the traditional
-`keras_sequential()` model. Instead we need to build a model that resembles this:
+`keras_model_sequential()` approach. Instead we need to build a model that
+resembles this:
 
-```{r, echo=FALSE, fig.align='center'}
-knitr::include_graphics("images/collaborative-filtering-keras-model.png")
-```
+
+![](images/collaborative-filtering-keras-model.png)
+
 
 First, let's create our input and embedding layers. We create an input and
 embedding for our user IDs and our movie IDs. Since each of these inputs are a
@@ -126,9 +134,7 @@ single dimension we specify `shape = 1` in our `layer_input()`.
 
 Our embedding layers build onto each of these inputs:
 
-- `input_dim`: input dimension has to be equal to the number of unique words.
-   If zero maps to a word, one can leave `input_dim = n_users`  otherwise
-   `input_dim = n_users + 1`. Typically only relevant within Python API.
+- `input_dim`: number of unique user and movie IDs
 - `output_dim`: represents the desired embeddings dimension (64 in this example).
 
 ```{r}
@@ -138,20 +144,20 @@ input_movies <- layer_input(shape = 1, name = "movies")
 
 user_embeddings <- input_users %>% 
   layer_embedding(
-    input_dim = n_users + 1,
+    input_dim = n_users,
     output_dim = embedding_dim,
     name = "user_embeddings"
   ) 
 
 movie_embeddings <- input_movies %>% 
   layer_embedding(
-    input_dim = n_movies + 1,
+    input_dim = n_movies,
     output_dim = embedding_dim,
     name = "movie_embeddings"
   ) 
 ```
 
-Recall in from our Excel example, we multiplied the user embeddings by the movie
+Recall from our Excel example, we multiplied the user embeddings by the movie
 embeddings. This is referred to as a dot product and we can use `layer_dot()` to
 execute this computation. Since our embeddings outputs are matrices we want to
 perform a dot product with the embedding columns (`axes = 2`). If our outputs
@@ -162,9 +168,17 @@ rating can't be < 0 I use `activation = "relu"` rather than a purely linear
 activation.
 
 ```{r}
-dot <- layer_dot(list(user_embeddings, movie_embeddings), axes = 2, name = "dot_product")
+dot <- layer_dot(
+  inputs = list(user_embeddings, movie_embeddings),
+  axes = 2,
+  name = "dot_product"
+  )
 
-pred <- dot %>% layer_dense(units = 1, activation = "relu", name = "rating_prediction")
+pred <- dot %>% layer_dense(
+  units = 1, 
+  activation = "relu",
+  name = "rating_prediction"
+  )
 ```
 
 Now, we just need to combine these layers into a keras model. We use
@@ -228,9 +242,7 @@ our model [ℹ️](http://bit.ly/dl-07-Excel).
 
 Doing this results in a neural net architecture that looks like:
 
-```{r, echo=FALSE, fig.align='center'}
-knitr::include_graphics("images/collaborative-filtering-keras-model2.png")
-```
+![](images/collaborative-filtering-keras-model2.png)
 
 We follow the same procedure as before to set up the user and movie embeddings.
 We also create two new bias layers (`user_bias` & `movie_bias`) that will have
@@ -244,28 +256,28 @@ input_movies <- layer_input(shape = 1, name = "movies")
 
 user_embeddings <- input_users %>%
   layer_embedding(
-    input_dim = n_users + 1,
+    input_dim = n_users,
     output_dim = embedding_dim,
     name = "user_embeddings"
   )
 
 movie_embeddings <- input_movies %>%
   layer_embedding(
-    input_dim = n_movies + 1,
+    input_dim = n_movies,
     output_dim = embedding_dim,
     name = "movie_embeddings"
   )
 
 user_bias <- input_users %>%
   layer_embedding(
-    input_dim = n_users + 1,
+    input_dim = n_users,
     output_dim = 1,
     name = "user_bias"
   ) 
 
 movie_bias <- input_users %>%
   layer_embedding(
-    input_dim = n_movies + 1,
+    input_dim = n_movies,
     output_dim = 1,
     name = "movie_bias"
   ) 
@@ -276,10 +288,13 @@ with the user and movie biases (via `layer_add()`). We then complete our model
 with our final prediction layer.
 
 ```{r}
-dot <- layer_dot(list(user_embeddings, movie_embeddings), axes = 2, name = "dot_product") 
+dot <- layer_dot(list(user_embeddings, movie_embeddings), axes = 2, 
+                 name = "dot_product")
+
 dot_bias <- layer_add(list(dot, user_bias, movie_bias), name = "add_bias")
 
-pred <- dot_bias %>% layer_dense(units = 1, activation = "relu", name = "rating_prediction")
+pred <- dot_bias %>% layer_dense(units = 1, activation = "relu", 
+                                 name = "rating_prediction")
 ```
 
 We follow the same procedure to build our model with `keras_model()` and then
@@ -341,7 +356,7 @@ movie_embeddings <- model %>%
 ```
 
 The following just adds the actual movie titles to the embeddings after some
-regex clean up to remote unncessary info. Note that the movie embeddings are
+regex clean up to remove unncessary info. Note that the movie embeddings are
 ordered based on the `dense_movie_id` value (i.e. 1, 2, ..., n) so we need to
 properly order the titles before adding them as row names.
 
@@ -352,7 +367,7 @@ movie_titles <- movie_data %>%
   arrange(dense_movie_id) %>%
   mutate(title = title %>% str_remove("\\(.+\\)") %>% str_trim())
 
-row.names(movie_embeddings) <- c(NA, movie_titles$title)
+row.names(movie_embeddings) <- movie_titles$title
 
 movie_embeddings[1:10, 1:4]
 ```
@@ -393,19 +408,21 @@ We can use this info to recommend a movie to this customer
 that we think they would enjoy but have not watched yet.
 
 ```{r}
-user_53 <- movie_data %>%
-  filter(user_id == 53) %>%
-  select(user_id, dense_movie_id) %>%
-  as.matrix()
+# convert customer of interest to align to our zero-based customer IDs
+original_customer_id <- 53
+new_customer_id <- original_customer_id - 1
 
+# get movies watched by our user
 movies_watched <- movie_data %>%
-  filter(user_id == 53) %>% 
+  filter(user_id == new_customer_id) %>% 
   pull(dense_movie_id)
 
+# get all available movies
 all_movies <- movie_data %>% 
   distinct(dense_movie_id) %>%
   pull()
-  
+
+# identify movies not watched
 movies_not_watched <- setdiff(all_movies, movies_watched)
 
 movie_options <- movie_data %>%
@@ -415,19 +432,19 @@ movie_options <- movie_data %>%
 movie_options
 ```
 
-To do so, we create a new matrix that includes the user ID. In this example we can see
-this column is always "53" since we are only focusing on this one user. We then
-add a second column of all the `dense_movie_id`s for the movies that user 53
-has not watched.
+To do so, we create a new matrix that includes the user's zero-based index ID.
+In this example we can see this column is always "52" since we are only focusing
+on this one user. We then add a second column of all the `dense_movie_id`s for
+the movies that the user has not watched.
 
 ```{r}
-customer_53_options <- expand.grid(
-  user_id = 53, 
+customer_options <- expand.grid(
+  user_id = new_customer_id, 
   dense_movie_id = movies_not_watched
   ) %>%
   as.matrix()
 
-head(customer_53_options)
+head(customer_options)
 ```
 
 We can now feed this information into our `predict()` function. Remember, our
@@ -436,8 +453,8 @@ function is going to expect a list of two inputs as well.
 
 ```{r}
 inputs <- list(
-  customer_53_options[, "user_id", drop = FALSE],
-  customer_53_options[, "dense_movie_id", drop = FALSE]
+  customer_options[, "user_id", drop = FALSE],
+  customer_options[, "dense_movie_id", drop = FALSE]
   )
 
 pred <- model %>% predict(inputs)
@@ -445,12 +462,12 @@ pred <- model %>% predict(inputs)
 head(pred)
 ```
 
-We can now add these predictions to our `customer_53_options` data, join the
+We can now add these predictions to our `customer_options` data, join the
 `movie_options` dataset that has the titles for the movies and rank-order our
 movies for those that have the highest expected rating.
 
 ```{r}
-customer_53_options %>%
+customer_options %>%
   as_tibble() %>%
   mutate(predictions = as.vector(pred)) %>%
   left_join(movie_options, by = "dense_movie_id") %>%
@@ -477,3 +494,5 @@ customer_53_options %>%
    - For more information on keras' functional model see:
       - [Deep Learning with R](https://bit.ly/2PvOrBv), Ch. 7
       - [Guide to the Functional API](https://bit.ly/35wZqAx)
+
+[🏠](https://github.com/rstudio-conf-2020/dl-keras-tf)
