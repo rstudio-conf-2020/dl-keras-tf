@@ -1,10 +1,13 @@
 ---
 title: "Can You Improve Sentiment Polarity with LSTMs?"
-output: html_notebook
+output:
+  html_notebook:
+    toc: yes
+    toc_float: true
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, cache = FALSE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ```
 
 This project is designed to test your current knowledge on applying LSTMS to the
@@ -25,7 +28,7 @@ Nearly all the code that you need can be found in these notebooks:
 
 ___Good luck!___
 
-## Requirements
+# Requirements
 
 ```{r}
 library(keras)
@@ -35,14 +38,20 @@ library(glue)
 library(testthat)
 ```
 
-## Import the data
+# Import the data
 
 For those in the workshop we have already downloaded the movie review data for
 you into the `"/materials/data/cornell_reviews"` directory. Outside of the
 workshop, you can find the download instructions [here](http://bit.ly/dl-rqmts).
 
 ```{r}
-movie_dir <- here::here("materials", "data", "cornell_reviews", "data")
+# get path to data
+if (stringr::str_detect(here::here(), "conf-2020-user")) {
+  movie_dir <- "/home/conf-2020-user/data/cornell_reviews/data"
+} else {
+  movie_dir <- here::here("materials", "data", "cornell_reviews", "data")
+}
+
 fs::dir_tree(movie_dir, recurse = FALSE)
 ```
 
@@ -111,7 +120,7 @@ Go ahead and check out the text of a couple reviews.
 texts[1]
 ```
 
-## Data exploration
+# Data exploration
 
 __Step 4__: Before preprocessing, let's get a sense of two attributes that will
 help us set two of our preprocessing hyperparameters:
@@ -143,7 +152,7 @@ ggplot(text_df, aes(text_length)) +
           subtitle = glue("Total number of unique words is {unique_words}"))
 ```
 
-## Data preprocessing
+# Data preprocessing
 
 __Step 5__: Now let's tokenize our text sequences. To do so we:
 
@@ -218,7 +227,7 @@ with the following code:
 paste(unlist(tokenizer$index_word)[features[1,]], collapse = " ")
 ```
 
-## Model training
+# Model training
 
 __Step 7__: To train our model we will use the `validation_split` procedure
 within `fit()`. Remember, this takes the last XX% of our data to be used as our
@@ -240,7 +249,7 @@ expect_equal(
   )
 ```
 
-### Word embedding model
+## Word embedding model
 
 __Step 8__: We're now ready to do modeling. For our first model, let's create a
 model that:
@@ -264,7 +273,7 @@ model_basic <- keras_model_sequential() %>%
   layer_embedding(
     input_dim = top_n_words,  # number of words we are considering
     input_length = max_len,   # length that we have set each review to
-    output_dim = 16            # length of our word embeddings
+    output_dim = 16           # length of our word embeddings
     ) %>%  
   layer_flatten() %>%
   layer_dense(units = 1, activation = "sigmoid")
@@ -297,7 +306,7 @@ best_acc <- history_basic$metrics$val_accuracy[best_epoch] %>% round(3)
 glue("Our optimal loss is {best_loss} with an accuracy of {best_acc}")
 ```
 
-### Word embedding + LSTM model
+## Word embedding + LSTM model
 
 __Step 9__: Now let's build on to the previous model by adding an LSTM layer
 after the `layer_embedding` layer. When feeding an embedding layer into an LSTM
@@ -344,7 +353,7 @@ best_acc <- history_lstm$metrics$val_accuracy[best_epoch] %>% round(3)
 glue("Our optimal loss is {best_loss} with an accuracy of {best_acc}")
 ```
 
-### Search for a better model
+## Search for a better model
 
 __Step 10__: Spend the rest of the time tuning hyperparameters and see if you
 can find a better model. Things you can try:
@@ -362,3 +371,5 @@ can find a better model. Things you can try:
    - adjust the learning rate (or even the optimizer (i.e. try "adam"))
    - adjust the `batch_size`
    - add a callback to adjust the learning upon plateauing
+
+[🏠](https://github.com/rstudio-conf-2020/dl-keras-tf)

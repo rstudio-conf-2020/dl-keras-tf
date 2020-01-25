@@ -1,10 +1,13 @@
 ---
 title: "Introduction to RNNs & LSTMs"
-output: html_notebook
+output:
+  html_notebook:
+    toc: yes
+    toc_float: true
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ggplot2::theme_set(ggplot2::theme_bw())
 ```
 
@@ -21,7 +24,7 @@ Learning objectives:
 
 # Requirements
 
-```{r, message=FALSE, warning=FALSE}
+```{r}
 library(keras)
 library(tidyverse)
 library(glue)
@@ -43,11 +46,12 @@ imdb <- dataset_imdb(num_words = n_features)
 c(c(x_train, y_train), c(x_test, y_test)) %<-% imdb
 
 x_train <- pad_sequences(x_train, maxlen = max_len)
+x_test <- pad_sequences(x_test, maxlen = max_len)
 ```
 
 # RNNs
 
-To model our IMDB data, we have used:
+To model our IMDB data, we could use:
 
 1. __one-hot encoding__, which has a problem with only allowing a single
    representation of a word. "Seattle" is simply a word but has no relationship
@@ -59,7 +63,7 @@ To model our IMDB data, we have used:
 Recurrent neural networks were specifically designed to model sequential data.
 [ℹ️](http://bit.ly/dl-08)
 
-# Train an RNN
+## Train an RNN
 
 Let's build a model with an RNN layer. First, we still use an embedding layer to
 allow for more complex representation of our words but we follow that with
@@ -102,7 +106,7 @@ acc <- history$metrics$val_acc[best_epoch] %>% round(3)
 glue("The best epoch had a loss of {loss} and an accuracy of {acc}")
 ```
 
-# Your Turn! (5min)
+## Your Turn! (5min)
 
 Spend a few minutes adjusting this model and see how it impacts performance. You
 may want to test:
@@ -112,6 +116,12 @@ may want to test:
 - It's sometimes userful to stack several recurrent layers one after the other
   in order to increase the representational power of a network. What happens
   when you try this?
+  
+__Tip__: An RNN will take inputs from different parts of a sequence and produce
+a single output. When stacking multiple recurrent layers, you need to set
+`return_sequences = TRUE` so that you get the output for each part of the
+sequence so that you can supply a sequence into the next RNN layer (see
+`?layer_simple_rnn()`).
   
 ```{r}
 model <- keras_model_sequential() %>%
@@ -127,7 +137,7 @@ model %>% compile(
   optimizer = "rmsprop",
   loss = "binary_crossentropy",
   metrics = "accuracy"
-  )
+)
 
 summary(model)
 ```
@@ -156,7 +166,7 @@ Unfortunately, a problem with RNNs (and any very deep neural network) is as our
 network gets deep, it loses the signal due to the vanishing gradient descent
 problem. LSTMs were developed to address this problem. [ℹ️](http://bit.ly/dl-08#12)
 
-# Train an LSTM
+## Train an LSTM
 
 To train an LSTM, we simply replace `layer_simple_rnn()` with `layer_lstm()`.
 
@@ -197,7 +207,7 @@ acc <- history$metrics$val_acc[best_epoch] %>% round(3)
 glue("The best epoch had a loss of {loss} and an accuracy of {acc}")
 ```
 
-# Your Turn! (5min)
+## Your Turn! (5min)
 
 Spend a few minutes adjusting this model and see how it impacts performance. You
 may want to test:
@@ -208,7 +218,18 @@ may want to test:
   improve model performance. See if you can add dropout to your model. Hint,
   checkout the docs (`?layer_lstm()`) because adding dropout to LSTMs are a
   little unique.
-  
+
+__Tip__: When applying dropout to a recurrent network, it’s important to apply
+the same dropout pattern to each timestep within the recurrent layer, rather
+than randomly. Consequently, recurrent layers have two dropout parameters:
+
+- `dropout`: the dropout rate for inputs going into the recurrent layer
+- `recurrent_dropout`: the dropout rate for the recurrent units within the
+   recurrent layer
+   
+See `?layer_lstm()` for details. Note, you can still apply dropout between the
+embedding layer and the dense layer after the LSTM layer by using the regular
+`layer_dropout()` layer.
 
 ```{r}
 model <- keras_model_sequential() %>%
@@ -224,7 +245,7 @@ model %>% compile(
   optimizer = "rmsprop",
   loss = "binary_crossentropy",
   metrics = "accuracy"
-  )
+)
 
 summary(model)
 ```
@@ -254,9 +275,7 @@ and simple word embedding models? For most sentiment predictions we can capture
 the essence of the tone (i.e. positive vs. negative) by focusing on a few key
 words, which our simpler encoding models can do quite well.
 
-```{r echo=FALSE}
-knitr::include_graphics("images/customer_review.gif")
-```
+![](images/customer_review.gif)
 
 As your prediction task requires more spatial context, then recurrent networks
 should begin to out perform the more simpler encoding models.
@@ -279,4 +298,5 @@ should begin to out perform the more simpler encoding models.
    - recurrent layers have their own special dropout procedures --> don't use
      `layer_dropout()`; rather, use the dropout parameters within the recurrent
      layer.
-     
+
+[🏠](https://github.com/rstudio-conf-2020/dl-keras-tf)
