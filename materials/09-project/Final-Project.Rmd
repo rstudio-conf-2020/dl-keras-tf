@@ -1,14 +1,13 @@
 ---
 title: "Project 2: Detecting Duplicate Quora Questions"
-output: html_notebook
+output:
+  html_notebook:
+    toc: yes
+    toc_float: true
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(
-  echo = TRUE,
-  message = FALSE,
-  warning = FALSE
-  )
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ```
 
 This project is designed to test your current knowledge on applying several of
@@ -162,7 +161,7 @@ Next, let's create a text tokenizer to define how we want to preprocess the text
 then apply it to our question text.
 
 ```{r}
-tokenizer <- text_tokenizer(num_words = vocab_size) %>%
+tokenizer <- text_tokenizer(num_words = _____) %>%
   fit_text_tokenizer(unique_questions)
 ```
 
@@ -172,8 +171,8 @@ Next, let's create two new objects:
 * `question2`: the text tokenizer for all `quora_data$question2` text
 
 ```{r}
-question1 <- texts_to_sequences(tokenizer, quora_data$question1)
-question2 <- texts_to_sequences(tokenizer, quora_data$question2)
+question1 <- texts_to_sequences(_____, quora_data$question1)
+question2 <- texts_to_sequences(_____, quora_data$question2)
 ```
 
 If you look at the first 6 `question1` obs, we see that they are of different
@@ -186,8 +185,8 @@ don’t appear within the established word index. We could still pad with this
 value or we could differentiate this value by padding with `vocab_size + 1`.
 
 ```{r}
-question1_padded <- pad_sequences(question1, maxlen = max_len, value = vocab_size + 1)
-question2_padded <- pad_sequences(question2, maxlen = max_len, value = vocab_size + 1)
+question1_padded <- pad_sequences(_____, maxlen = _____, value = vocab_size + 1)
+question2_padded <- pad_sequences(_____, maxlen = _____, value = vocab_size + 1)
 ```
 
 We have now finished the preprocessing steps. We will now run a simple benchmark
@@ -243,7 +242,7 @@ accuracy <- table(pred, benchmark_valid$is_duplicate) %>%
 glue("Our benchmark model achieves a {round(accuracy * 100, 2)}% accuracy.")
 ```
 
-Now your goal is to create a keras model that out performs this benchmark.
+Now your goal is to create a keras model that out-performs this benchmark.
 
 # Modeling with just embeddings
 
@@ -255,9 +254,8 @@ couple of adjustments. In essence, we want to build a model that:
 2. computes the dot product of these embeddings,
 3. adds a dense classifier to predict if the questions are duplicates.
 
-```{r, echo=FALSE}
-knitr::include_graphics("p2-model1-structure.png")
-```
+
+![](images/p2-model1-structure.png)
 
 First, create the keras model components by filling in the blanks.
 
@@ -290,23 +288,23 @@ First, create the keras model components by filling in the blanks.
 
 ```{r}
 # input layers
-input_q1 <- layer_input(shape = max_len, name = "Q1")
-input_q2 <- layer_input(shape = max_len, name = "Q2")
+input_q1 <- layer_input(shape = _____, name = "Q1")
+input_q2 <- layer_input(shape = _____, name = "Q2")
 
 # embedding layers
 q1_embeddings <- input_q1 %>% 
   layer_embedding(
     input_dim = vocab_size + 2,
-    output_dim = embedding_size,
-    input_length = max_len,
+    output_dim = _____,
+    input_length = _____,
     name = "Q1_embeddings"
   )
 
 q2_embeddings <- input_q2 %>% 
   layer_embedding(
     input_dim = vocab_size + 2,
-    output_dim = embedding_size,
-    input_length = max_len,
+    output_dim = _____,
+    input_length = _____,
     name = "Q2_embeddings"
   )
 
@@ -318,17 +316,21 @@ q2_em_flatten <- q2_embeddings %>% layer_flatten(name = "Q2_embeddings_flattened
 dot <- layer_dot(list(q1_em_flatten, q2_em_flatten), axes = 1, name = "dot_product")
 
 # output/prediction
-pred <- dot %>% layer_dense(units = 1, activation = "sigmoid", name = "similarity_prediction")
+pred <- dot %>% layer_dense(units = 1, activation = _____, 
+                            name = "similarity_prediction")
 ```
 
 Now that we have all the model components, we can create our functional keras
-model and establish the desired compiler.
+model and establish the desired compiler. You'll need to supply:
+
+- the proper list of inputs and output in `keras_model()`
+- the proper loss function for our binary response
 
 ```{r}
-embedding_model <- keras_model(list(input_q1, input_q2), pred)
+embedding_model <- keras_model(inputs = list(_____, _____), outputs = _____)
 embedding_model %>% compile(
   optimizer = "rmsprop", 
-  loss = "binary_crossentropy", 
+  loss = _____, 
   metrics = "accuracy"
 )
 
@@ -349,22 +351,27 @@ val_question2_padded <- question2_padded[-index,]
 val_response <- quora_data$is_duplicate[-index]
 ```
 
-Now we can train our model.
+Now we can train our model. Go ahead and start with:
+
+- batch size of 64
+- 10 epochs
+- add early stopping with patience of 5
+- add a callback to reduce the learning rate (use patience = 3)
 
 ```{r}
 m1_history <- embedding_model %>%
   fit(
     list(train_question1_padded, train_question2_padded),
     train_response, 
-    batch_size = 64, 
-    epochs = 10, 
+    batch_size = _____, 
+    epochs = _____, 
     validation_data = list(
       list(val_question1_padded, val_question2_padded), 
       val_response
     ),
     callbacks = list(
-      callback_early_stopping(patience = 5, restore_best_weights = TRUE),
-      callback_reduce_lr_on_plateau(patience = 3)
+      callback______,
+      callback______
     )
   )
 ```
@@ -385,9 +392,7 @@ Let's modify our model so that in addition to embedding our questions, we can
 use LSTMs to embed our sequences. We do this by adding an LSTM layer after the
 embedding layer as represented here:
 
-```{r, echo=FALSE}
-knitr::include_graphics("p2-model2-structure.png")
-```
+![](images/p2-model2-structure.png)
 
 The idea behind this is that the LSTM sequence embeddings may allow us to improve
 the ability to capture questions with strong similarities but worded in
@@ -418,8 +423,8 @@ feeding it into the dot product, so the rest of the code is as it was earlier.
 q1_embeddings <- input_q1 %>% 
   layer_embedding(
     input_dim = vocab_size + 2,
-    output_dim = embedding_size,
-    input_length = max_len,
+    output_dim = _____,
+    input_length = _____,
     embeddings_regularizer = regularizer_l2(0.0001),
     name = "Q1_embeddings"
   )
@@ -427,8 +432,8 @@ q1_embeddings <- input_q1 %>%
 q2_embeddings <- input_q2 %>% 
   layer_embedding(
     input_dim = vocab_size + 2,
-    output_dim = embedding_size,
-    input_length = max_len,
+    output_dim = _____,
+    input_length = _____,
     embeddings_regularizer = regularizer_l2(0.0001),
     name = "Q2_embeddings"
   )
@@ -436,14 +441,14 @@ q2_embeddings <- input_q2 %>%
 # sequence embeddings
 q1_lstm <- q1_embeddings %>%
   layer_lstm(
-    units = lstm_size, 
+    units = _____, 
     kernel_regularizer = regularizer_l2(0.0001), 
     name = "Q1_lstm"
     )
 
 q2_lstm <- q2_embeddings %>%
   layer_lstm(
-    units = lstm_size, 
+    units = _____, 
     kernel_regularizer = regularizer_l2(0.0001),  
     name = "Q2_lstm"
     )
@@ -458,7 +463,7 @@ pred <- dot %>% layer_dense(units = 1, activation = "sigmoid", name = "similarit
 Now create and compile the model as before.
 
 ```{r}
-lstm_model <- keras_model(list(input_q1, input_q2), pred)
+lstm_model <- keras_model(inputs = list(input_q1, input_q2), outputs = pred)
 lstm_model %>% compile(
   optimizer = "rmsprop", 
   loss = "binary_crossentropy", 
@@ -501,11 +506,19 @@ glue("The best epoch had a loss of {loss} and mean absolute error of {acc}")
 
 # Next steps
 
-Once you get the above models working on a smaller fraction of the data, go
-ahead and train them on the entire dataset (you'll need to re-run the
-preprocessing steps). Feel free to tune the hyperparameters to find a near
-optimal model (although time will be a constraint). If you find the right model
-you will be able to get near 85% accuracy.
+Once you get the above models working on a smaller fraction of the data, tune
+some of the hyperparameters to see if you can find better results:
+
+- learning rate
+- max_len (line 152)
+- embedding size (line 153)
+- lstm size (512)
+- model capacity (width and/or depth)
+- regularization (dropout vs larger weight decay)
+
+Once you find a model you are happy with on the sampled data set, go ahead and
+train it on the entire dataset (you'll need to re-run the preprocessing steps).
+You should be able to get near 85% accuracy and possibly higher.
 
 Although training time for these models can be quite slow, applying the models
 to new input (aka "scoring") is quite fast. For example, the following function
@@ -556,8 +569,11 @@ save_model_hdf5(embedding_model, "model-question-pairs.hdf5")
 3. Now launch the Shiny app by running the `app-question-pairs.Rmd` file in the
 `dl-keras-tf/materials/09-project` directory.
 
+
 ---
 
-Speaking of duplication^[This project is based on Daniel Falbel's blog post
-"Classifying Duplicate Questions from Quora with Keras" on the [TensorFlow for R
-blog](https://blogs.rstudio.com/tensorflow/), a great resource to learn from!]
+This project is based on Daniel Falbel's blog post "Classifying Duplicate
+Questions from Quora with Keras" on the [TensorFlow for R blog](https://blogs.rstudio.com/tensorflow/),
+a great resource to learn from!
+
+[🏠](https://github.com/rstudio-conf-2020/dl-keras-tf)
