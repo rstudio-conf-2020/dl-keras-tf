@@ -93,6 +93,10 @@ modeling where our objective function (aka ___loss___) is:
 
 $$loss = MSE = \frac{1}{n}\sum^n_{i-1}(Y_i - \hat Y_i)^2$$
 
+which, for our problem, results in an equation:
+
+$$\hat y = b_0 + b_1x$$
+
 If we apply OLS to our data, we get:
 
 * estimated intercept = 30.01
@@ -158,6 +162,9 @@ model <- keras_model_sequential() %>%
 
 ![](images/perceptron.png)
 
+All this is calculating is (if we match the above image):
+
+$$y = bias + w_1x_1 + w_2x_2 + w_3x_3$$
 
 ### 2. Define how our model is going to learn
 
