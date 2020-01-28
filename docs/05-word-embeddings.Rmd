@@ -193,19 +193,11 @@ knitr::include_graphics("images/embeddings-notions-of-similarity.png")
 ]
 
 ---
-# Embedded vector space
+# How do we get embeddings from this?
 
-However, as our inputs (i.e. sentences, documents) get larger, this approach becomes unwieldy so we learn a lower dimensional representation of the terms.
+<br><br><br><br><br>
 
-<br>
-
-```{r, echo=FALSE, fig.align='center'}
-knitr::include_graphics("images/embeddings-weights.png")
-```
-
-<br>
-
-.center.bold[Let's check out a simple example in...Excel 😳 !]
+.center.bold.font180[Let's check out a simple example in...Excel 😳 !]
 
 ---
 # Example

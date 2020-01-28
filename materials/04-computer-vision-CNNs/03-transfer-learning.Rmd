@@ -328,7 +328,7 @@ train_generator <- flow_images_from_directory(
 )
 
 validation_generator <- flow_images_from_directory(
-  validation_dir,
+  valid_dir,
   test_datagen,
   target_size = c(150, 150),
   batch_size = 20,

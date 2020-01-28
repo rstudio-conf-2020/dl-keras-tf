@@ -169,7 +169,7 @@ model <- keras_model_sequential() %>%
 
 All this is calculating is (if we match the above image):
 
-$$y = bias + w_1x_1 + w_2x_2 + w_3x_3$$
+$$y = bias + w_1x_1$$
 
 ### 2. Define how our model is going to learn
 
@@ -530,14 +530,14 @@ model %>% compile(
 
 ```{r}
 model <- keras_model_sequential() %>%
-  layer_dense(units = 1, input_shape = ncol(x), activation = ____)
+  layer_dense(units = 1, input_shape = ncol(x), activation = "sigmoid")
 
 model %>% compile(
-  optimizer = ____,
+  optimizer = optimizer_sgd(lr = 0.1, momentum = .95),
   loss = "binary_crossentropy"
 )
 
-history <- model %>% fit(x, y, epochs = 50, verbose = FALSE)
+(history <- model %>% fit(x, y, epochs = 50, verbose = FALSE))
 ```
 
 
@@ -647,7 +647,7 @@ model %>% compile(
 df %>%
   mutate(pred = predict(model, x) %>% as.vector()) %>%
   ggplot(aes(x, y)) +
-  geom_point(alpha = 0.25) +
+  geom_point(alpha = 0.05) +
   geom_smooth(se = FALSE) +
   geom_line(aes(y = pred), lty = "dashed", color = "red", size = 1)
 ```
@@ -685,7 +685,7 @@ Looking at how our predicted values fit the true underlying model:
 df %>%
   mutate(pred = predict(model, x) %>% as.vector()) %>%
   ggplot(aes(x, y)) +
-  geom_point(alpha = 0.25) +
+  geom_point(alpha = 0.05) +
   geom_smooth(se = FALSE) +
   geom_line(aes(y = pred), lty = "dashed", color = "red", size = 1)
 ```

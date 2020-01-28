@@ -88,7 +88,7 @@ small subset, which includes:
 ```{r verify-data}
 glue("Cat images:",
      " - total training cat images: {length(list.files(train_cats_dir))}",
-     " - total training cat images: {length(list.files(train_cats_dir))}",
+     " - total validation cat images: {length(list.files(valid_cats_dir))}",
      " - total test cat images: {length(list.files(test_cats_dir))}",
      "\n",
      "Dog images:",
